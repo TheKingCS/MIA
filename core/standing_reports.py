@@ -148,7 +148,8 @@ _LAST = {"monthly": "last month", "weekly": "last week", "daily": "yesterday", "
 
 def _question(what: str, every: str) -> str:
     """Pure logic. His words as the question asked then ("how much I spent": a month's report the month just gone,
-    a weekday's the week it ends, a daily one yesterday, an evening one today)."""
+    a weekday's the week it ends, a daily one yesterday, an evening one today); one said indirectly asked directly
+    ("what my week looks like": "What does my week look like?")."""
     what = what.strip().rstrip("?.! ")
     spent = re.fullmatch(r"how much (?:i|we) (?:spent|spend|have spent)", what, re.I)
     if spent:  # a weekday's report reads the week it ends ("this week"), a month's the month just gone
@@ -156,6 +157,19 @@ def _question(what: str, every: str) -> str:
     looks = re.fullmatch(r"how (?:my|our) money (?:looks|is looking|is doing)", what, re.I)
     if looks:
         return "How's my money this week?"
+    # said indirectly ("what my week looks like", "what I did yesterday", "what reminders I have"): asked directly
+    week = re.fullmatch(r"what (?:my|the) week (?:looks|is going to look|will look) like", what, re.I)
+    if week:
+        return "What does my week look like?"
+    did = re.fullmatch(r"what (?:i|we) did (yesterday|today|this week)", what, re.I)
+    if did:
+        return f"What did I do {did.group(1)}?"
+    have = re.fullmatch(r"what (reminders|alarms) (?:i|we) have", what, re.I)
+    if have:
+        return f"What {have.group(1)} do I have?"
+    due = re.fullmatch(r"what(?:'s| is) due|what i owe", what, re.I)
+    if due:
+        return "What's due this week?" if every != "monthly" else "What's due this month?"
     return what[:1].upper() + what[1:] + "?"
 
 

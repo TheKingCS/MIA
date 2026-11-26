@@ -10,6 +10,7 @@ a verb after "start" are the model's; the animals' food is Animals & Feed.
 The nineteenth's: morning in the task is no morning, a pet project no animal, spring peas a crop.
 """
 
+from datetime import date, timedelta
 from types import SimpleNamespace
 
 from core import assistant_turn
@@ -44,7 +45,7 @@ def test_what_he_spent_on_a_category_is_from_his_expenses():
     said = assistant_turn._spent_on_reply(context, "How much did I spend on groceries this month?")
     assert "182.50 on Groceries this month" in said
     assert assistant_turn._spent_on_reply(context, "how much have I spent on gas last month?") == \
-        "Nothing logged under Transportation last month."
+        "Nothing logged under Transportation last month (" + (date.today().replace(day=1) - timedelta(days=1)).strftime("%B") + ")."
     assert asked[-1][1] < asked[0][0]  # last month ends before this month starts
     assert assistant_turn._spent_on_reply(context, "how much did I spend on my vacation?") is None
 
@@ -92,10 +93,13 @@ def test_the_day_said_first_is_the_day_and_three_is_the_afternoon():
 
 
 def test_spending_it_cant_read_is_the_models():
+    """Two things at once are the model's; any period core/money_periods reads is answered (2026-11-26: "last week",
+    "in October" and "yesterday" had been the model's)."""
     context = SimpleNamespace(budget=SimpleNamespace(total_expenses_by_category=lambda s, e: {"Animals & Feed": 30.0}))
+    assert assistant_turn._spent_on_reply(context, "how much did I spend on gas and groceries?") is None
     for words in ("how much did I spend on gas last week?", "how much did I spend on gas in October?",
-                  "how much did I spend on groceries yesterday?", "how much did I spend on gas and groceries?"):
-        assert assistant_turn._spent_on_reply(context, words) is None, words
+                  "how much did I spend on groceries yesterday?"):
+        assert assistant_turn._spent_on_reply(context, words).startswith("Nothing logged under"), words
     for words in ("how much did I spend on chicken food?", "how much did I spend on food for the dogs?"):
         assert "Animals & Feed" in assistant_turn._spent_on_reply(context, words), words
     assert "so far" in assistant_turn._spent_on_reply(context, "how much have we spent on feed so far?")

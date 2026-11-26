@@ -477,12 +477,14 @@ def _daily_reminder_reply(context, prompt: str):
 _REMIND_MONTHLY = re.compile(
     r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can you\s+|could you\s+|would you\s+)?(?:"
     r"remind me (?:to|about)\s+(?P<what>.+?)\s+(?:every month|each month|monthly|once a month)|"
+    r"remind me (?:every|each) month,?\s+to\s+(?P<what3>.+?)|"
     r"(?:every|each) month,?\s+remind me to\s+(?P<what2>.+?))"
     r"(?:\s+on the (?P<day>\d{1,2})(?:st|nd|rd|th)?)?\s*[.!]?\s*$", re.I)
 
 
 def _monthly_reminder_reply(context, prompt: str):
-    """"Remind me to change the furnace filter every month", in code (the live sweep, 2026-11-25: the model called
+    """"Remind me to change the furnace filter every month" (or "remind me every month to ..."), in code (the live
+    sweep, 2026-11-25: the model called
     add_maintenance_task for a furnace he hasn't listed, and it was refused): a monthly event on his calendar, from
     today, or from the next day of the month he names ("on the 1st"), through add_calendar_event (undoable). None
     otherwise, and None for a bill (his bill tools remind him of those)."""
@@ -491,7 +493,7 @@ def _monthly_reminder_reply(context, prompt: str):
     found = _REMIND_MONTHLY.match(prompt.replace("’", "'"))
     if not found:
         return None
-    what = (found.group("what") or found.group("what2") or "").strip().rstrip(",")
+    what = (found.group("what") or found.group("what2") or found.group("what3") or "").strip().rstrip(",")
     if not what or "?" in what or re.search(r"\b(?:pay|bills?|rent|mortgage|loan)\b", what, re.I) \
             or re.search(r"\b(?:every|each)\b", what, re.I):
         return None
@@ -948,8 +950,9 @@ def _led_reply(context, prompt: str):
 
 
 _SPENT_ON_ASK = re.compile(r"^\s*how much (?:money )?(?:did|have) (?:i|we) (?:spend|spent|spended) on (?P<what>[\w&' -]+?)"
-                           r"(?:\s+(?P<when>this month|last month|this week|this year|so far this month|so far))?"
-                           r"\s*\??\s*$", re.I)
+                           r"(?:\s+(?P<when>(?:so far )?(?:this|last) (?:week|month|year)|today|yesterday|so far|"
+                           r"(?:in|for|during) (?:january|february|march|april|may|june|july|august|september|october|"
+                           r"november|december)(?:,? \d{4})?))?\s*\??\s*$", re.I)
 
 
 _PLANT_WHEN = re.compile(r"^\s*when\s+(?:should|do|can|would)\s+(?:i|we)\s+(?:start|plant|sow|transplant|put out|set out)"
@@ -1956,7 +1959,8 @@ _OVER_BUDGET = re.compile(r"^\s*(?:am i|are we|is anything|anything)\s+(?:over|u
 def _spent_on_reply(context, prompt: str):
     """"How much did I spend on groceries this month?", in code from his own expenses (the live sweep, 2026-11-25:
     the money plan's model had said "the fact sheet only mentions..."): the category his words name (`_SPENT_ON`'s
-    words, or a category's own name), this month unless he said last month, this week or this year. None when the
+    words, or a category's own name), this month unless he named another period (core/money_periods.period: last
+    week, yesterday, last month, in October...). None when the
     words name no category, or there's no budget.
     "Am I over budget anywhere?" is his budgets, each spent against its target (budget_left, `_OVER_BUDGET`).
     A period it can't read ("last week") or two things are the model's; "so far" is all of it."""
@@ -1985,17 +1989,12 @@ def _spent_on_reply(context, prompt: str):
         return None
     today = _date.today()
     when = (found.group("when") or "this month").lower()
-    if when == "last month":
-        end = today.replace(day=1) - timedelta(days=1)
-        start, said = end.replace(day=1), "last month"
-    elif when == "this week":
-        start, end, said = today - timedelta(days=today.weekday()), today, "this week"
-    elif when == "this year":
-        start, end, said = today.replace(month=1, day=1), today, "this year"
-    elif when == "so far":
+    if when == "so far":
         start, end, said = None, today, "so far"
-    else:
-        start, end, said = today.replace(day=1), today, "this month"
+    else:  # any period core/money_periods reads ("last week", "yesterday", "in October")
+        from core.money_periods import period
+
+        start, end, said = period(when, today) or (today.replace(day=1), today, "this month")
     try:
         spent = book.total_expenses_by_category(start.isoformat() if start else None, end.isoformat()).get(category, 0.0)
     except Exception:

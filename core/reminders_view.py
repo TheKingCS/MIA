@@ -339,7 +339,7 @@ HISTORY_ASKS = (
      ("workout_logged", "training_done"), "worked out"),
     (r"(?:collect(?:ed)?|g[eo]t|gather(?:ed)?) (?:the |any )?eggs", ("eggs_collected",), "collected eggs"),
     (r"(?:catch|caught) (?:a |any )?fish|(?:go|went) fishing", ("fish_caught",), "caught a fish"),
-    (r"pa(?:y|id) (?:a |any |the |my )?bills?$", ("bill_paid",), "paid a bill"),
+    (r"pa(?:y|id) (?:a |any )?bills?$", ("bill_paid",), "paid a bill"),
     (r"harvest(?:ed)?", ("harvest",), "harvested"),
     (r"plant(?:ed)? (?:anything|something|seeds)", ("batch_planted",), "planted"),
     (r"cook(?:ed)?|ma(?:k|d)e dinner", ("meal_logged",), "cooked"),
@@ -350,13 +350,14 @@ HISTORY_ASKS = (
 def last_in_history(context, words: str, today: Optional[date] = None) -> Optional[str]:
     """For "when did I last work out?" / "... collect eggs" / "... catch a fish" / "... pay a bill" (the model had
     guessed): the latest of that kind in his history (core/life_events, never one taken back), on the day it happened
-    (a backdated log's own date) and what it was; "pay the electric bill" from that bill's own record; that none is
+    (a backdated log's own date) and what it was; "pay the electric bill", "pay rent" or "pay the truck" from that bill's or loan's own
+    record; that none is
     logged when there's none; None when his words aren't one of HISTORY_ASKS."""
     from core import life_events
 
     today = today or date.today()
     said = " ".join((words or "").lower().split())
-    bill = re.fullmatch(r"pa(?:y|id) (?:the |my )?(?P<name>[\w' -]+?) bill", said)
+    bill = re.fullmatch(r"pa(?:y|id) (?:the |my |on (?:the |my )?)?(?P<name>[\w' -]+?)(?: bill| payment)?", said)
     if bill:  # "when did I last pay the electric bill?": the bill's own record
         budget = getattr(context, "budget", None)
         want = _stems(bill.group("name"))
@@ -367,7 +368,17 @@ def last_in_history(context, words: str, today: Optional[date] = None) -> Option
                 return f"{hits[0].name} isn't marked paid yet."
             when = date.fromisoformat(str(paid)[:10])
             return f"You last paid {hits[0].name} on {when:%A, %B} {when.day}."
-        return None
+        debts = [d for d in (budget.all_debts() if budget is not None and hasattr(budget, "all_debts") else [])
+                 if want and want <= _stems(d.name) | _stems(getattr(d, "debt_type", ""))]
+        if len(debts) == 1:  # "when did I last pay the truck?": the loan's own record
+            paid = debts[0].last_payment_date
+            if not paid:
+                return f"No payment on {debts[0].name} is logged yet."
+            when = date.fromisoformat(str(paid)[:10])
+            return f"You last paid on {debts[0].name} on {when:%A, %B} {when.day}."
+        if want and re.search(r"\b(?:bill|payment)$", said):
+            return None  # a bill or payment he named that isn't one of his: the model's
+        # otherwise ("pay a bill", "pay any bills", a name that's none of his): the history's kinds below
     for pattern, types, did in HISTORY_ASKS:
         if not re.fullmatch(rf"(?:{pattern})(?: today| yesterday)?", said):
             continue
