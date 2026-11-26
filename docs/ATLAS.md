@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1888 files, 398,657 lines; 1888 files describe themselves; 21,637 of 21,781 classes and functions are documented.
+1890 files, 398,758 lines; 1890 files describe themselves; 21,641 of 21,785 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-737 files, 208,893 lines; 10,353 of 10,432 classes and functions documented
+738 files, 208,957 lines; 10,354 of 10,433 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -420,6 +420,7 @@
 - `core/money_pulse.py`: A money pulse (brainstorm round 16, 2026-11-25): once a week, his money in a line or two, never a report: the one spending category drifting furthest over its usual pace this month (core/spending_pace), what's due in the next seven days from his bills and debts, and the tightest week of the next fou
 - `core/more_actions.py`: Every change the Journal, Workshop, Expeditions, Music and Files screens make (Zac, 2026-10-16: "they are empty right now and just bring up a chat with MIA"), as action kinds on the contract in core/actions.py, most from the shared table in core/record_actions.py.
 - `core/morning_briefing.py`: The morning briefing he asks for (brainstorm round 14; the live sweep, 2026-11-25: "every morning tell me the weather and my day" got a one-off answer and nothing kept): once a morning, from the hour he sets, the day's weather and his day, worked out in code from his records like the evening wrap (c
+- `core/motivation.py`: "I need motivation" (the full sweep, 2026-11-26: the model made up "you're running low on cash" and asked a question): his own reasons said back (core/why_graph's chains, the ones he gave: "working this job to pay off debt, to control my own time"), and one small thing he can do now from today's lis
 - `core/music_manager.py`: Local audio library + playlists + real playback for the Music module (modules/music/module.py) — 2026-09-09. Replaces the pure-placeholder Music stub, closing the last remaining "pure stub module" in this project.
 - `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute
 - `core/navigation_web.py`: Navigation's web screen (web/navigation.html): the waypoints with their grid references (core/geo_grid.py, MGRS), the distance and bearing from one to another, and the sun and moon at one of them on a day. The same reading as the desktop's Navigation module (modules/navigation), assembled here so th
@@ -1036,7 +1037,7 @@
 
 ## tests/: the test suite: what each part must do
 
-741 files, 107,602 lines; 8,910 of 8,975 classes and functions documented
+742 files, 107,639 lines; 8,913 of 8,978 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1412,6 +1413,7 @@
 - `tests/test_money_periods.py`: Money over a period in code (core/money_periods.py, the live sweep 2026-11-26): spending in a period with its top categories, the biggest category, the shop's month; and plan answers never say "the fact sheet". *(1 undocumented)*
 - `tests/test_money_pulse.py`: The money pulse (core/money_pulse.py, 2026-11-25): the category drifting furthest over its usual pace, what's due in the next seven days and the tightest week ahead, from his own budget; said on Sundays once a week through the gate, and on "how's my money this week?". *(5 undocumented)*
 - `tests/test_morning_briefing.py`: The morning briefing he asks for (core/morning_briefing.py; brainstorm round 14): off until he asks, his words set its hour (7 unless he says a morning hour), turn it off, or are asked again for an evening hour; the words are today's weather and his day from his records; the daily check offers it fr
+- `tests/test_motivation.py`: "I need motivation" (core/motivation.py, the full sweep 2026-11-26): his own reasons said back and one small thing from today, never a guess about how he feels.
 - `tests/test_move_rehearsal.py`: FW-07b: the move to MIA OS rehearsed on synthetic data (os/poc/vm/move_rehearsal.py), here as in the VM: a real backup of stores laid out as on Windows, restored by MIA's own code into a fresh folder, matches store for store; a record changed afterwards is named.
 - `tests/test_music_manager.py`: Unit tests for core.music_manager. The CRUD/scan_library() section is entirely Qt-free (matches this project's established convention — see tests/test_avatar_manager.py monkeypatching QMediaDevices rather than constructing a real QApplication). The playback section monkeypatches MusicManager._ensure
 - `tests/test_music_module.py`: Unit tests for modules.music.module's pure formatting functions — no Qt event loop needed, same shape as tests/test_power_module.py.

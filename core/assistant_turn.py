@@ -1416,6 +1416,9 @@ _LAST_DONE = re.compile(r"^\s*(?:hey mia,? )?when (?:did|was) (?:i|we) last (?P<
 _IN_A_WHILE = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:can you |could you )?remind me in (?P<spec>[\w .-]{1,40}?"
                          r"(?:minutes?|mins?|hours?|hrs?|half an hour|a half hour|half hour|and a half)) to (?P<what>.+?)"
                          r"\s*[.!?]*\s*$", re.I)
+_MOTIVATION = re.compile(r"^\s*(?:hey mia,? )?(?:i (?:really )?need (?:some )?motivation|motivate me|give me (?:some )?"
+                         r"motivation|i'?m (?:feeling )?(?:so |really )?unmotivated|i can'?t get motivated|i have no "
+                         r"motivation)(?: today| right now)?\s*[.!?]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1460,7 +1463,8 @@ def _own_tool_reply(context, prompt: str):
     record (or his history: "when did I last work out?"), "remind me in 2 hours to ..." (or "an hour and a half") with the clock worked out, spending tracked automatically, a morning routine,
     "when I get paid remind me", rent reminded as a bill only when said monthly), a report on a schedule kept only
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
-    out for it (core/build_calcs's structures, only one named on its own and with no size said), "what's a good side hustle for me?" from what he already sells,
+    out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation" his own reasons and one small step (core/motivation), "what's a good side
+    hustle for me?" from what he already sells,
     keeps and owns (core/side_hustle), "what do I need for the chili?" a saved recipe's missing
     ingredients (core/assistant_domain_actions.needs_for; anything not a recipe of his is the model's), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
@@ -1662,6 +1666,14 @@ def _own_tool_reply(context, prompt: str):
             found = None
         if found:
             return found
+    if _MOTIVATION.match(said):  # "I need motivation": his own reasons and one small step (core/motivation)
+        from core import motivation
+
+        try:
+            return motivation.say(context)
+        except Exception:
+            log.exception("Couldn't give motivation")
+            return None
     if _DUE_MONTH.match(said):  # "what's due this month?": the month to its end, overdue first (get_week's sources)
         from core.assistant_today_actions import due_through
 
