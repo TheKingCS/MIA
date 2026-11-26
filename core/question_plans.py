@@ -404,15 +404,21 @@ def _product_cost(context, sheet, prompt, today):
     """Plan gatherer (what one thing costs to make): the product, its build costs and materials, and that labour and
     overhead aren't recorded (an estimate line). The workshop's materials only for a product of his: "how do I price
     my firewood?" is never answered with the plywood on hand (the live sweep, 2026-11-25); for one he hasn't
-    recorded, the way to price it (the business course's pricing lesson) is on the sheet instead."""
+    recorded, the way to price it (the business course's pricing lesson) is on the sheet instead.
+    His product is found by its name's words, plurals in "es" too ("benches" is the Bench)."""
     subject = _subject(prompt)
     _look(context, sheet, "list_products", "Workshop", query=subject)
     _look(context, sheet, "get_build_costs", "Workshop", build=subject)
     book = getattr(context, "products", None)
 
     def stems(text):
-        """Its words of three letters or more, a plural as its one."""
-        return {w[:-1] if w.endswith("s") and len(w) > 3 else w for w in re.findall(r"[a-z]{3,}", str(text).lower())}
+        """Its words of three letters or more, a plural as its one ("benches" is bench, "boxes" box), "the" left out."""
+        out = set()
+        for w in re.findall(r"[a-z]{3,}", str(text).lower()):
+            if w == "the":
+                continue
+            out.add(w[:-2] if re.search(r"(?:ch|sh|x|ss)es$", w) else w[:-1] if w.endswith("s") and len(w) > 3 else w)
+        return out
 
     said = stems(prompt)  # the whole question: a product of his is one whose name's words are all in it
     his = [pr for pr in (book.all_products() if book is not None and hasattr(book, "all_products") else [])

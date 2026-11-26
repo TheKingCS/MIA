@@ -84,7 +84,8 @@ def parse_quantity_phrase(text: str) -> tuple[float, str, str]:
 
 def _as_list(value) -> list[str]:
     """Tool arguments may arrive as a list or a comma/"and"-separated string.
-    A list written as JSON ('["milk", "eggs"]') is its items."""
+    A list written as JSON ('["milk", "eggs"]') is its items.
+    Single quotes, nulls and nested values are left out."""
     if value is None:
         return []
     if isinstance(value, str) and value.strip().startswith("["):
@@ -96,11 +97,13 @@ def _as_list(value) -> list[str]:
                 value = parsed
         except ValueError:
             value = value.strip("[]")
+    if isinstance(value, str) and value.strip().startswith("[") and "'" in value:
+        value = value.strip("[]")  # a list in single quotes ("['milk', 'eggs']"): its items, the quotes off below
     if isinstance(value, (list, tuple)):
-        items = [str(v) for v in value]
+        items = [str(v) for v in value if v is not None and not isinstance(v, (dict, list))]
     else:
         items = re.split(r",|\band\b", str(value))
-    return [i.strip() for i in items if i and i.strip()]
+    return [i.strip().strip("'\"").strip() for i in items if i and i.strip().strip("'\"").strip()]
 
 
 def _num(value, default: Optional[float] = None) -> Optional[float]:
@@ -435,14 +438,19 @@ def _action_log_meal(context: AppContext, arguments: dict) -> str:
 
 def _action_add_grocery_item(context: AppContext, arguments: dict) -> str:
     """Assistant tool `add_grocery_item`: adds items to the grocery list from phrases ("2 lb ground beef"), skipping ones already on it. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
-    Given his words, it asks before adding when they don't ask for the list ("I want to start selling eggs")."""
+    Given his words, it asks before adding when they don't ask for the list ("I want to start selling eggs").
+    Only a sentence clearly about something else (selling, a price, a recipe) asks first; "milk too" and "yes" are
+    the list's."""
     items = _as_list(arguments.get("items")) or _as_list(arguments.get("name"))
     if not items:
         return "What should I add to the grocery list?"
     said = str(arguments.get("question") or "")
-    if said and not re.search(r"\b(?:add|put|buy|get|need|grab|pick up|grocer\w*|shopping|list|out of|low on|ran out|"
-                              r"running out|almost out)\b", said, re.I):
-        return f"Should I add {', '.join(items)} to the grocery list?"  # "I want to start selling eggs" isn't a list
+    # only a sentence that's clearly about something else asks first: "I want to start selling eggs" (the live sweep);
+    # "milk", "milk too", "don't forget the milk" and "yes" are the list's (the Fable review)
+    if said and re.search(r"\b(?:sell|selling|sold|price|prices|recipe|list (?:my|them|it) for sale|get rid of|raise|"
+                          r"hatch\w*|laid|laying|collected)\b", said, re.I) \
+            and not re.search(r"\b(?:grocery|shopping) list\b|\bon the list\b", said, re.I):
+        return f"Should I add {', '.join(items)} to the grocery list?"
     open_names = {g.name.lower() for g in context.kitchen.all_grocery_items() if not g.checked}
     added, skipped = [], []
     for line in items:
@@ -849,6 +857,7 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     Where the live model picked a neighbouring tool (2026-11-24), a description names the one to use instead
     (list_inventory and list_materials, list_trips and get_trip_route...).
     add_grocery_item is given his words.
+    add_grocery_item's schema carries his words ("question"), filled in by core/tool_loop.his_words.
     """
     registry.register(AssistantAction(
         name="update_maintenance_asset", domain="maintenance",
@@ -1061,7 +1070,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     registry.register(AssistantAction(
         name="add_grocery_item", domain="groceries",
         description="Add one or more items to the grocery/shopping list.",
-        parameters=_obj({"items": _list("Items, e.g. ['eggs', '2 gallons milk'].")}, ["items"]),
+        parameters=_obj({"items": _list("Items, e.g. ['eggs', '2 gallons milk']."),
+                         "question": _s("his words")}, ["items"]),
         handler=_action_add_grocery_item, prompt_arg="question",
         trigger_phrases=("grocery list", "shopping list", "need to buy", "pick up some"),
     ))

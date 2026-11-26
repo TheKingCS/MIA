@@ -29,13 +29,14 @@ STEPS = ("Keep the fridge and freezer shut: a closed fridge keeps food cold abou
          "power company.")
 # asked ahead, never happening now ("the power went out" is the outage clock's, core/outage.py)
 _ASKED = re.compile(r"\b(?:what (?:do|should|would|can) (?:i|we) do|how (?:do|should|can) (?:i|we) (?:prepare|get ready|be "
-                    r"ready)|what (?:do|should) (?:i|we) (?:need|have))\b.{0,30}\b(?:if|when|for)\b.{0,25}\b(?:power|"
-                    r"electricity|grid)\b|\bif (?:the )?(?:power|electricity|grid) (?:goes|go|were to go|went) (?:out|"
+                    r"ready)|what (?:do|should) (?:i|we) (?:need|have))\b.{0,30}\b(?:if|when)\b.{0,10}\b(?:the )?(?:power|"
+                    r"electricity|grid) (?:goes|go|went|were to go) (?:out|down)\b|\bif (?:the )?(?:power|electricity|grid) (?:goes|go|were to go|went) (?:out|"
                     r"down)\b|\bif (?:we|i) (?:lose|lost) (?:the )?(?:power|electricity)\b|\b(?:prepare|get ready|be "
                     r"ready) for (?:a |the )?(?:long )?(?:power outage|blackout|outage)\b|\bpower outage (?:for|that lasts|"
                     r"of) (?:a |several |a few )?(?:days?|weeks?|week)\b", re.I)
 _NOT = re.compile(r"\b(?:bill|bills|rate|rates|company'?s? number|solar panels?|power tools?|power steering|power "
-                  r"washer|power supply|power bank|powerpoint|game|show|movie|drill)\b", re.I)
+                  r"washer|power supply|power bank|powerpoint|game|show|movie|drill|right now|comes back|came back|still "
+                  r"out|legs?|arms?|scream|sump pump|truck|cabin|inverter|again tonight)\b", re.I)
 
 
 def reply(context, words: str) -> Optional[str]:

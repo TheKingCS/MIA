@@ -1090,16 +1090,24 @@ def _fish_when_reply(context, prompt: str):
 _TIME_NOW = re.compile(r"^\s*(?:hey\s+mia[,:]?\s+)?(?:what(?:'s| is)? (?:the )?time(?: is it)?(?: (?:now|right now))?|what time "
                        r"is it(?: (?:now|right now))?|(?:do you know )?what time it is|what(?:'s| is) (?:the |today'?s )?"
                        r"date(?: today)?|what day is (?:it|today)|what(?:'s| is) today)\s*\??\s*$", re.I)
-_DAYS_UNTIL = re.compile(r"^\s*how (?:many|much) (?:days|weeks|time)(?: is it| are there| left| do i have)? (?:until|till|til|to|"
-                         r"before)\s+(?P<what>.+?)\s*\??\s*$", re.I)
-_AREA = re.compile(r"\b(?:square (?:footage|feet|foot)|sq\.? ?ft|area)\b.{0,25}?\b(?P<a>\d+(?:\.\d+)?)\s*(?:'|ft|feet|foot)?\s*"
-                   r"(?:by|x)\s*(?P<b>\d+(?:\.\d+)?)\b|\b(?P<a2>\d+(?:\.\d+)?)\s*(?:by|x)\s*(?P<b2>\d+(?:\.\d+)?)\b.{0,25}\b"
-                   r"(?:in square feet|square (?:footage|feet)|sq\.? ?ft)\b", re.I)
+_DAYS_UNTIL = re.compile(r"^\s*how (?:many|much) (?P<unit>days|weeks|time)(?: is it| are there| left| do i have)? (?:until|"
+                         r"till|til|to)\s+(?P<what>.+?)\s*\??\s*$", re.I)
+_NUM = r"\d[\d,]*(?:\.\d+)?"
+_AREA = re.compile(r"\b(?:square (?:footage|feet|foot)|sq\.? ?ft)\b.{0,25}?(?<![\d,.])(?P<a>" + _NUM + r")\s*(?:'|ft|feet|foot)?\s*"
+                   r"(?:by|x)\s*(?P<b>" + _NUM + r")\b|(?<![\d,.])(?P<a2>" + _NUM + r")\s*(?:by|x)\s*(?P<b2>" + _NUM +
+                   r")\b.{0,25}\b(?:in square feet|square (?:footage|feet)|sq\.? ?ft)\b", re.I)
+# a measure that isn't feet, a quote, lumber or a rug's size is the model's (the Fable review)
+_NOT_AREA = re.compile(r"\b(?:meters?|metres?|inch(?:es)?|cm|mm|tiles?|rugs?|area code|quote|dollars?|\$|lumber|boards?|"
+                       r"2 by 4|2x4|long)\b|\b\d+\s*(?:ft|feet|')\s*\d", re.I)
 _LOG_ACTIVITY = re.compile(r"^\s*(?:please\s+)?log (?:a |an |my )?(?P<n>\d+(?:\.\d+)?)[- ]?(?P<unit>minutes?|mins?|hours?|"
                            r"hrs?) (?P<what>walk|run|jog|hike|bike ride|ride|swim|workout|yoga|stretch(?:ing)?|"
-                           r"lift(?:ing)?|row(?:ing)?)\s*[.!]?\s*$", re.I)
-_EGG_PRICE = re.compile(r"\b(?:charge|price|sell|ask)\b.{0,30}\b(?:dozen|eggs?)\b|\b(?:dozen|eggs?)\b.{0,20}\b(?:sell|price|"
-                        r"charge)\b", re.I)
+                           r"lift(?:ing)?|row(?:ing)?)(?:\s+(?P<day>yesterday|today|this morning|last night))?\s*[.!]?\s*$",
+                           re.I)
+# what he should charge for his own eggs, never a store's price, a recipe or another thing by the dozen
+_EGG_PRICE = re.compile(r"\b(?:how much|what) (?:should|could|do|can) (?:i|we) (?:charge|ask|sell|get)\b.{0,25}\b(?:eggs?|"
+                        r"a dozen|per dozen)\b|\bprice (?:my|our) eggs\b|\bcharge (?:per|a|for a) dozen\b", re.I)
+_NOT_EGG_PRICE = re.compile(r"\b(?:walmart|store|costco|aldi|kroger|grocery|benedict|cupcakes?|donuts?|doughnuts?|cookies?|"
+                            r"rolls|bagels?|last (?:week|month)|did i|legal|chickens)\b", re.I)
 
 
 def _everyday_reply(context, prompt: str):
@@ -1107,44 +1115,62 @@ def _everyday_reply(context, prompt: str):
     time it is"), days until a holiday ("how many days until Christmas?" had said the library's instruction aloud),
     a floor's square footage ("12 by 16": the model had listed a shed's materials), "log a 30 minute walk" through
     log_workout (the model had only said "I'll log it"), and an egg price from his own feed cost per dozen
-    (core/flock.figures). None otherwise."""
+    (core/flock.figures). None otherwise.
+    Only what's its own (the Fable review): today's date for "what's today", a holiday itself in days or weeks, feet
+    only (never meters, a rug or a quote), a walk of up to a day (yesterday's too), and what he should charge for
+    his own eggs, never a store's price."""
     from datetime import datetime as _dt
 
     said = prompt.replace("’", "'")
     if _TIME_NOW.match(said):
         now = _dt.now()
-        if re.search(r"\b(?:date|day)\b", said, re.I):
+        if re.search(r"\b(?:date|day|today)\b", said, re.I):
             return f"It's {now:%A}, {now:%B} {now.day}, {now.year}."
         return f"It's {now.strftime('%I:%M %p').lstrip('0')}, {now:%A}."
     found = _DAYS_UNTIL.match(said)
     if found:
         from core import holidays
 
-        name = holidays.named(found.group("what"))
+        what = found.group("what")
+        name = holidays.named(what)
         if name is None:
             return None
+        left = re.sub(rf"\b(?:{holidays.HOLIDAYS[name][0]})\b", " ", what.lower().replace("’", "'"))
+        if re.sub(r"\b(?:the|this year|day)\b|[?.!,]", " ", left).strip():
+            return None  # "the day after thanksgiving", "christmas break ends": not the holiday itself
         today = _dt.now().date()
         when = holidays.day_of(name, today.year)
         when = when if when >= today else holidays.day_of(name, today.year + 1)
         days = (when - today).days
         label = name.split(" (")[0]
-        return (f"{days} days until {label} ({when:%A}, {when:%B} {when.day})." if days else f"{label} is today.")
+        if not days:
+            return f"{label} is today."
+        if found.group("unit").lower() == "weeks":
+            return f"About {days / 7:.1f} weeks ({days} days) until {label} ({when:%A}, {when:%B} {when.day})."
+        return f"{days} day{'' if days == 1 else 's'} until {label} ({when:%A}, {when:%B} {when.day})."
     found = _AREA.search(said)
-    if found and not re.search(r"\b(?:materials?|lumber|how many|cost|price|build)\b", said, re.I):
-        a, b = float(found.group("a") or found.group("a2")), float(found.group("b") or found.group("b2"))
+    if found and not re.search(r"\b(?:materials?|how many|cost|price|build)\b", said, re.I) and not _NOT_AREA.search(said):
+        a = float((found.group("a") or found.group("a2")).replace(",", ""))
+        b = float((found.group("b") or found.group("b2")).replace(",", ""))
         return f"{a:g} by {b:g} feet is {a * b:,.0f} square feet." if (a * b).is_integer() else \
             f"{a:g} by {b:g} feet is {a * b:,.2f} square feet."
     found = _LOG_ACTIVITY.match(said)
     if found:
         minutes = float(found.group("n")) * (60 if found.group("unit").lower().startswith("h") else 1)
+        if not 0 < minutes <= 24 * 60:
+            return None  # "a 0 minute walk", "90 hours": the model's to ask
         what = found.group("what").lower()
+        args = {"exercises": [f"{minutes:g} minute {what}"], "duration_minutes": minutes}
+        if (found.group("day") or "").lower() in ("yesterday", "last night"):
+            from core.budget_manager import read_date
+
+            args["date"] = read_date("yesterday")
         try:
-            return context.assistant_actions.execute(context, "log_workout", {
-                "exercises": [f"{minutes:g} minute {what}"], "duration_minutes": minutes, "notes": what})
+            return context.assistant_actions.execute(context, "log_workout", args)
         except Exception:
             log.exception("Couldn't log the activity")
             return None
-    if _EGG_PRICE.search(said) and re.search(r"\b(?:eggs?|dozen)\b", said, re.I) and "?" in said:
+    if _EGG_PRICE.search(said) and not _NOT_EGG_PRICE.search(said):
         return _egg_price(context)
     return None
 
