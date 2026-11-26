@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1919 files, 401,598 lines; 1919 files describe themselves; 21,743 of 21,889 classes and functions are documented.
+1920 files, 401,644 lines; 1920 files describe themselves; 21,745 of 21,891 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,623 lines; 10,385 of 10,464 classes and functions documented
+741 files, 210,635 lines; 10,385 of 10,464 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-768 files, 108,813 lines; 8,984 of 9,051 classes and functions documented
+769 files, 108,847 lines; 8,986 of 9,053 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1714,6 +1714,7 @@
 - `tests/test_update_and_daylight.py`: Zac's two answers of 2026-11-23, held in code:
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g
 - `tests/test_upkeep_missions.py`: Upkeep as scheduled missions (DEC-0153, core/upkeep_missions.py): this week's upkeep becomes one mission per task and due date, attached to the task and its asset; it isn't made twice or remade once set aside; Done on the upkeep completes the mission, and completing the mission marks the upkeep done
+- `tests/test_upkeep_partial.py`: "The mower needs new blades" is a task on his Riding Mower (core/assistant_turn._upkeep_reply, the vehicle conversation check 2026-11-26: it went to the inventory and was refused), only when one asset has those words; and "what has the truck cost me?" is that machine's costs.
 - `tests/test_usage_loops.py`: Build plan step 3, the remaining usage loops (core/loops.py): numbers she didn't look up, memories corrected soon after she kept them, the gate's daily limit and the kinds it put on a break, published screens a later change broke, and data files found corrupt. Each record keeps kinds and counts, nev
 - `tests/test_usage_tracker.py`: Unit tests for core.usage_tracker. Isolates _DATA_DIR/_USAGE_FILE into a tmp_path scratch area (same monkeypatch pattern as test_activity_log_manager.py's isolated_paths).
 - `tests/test_user_memory_manager.py`: Unit tests for core.user_memory_manager. is_duplicate_memory() is tested directly (pure, deterministic). UserMemoryManager is tested against a tmp_path scratch area, same monkeypatch pattern as test_mission_manager.py's isolated_paths.

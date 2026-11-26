@@ -884,7 +884,8 @@ def _task_line(context, asset: str, task: str, same: bool = False):
 def _upkeep_reply(context, prompt: str):
     """His upkeep in code (the live sweep, 2026-11-25): "when is my truck due for an oil change?" is that task's line
     from his own maintenance (the model had asked for the truck's make and model, or added a task); "the truck needs
-    new brakes" adds the task for that asset (it had tried to mark one complete), only when the asset is one of his.
+    new brakes" adds the task for that asset (it had tried to mark one complete), only when the asset is one of his
+    ("the mower" is his Riding Mower when no other asset has those words).
     None otherwise.
     The line is that asset's own (`_task_line`); a need already listed is said, never added twice, and a remark, a
     repeat, a date or a non-task (`_NOT_A_TASK`) is the model's.
@@ -903,6 +904,13 @@ def _upkeep_reply(context, prompt: str):
                 if "no readings" in line.lower() else "")
         return f"{line}.{tail}"
     found = _NEEDS.match(said)
+    if found and found.group("asset").lower() not in assets:
+        # "the mower" is his Riding Mower when it's the only one with those words (the vehicle conversation check)
+        said_words = set(re.findall(r"[a-z]+", found.group("asset").lower()))
+        fits = [a for a in assets if said_words and said_words <= set(re.findall(r"[a-z]+", a))]
+        if len(fits) == 1:
+            said = said[:found.start("asset")] + fits[0] + said[found.end("asset"):]
+            found = _NEEDS.match(said)
     if found and found.group("asset").lower() in assets and not _NOT_A_TASK.search(found.group("what")) \
             and _UPKEEP_JOB.search(found.group("what")) \
             and not re.search(r"\b(?:i think|maybe|probably|no|me|you|him|her|name|bigger|smaller)\b", found.group("what"),
@@ -1772,7 +1780,7 @@ def _own_tool_reply(context, prompt: str):
     me?" and "stop the Sunday one" her standing reports (core/standing_reports), "what's overdue?" everything
     overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
-    (core/project_status.whole_cost), "how's the shed coming along?" that project's picture
+    (core/project_status.whole_cost), or a machine's costs ("the truck": get_tool_costs), "how's the shed coming along?" that project's picture
     (core/project_status, only for a project his words name whole), "what should I be doing on the homestead this
     month?" (or "in march") that month's items and the season's usual work (core/homestead_year.this_month), "what should be in my truck's
     emergency kit?" Ready.gov's car kit against his records (core/ready_kit.say_vehicle), "what's a good side
@@ -2142,6 +2150,10 @@ def _own_tool_reply(context, prompt: str):
             project = project_time.project_named(context, costing.group("p") or costing.group("q"), whole=True)
             if project is not None and project.name.lower() not in _assets(context):
                 return project_status.whole_cost(context, project)  # a machine of the same name stays get_tool_costs'
+            named = re.sub(r"^(?:the|my|our)\s+", "", (costing.group("p") or costing.group("q") or "").lower()).strip()
+            fits = [a for a in _assets(context) if named and set(named.split()) <= set(a.split())]
+            if project is None and len(fits) == 1:  # "what has the truck cost me?": the machine's own costs
+                return _run_own(context, "get_tool_costs", {"tool": fits[0]})
         except Exception:
             log.exception("Couldn't say what the project cost")
     coming = _PROJECT_COMING.match(said)
