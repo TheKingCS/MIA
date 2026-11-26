@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1866 files, 395,391 lines; 1866 files describe themselves; 21,478 of 21,612 classes and functions are documented.
+1868 files, 395,559 lines; 1868 files describe themselves; 21,490 of 21,625 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-730 files, 206,657 lines; 10,258 of 10,337 classes and functions documented
+731 files, 206,770 lines; 10,265 of 10,344 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -636,6 +636,7 @@
 - `core/training_session.py`: The live workout session (DEC-0055, docs/ACTIVE_TRAINING_PLAN.md): one per person, shared by every surface (the PC, the phone, the glasses, voice), moving set by set through today's training.
 - `core/trip_eve.py`: "Before you go" (brainstorm round 16, 2026-11-25): the afternoon before a planned trip (core/trip_manager.py, a trip starting tomorrow and still planned), one message through the gate: what on its packing list isn't packed yet, tomorrow's forecast here (core/weather.card: his town, not the trip's), 
 - `core/trip_manager.py`: Backs the Expeditions module (modules/expeditions/module.py) — docs/ROADMAP.md milestone 12.1, Expedition Mode. A Trip is one outing — a hike, paddle, ride, fishing trip, etc. (see `ACTIVITY_TYPES`) — always belonging to a core.expedition_manager.Expedition via the required `expedition_id`. It ties 
+- `core/trip_packing.py`: A trip's packing list from the last one (brainstorm round 17, 2026-11-25): when he adds a trip, the last trip of the same kind (core/trip_manager.py, by start date, else when it was made) that had a packing list is named with its list, and "copy the packing list" puts its items on the new trip, unpa
 - `core/trip_route.py`: A trip's route and checkpoints on every device (DEC-0125; docs/WEB_PARITY.md Expeditions "not yet: route, splits"). The desktop's trip dialog plans a route from saved waypoints and logs "arrived here" at each one (core/trip_manager.py: `waypoint_ids`, `record_split`, `leg_summaries`); the web and vo
 - `core/tts_worker.py`: Runs `VoiceManager.synthesize()` + `.play()` off the GUI thread — docs/ROADMAP.md milestone 5.3. Same reasoning as `core/chat_worker.py`: `play()`'s `sd.wait()` blocks for the full duration of the spoken reply, which scales with reply length and would freeze the GUI thread for that whole time otherw
 - `core/turn_trace.py`: One line per Assistant turn: how MIA got to what she said (DEC-0067, choice 4: native traces before Langfuse; phase 2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). The route that answered (a fixed reply, a plain-word command, a question plan, the model), what was asked and said, the tools offered and
@@ -1029,7 +1030,7 @@
 
 ## tests/: the test suite: what each part must do
 
-726 files, 106,603 lines; 8,846 of 8,901 classes and functions documented
+727 files, 106,658 lines; 8,851 of 8,907 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1653,6 +1654,7 @@
 - `tests/test_trip_eve.py`: "Before you go" (core/trip_eve.py, 2026-11-25): the afternoon before a planned trip, what isn't packed, tomorrow's weather here and the checks for that kind of trip (telling someone where you're going first), once per trip through the gate; "what do I need for my trip?" reaches it. *(2 undocumented)*
 - `tests/test_trip_manager.py`: Unit tests for core.trip_manager. Isolates _DATA_DIR/_TRIPS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_waypoint_manager.py's isolated_paths). planned_route_distance_km() is checked against the same known real-world distance test_waypoint_manager.py already uses (New York <->
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.
+- `tests/test_trip_packing.py`: A trip's packing list from the last one (core/trip_packing.py, brainstorm round 17): a new trip names the last trip of the same kind with a list, and "copy the packing list" puts its items on, unpacked, never twice. *(1 undocumented)*
 - `tests/test_trip_route.py`: A trip's route and checkpoints on the web and by voice (core/trip_route.py, core/assistant_trip_route_actions.py): stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, undo, the glasses' On The Trail panel, and a trip's log with its weather.
 - `tests/test_turn_harness.py`: Turns through the real engine with a scripted model (roadmap 2.8, 2026-11-10): the server built on the real headless context (build_core_context), the real model manager with a backend that replies from a script, and the real tools. Each test says what was asked, what the model "chose", and checks w
 - `tests/test_turn_trace.py`: Turn traces (DEC-0067, core/turn_trace.py): one line per turn, how it was answered and how long it took; never a private turn, never a password.

@@ -41,6 +41,8 @@
       "add_route_stop",
       "add_trip",
       "add_trip_log_entry",
+      "best_time_to_fish",
+      "copy_packing_list",
       "delete_expedition",
       "delete_trip",
       "get_trip_route",
@@ -48,11 +50,10 @@
       "list_expeditions",
       "list_trips",
       "log_arrival",
+      "log_catch",
       "recall_expedition",
       "toggle_gear_packed",
-      "log_catch",
-      "whats_biting",
-      "best_time_to_fish"
+      "whats_biting"
     ],
     "actions": [
       "expedition.add",
@@ -103,7 +104,8 @@
       "log_catch": "act_within_grant",
       "whats_biting": "observe",
       "catch.log": "act_within_grant",
-      "best_time_to_fish": "observe"
+      "best_time_to_fish": "observe",
+      "copy_packing_list": "act_within_grant"
     },
     "outside": []
   },
