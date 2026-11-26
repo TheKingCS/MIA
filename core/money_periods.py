@@ -190,7 +190,8 @@ def compare(context, category: str = "", today: Optional[date] = None) -> str:
 
 def best_sellers(context, words: str = "", today: Optional[date] = None) -> str:
     """His products by units sold in the period (this year when none is said), the money each brought in beside it,
-    from the ledger's sales tied to a product; the top three. Stock is never taken for sales."""
+    from the ledger's sales tied to a product with a count; the top three. Stock is never taken for sales, and a month
+    is said "in October"."""
     today = today or date.today()
     start, end, label = period(words, today) or (today.replace(month=1, day=1), today, "this year")
     ledger = getattr(context, "ledger", None)
@@ -198,12 +199,13 @@ def best_sellers(context, words: str = "", today: Optional[date] = None) -> str:
         return "The workshop ledger isn't on this MIA."
     s, e = start.isoformat(), end.isoformat()
     units, money_in = {}, {}
+    said_when = label if label.split()[0].lower() in ("this", "last", "today", "yesterday", "so") else f"in {label}"
     for entry in ledger.all_revenue():
-        if entry.product_id and s <= (entry.date or "")[:10] <= e:
+        if entry.product_id and (entry.quantity_sold or 0) > 0 and s <= (entry.date or "")[:10] <= e:
             units[entry.product_id] = units.get(entry.product_id, 0) + (entry.quantity_sold or 0)
             money_in[entry.product_id] = money_in.get(entry.product_id, 0) + (entry.amount or 0)
     if not units:
-        return (f"No sales tied to a product {label}, so I can't say what sells best. Tell me when you sell (\"I sold "
+        return (f"No sales tied to a product {said_when}, so I can't say what sells best. Tell me when you sell (\"I sold "
                 f"2 cutting boards for $80\") and I'll keep count.")
     products = getattr(context, "products", None)
 
@@ -214,7 +216,7 @@ def best_sellers(context, words: str = "", today: Optional[date] = None) -> str:
 
     ranked = sorted(units, key=lambda pid: (-units[pid], -money_in[pid]))
     said = [f"{name(pid)}: {units[pid]:g} sold, {_money(money_in[pid])}" for pid in ranked[:3]]
-    return f"Your best seller {label} is " + said[0] + (". Then " + "; ".join(said[1:]) if len(said) > 1 else "") + "."
+    return f"Your best seller {said_when} is " + said[0] + (". Then " + "; ".join(said[1:]) if len(said) > 1 else "") + "."
 
 
 def afford(context, amount: float, today: Optional[date] = None) -> str:

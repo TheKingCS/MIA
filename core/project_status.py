@@ -86,7 +86,7 @@ def _spent_line(context, project) -> str:
 def whole_cost(context, project) -> str:
     """"What has the shed cost me?": the money spent on it (its tagged expenses, against its budget), then his hours on
     it, and those hours at his shop's labor rate when he set one (said as what his time is worth, never added to
-    money spent)."""
+    money spent); without the budget on this MIA, said as that."""
     from core import project_time
     from core.region import money
 
@@ -95,6 +95,8 @@ def whole_cost(context, project) -> str:
         from core.homestead_costs import build_cost, describe_build
 
         parts.append(describe_build(build_cost(context, project)))
+    else:
+        parts.append(f"Money isn't kept on this MIA, so I can't say what {project.name} has cost.")
     hours = project_time.total(project)
     if hours:
         line = f"You've put {hours:g} hour{'s' if hours != 1 else ''} into it"

@@ -356,7 +356,7 @@ def week_days(context, today: Optional[date] = None, days: int = 7) -> list[dict
 def overdue_said(context, today: Optional[date] = None) -> str:
     """For "what's overdue?" (the live sweep, 2026-11-26: it went to the tax deadlines): everything overdue on his
     list (bills, upkeep, tasks, from `today_items`), the most overdue first as the list orders it, and an overdue
-    filing from Compliance when that's kept; else that nothing is, with what's due today."""
+    filing from Compliance when that's kept (said as days late, like the rest); else that nothing is, with what's due today."""
     items = today_items(context, today)
     late = [i for i in items if i.when == OVERDUE]
     parts = []
@@ -370,7 +370,9 @@ def overdue_said(context, today: Optional[date] = None) -> str:
         page = compliance_page(context, today) if today else compliance_page(context)
         filings = page.get("groups", {}).get("overdue", []) if page.get("available") else []
         if filings:
-            parts.append("Filings overdue: " + "; ".join(f"{c['title']} (due {c['due']})" for c in filings[:4]) + ".")
+            parts.append("Filings overdue: " + "; ".join(
+                f"{c['title']} ({_late(abs(int(c['days'])))})" if isinstance(c.get("days"), (int, float))
+                else f"{c['title']} (due {c['due']})" for c in filings[:4]) + ".")
     except Exception:  # noqa: BLE001
         log.exception("Couldn't read the overdue filings")
     if parts:

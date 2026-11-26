@@ -1555,7 +1555,8 @@ _MONTH_VS = re.compile(r"^\s*(?:hey mia,? )?(?=.*\b(?:spend|spent|spending)\b)(?
                        r"last month\s*[?.!]*\s*$", re.I)
 _BEST_SELLER = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| are) (?:my )?(?:best[- ]sell(?:ing|er)s?|top[- ]sell(?:ing|er)s?)"
                           r"(?: products?| items?)?|what (?:sells|sold) (?:the )?best|which (?:of my )?products? (?:sells?|sold) "
-                          r"(?:the )?(?:best|most))(?P<when> this (?:year|month|week)| last (?:year|month|week)| in \w+)?"
+                          r"(?:the )?(?:best|most))(?P<when> this (?:year|month|week)| last (?:year|month|week)| in (?:january|february|"
+                          r"march|april|may|june|july|august|september|october|november|december)(?: \d{4})?)?"
                           r"\s*[?.!]*\s*$", re.I)
 _HARDWARE_NEEDS = re.compile(r"^\s*(?:hey mia,? )?(?:what do (?:i|we) (?:need|have to get|need to (?:get|buy|pick up)) (?:from|at) "
                              r"(?:the )?(?:hardware store|lumber ?yard|lowe'?s|home depot|menards|tractor supply|farm store)|"
@@ -1959,8 +1960,8 @@ def _own_tool_reply(context, prompt: str):
 
         try:
             project = project_time.project_named(context, costing.group("p") or costing.group("q"), whole=True)
-            if project is not None:  # a tool or a machine ("the mower") stays get_tool_costs'
-                return project_status.whole_cost(context, project)
+            if project is not None and project.name.lower() not in _assets(context):
+                return project_status.whole_cost(context, project)  # a machine of the same name stays get_tool_costs'
         except Exception:
             log.exception("Couldn't say what the project cost")
     coming = _PROJECT_COMING.match(said)
