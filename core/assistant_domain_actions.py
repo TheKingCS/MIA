@@ -516,12 +516,18 @@ def _find_pantry(context: AppContext, name: str):
 
 
 def _action_add_pantry_item(context: AppContext, arguments: dict) -> str:
-    """Assistant tool `add_pantry_item`: adds a pantry item, or sets the quantity of one already there. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
+    """Assistant tool `add_pantry_item`: adds a pantry item, or sets the quantity of one already there. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    Out of something, by his words ("we're out of milk"), is the grocery list's (add_grocery_item)."""
     from core.kitchen_manager import PANTRY_CATEGORIES
 
     raw_name = str(arguments.get("name", "") or "").strip()
     if not raw_name:
         return "What should I add to the pantry?"
+    said = str(arguments.get("question") or "")
+    if re.search(r"\b(?:out of|ran out|run out|running out|almost out|low on|need(?:s)? (?:more|some)?|used (?:up|the "
+                 r"last)|finished the)\b", said, re.I):
+        # "we're out of milk" is the grocery list's, never milk added to the pantry (the live sweep, 2026-11-25)
+        return _action_add_grocery_item(context, {"items": raw_name, "question": said})
     parsed_qty, parsed_unit, parsed_name = parse_quantity_phrase(raw_name)
     name = parsed_name or raw_name
     quantity = _num(arguments.get("quantity"), parsed_qty or 0.0)
@@ -844,7 +850,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     # -- maintenance (assets incl. greenhouse/garden plants) --------------
     """Registers every tool above with the Assistant's registry, with its description, parameters and trigger
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
-    pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
+    pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase.
+    add_grocery_item and add_pantry_item are given his words (their guards read them). Among
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), budget_left ("am I over budget"; this month's budgets, spent and
     left, from core/finance_summary.py; "over my budget", never a build's; its description says it isn't bills or
     what's due, which the model confused it with), get_net_worth (the Money page's figure, each
@@ -1100,8 +1107,9 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         name="add_pantry_item", domain="groceries",
         description="Record something the user has in the pantry/fridge and how much (updates the amount if it's already listed).",
         parameters=_obj({"name": _s("Item, e.g. 'flour'."), "quantity": _n("Amount on hand."), "unit": _s("e.g. lb, cans."),
-                         "category": _s("Produce, Dairy, Meat, Frozen, Pantry/Dry Goods, Spices, Condiments, Beverages or Other.")}, ["name"]),
-        handler=_action_add_pantry_item,
+                         "category": _s("Produce, Dairy, Meat, Frozen, Pantry/Dry Goods, Spices, Condiments, Beverages or Other."),
+                         "question": _s("his words")}, ["name"]),
+        handler=_action_add_pantry_item, prompt_arg="question",
         trigger_phrases=("in the pantry", "in the fridge", "in the freezer", "to the pantry"),
     ))
     registry.register(AssistantAction(

@@ -129,7 +129,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
     A monthly reminder (`_monthly_reminder_reply`) too, a unit conversion (`_convert_reply`) and a holiday's date
     (`_holiday_reply`), and the house's trouble (`_home_trouble_reply`), and when to fish (`_fish_when_reply`), and the
-    power out (`_outage_reply`), and the small everyday answers (`_everyday_reply`).
+    power out (`_outage_reply`), and the small everyday answers (`_everyday_reply`), and a load's watts
+    (`_load_watts_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -203,6 +204,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _home_trouble_reply(context, prompt)  # a burst pipe, a flooded basement, as in a turn
     if walked is None:
         walked = _outage_reply(context, prompt)  # the power out, and his readiness, as in a turn
+    if walked is None:
+        walked = _load_watts_reply(context, prompt)  # "my freezer uses 150 watts", as in a turn
     if walked is None:
         walked = _everyday_reply(context, prompt)  # the time, days until, square feet, a walk logged, as in a turn
     if walked is None:
@@ -1201,6 +1204,28 @@ def _egg_price(context):
     return "Log your feed and eggs and I'll work out what a dozen costs you. " + rule
 
 
+_LOAD_WATTS = re.compile(r"^\s*(?:my|the|our)\s+(?P<load>[a-z][\w' -]{1,30}?)\s+(?:uses|draws|pulls|runs at|is|takes)\s+"
+                         r"(?:about\s+|around\s+)?(?P<w>\d[\d,]*)\s*(?:w|watts)\b(?:\s+(?:for|and runs)\s+(?P<h>\d+(?:\.\d+)?)"
+                         r"\s*hours?(?: a day)?)?\s*[.!]?\s*$", re.I)
+
+
+def _load_watts_reply(context, prompt: str):
+    """"My freezer uses 150 watts" (and "for 8 hours a day"), kept as one of his essential loads through
+    set_power_load (the live sweep, 2026-11-25: the pantry's tools were offered and nothing was kept); a car, a
+    phone or a light bulb's watts are the model's. None otherwise."""
+    found = _LOAD_WATTS.match(prompt.replace("’", "'"))
+    if not found or re.search(r"\b(?:bulb|phone|laptop|charger|car|truck|tv)\b", found.group("load"), re.I):
+        return None
+    args = {"load": found.group("load").strip(), "watts": float(found.group("w").replace(",", "")), "question": prompt}
+    if found.group("h"):
+        args["hours"] = float(found.group("h"))
+    try:
+        return context.assistant_actions.execute(context, "set_power_load", args)
+    except Exception:
+        log.exception("Couldn't keep the load")
+        return None
+
+
 def _outage_reply(context, prompt: str):
     """Ready for the power going out: the first things to do and his own readiness (core/outage_plan.reply); the
     power going out now is the outage clock's (core/outage.py). None otherwise."""
@@ -1449,7 +1474,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     conversion (`_convert_reply`) and a holiday's date (`_holiday_reply`) are worked out in code; a burst pipe or a
     flooded basement is said in fixed words (`_home_trouble_reply`), and when to fish from his catches
     (`_fish_when_reply`), and the power out with his own readiness (`_outage_reply`); the time, days until a holiday,
-    square feet, a walk logged and an egg price are worked out in code (`_everyday_reply`). A turn the
+    square feet, a walk logged and an egg price are worked out in code (`_everyday_reply`); a load's watts are kept
+    (`_load_watts_reply`). A turn the
     model answers ends a question plan's thread
     (core/conversation_state.forget), and a reply that is only a humor example is never said.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
@@ -1597,6 +1623,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _home_trouble_reply(context, prompt)  # the house's trouble: the main shutoff, the power first
         if walked is None:
             walked = _outage_reply(context, prompt)  # the power out: the first things, then his own stores
+        if walked is None:
+            walked = _load_watts_reply(context, prompt)  # a load's watts, kept for the power picture
         if walked is None:
             walked = _everyday_reply(context, prompt)  # the time, days until, square feet, a walk, an egg price
         if walked is None:

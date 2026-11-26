@@ -1481,6 +1481,8 @@ _LEARNING = r"homework|lessons?|practi[cs]e\w*|woodworking|bushcraft|fitness pla
 # spending past its usual is "anything unusual"'s, which compares each category with its own normal month; what's due
 # this week is the bills', not the week's review; having enough for rent is money ahead's).
 NOT_FOR = {
+    # who he owes is his debts', never what his assets return (the live sweep)
+    "returns": re.compile(r"\b(?:owe|owed|debts?)\b", re.I),
     # what he told her before is his past conversations' (list_past_conversations), never one person's (the live
     # sweep, 2026-11-25: "do you remember what I told you yesterday?" had asked which person)
     "person": re.compile(r"\b(?:remember|recall) what i (?:told|said)|\bwhat (?:did )?i (?:tell|told|said to) you\b|"
@@ -1529,7 +1531,8 @@ NOT_FOR = {
                                   r"let's plan|plan the|debts?|loans?|bills?|weather|frost|due|overdue|status|"
                                   r"how(?:'s| is) (?:the|my) \w+ (?:doing|going)|needs? doing|needs? done|readings?|"
                                   r"temperature|humidity)\b", re.I),
-    "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|training|workouts?|due|bills?|dinner|lunch|breakfast|"
+    # what's on his calendar is the calendar's listing (the live sweep, 2026-11-25)
+    "week review": re.compile(rf"\b((?:on )?my calendar|{_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|training|workouts?|due|bills?|dinner|lunch|breakfast|"
                               rf"supper|meals?|weekend)\b", re.I),
     "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to|prepared|"
                             r"emergency|emergencies|kit|preparedness)\b", re.I),
