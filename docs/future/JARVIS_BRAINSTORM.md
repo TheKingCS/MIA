@@ -344,6 +344,33 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 16 (2026-11-25, late night): from answering to anticipating
+
+Round 15 made her answer his everyday questions from his own records. The next step toward Jarvis is her noticing
+before he asks, and doing the dull part herself, always through the gate and with an exact undo. Each idea says
+what it needs:
+
+- **The weekly look-ahead** (no decision): Sunday evening, one message through the gate: the week's weather against
+  his outdoor plans and projects, bills and renewals due, the flock's feed running out, a holiday that moves a
+  pickup, the garden's next planting window. Built from what already exists (core/holidays, the bills, feed runway,
+  planting_now, weather_watch); only the joining is new.
+- **"Before you go"** (no decision): when the calendar has a trip or a market day tomorrow, the evening before:
+  the checklist from that trip's gear, the forecast there, fuel and cash, the goods on hand for the market.
+- **Shop mode by voice** (his say: how it starts): the cut list one cut at a time ("next"), conversions and
+  timers by voice, the build's next step, hands free.
+- **A money pulse** (no decision): once a week, spending against his budgets with the one category drifting most,
+  said in one line, never a report; the freedom date's change since last week.
+- **The homestead's health line** (no decision): one line on demand and on the morning briefing: water days, food
+  days, feed days, fuel days, the lowest first ("Feed: 6 days, the lowest").
+- **Ask her to watch for something** (no decision; the watch tool exists): "tell me when propane drops below a
+  quarter", "tell me if it freezes tonight", kept as a watch she checks daily through the gate.
+- **What she learned this week** (no decision): from the Fix-It Log, the corrections he made and the misses she
+  fixed, said plainly once a week, so he sees her getting better.
+- **Teach her a routine by doing it** (built: "watch me"): the next step is her offering one she's seen him do three
+  times ("You log the eggs and check the waterer every morning: want me to remind you, or keep count?").
+- **His hobbies' progress in one place** (no decision): guitar minutes, catches, workouts, builds and courses this
+  month, beside his goals, as a page and a one-line answer.
+
 ## Round 15 (2026-11-25, night): what the Fable reviews and nine more sweeps showed
 
 A Fable review of the whole day, two Fable audits of every tool that writes a record, and sweeps 11 to 16 found three
