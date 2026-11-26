@@ -24,6 +24,7 @@ electric bill" marked in code. Automation: standing reports kept, listed and sto
 undoable. Guitar: practice logged to his course, "what's next?" after it.
 Vehicles: "the mower needs new blades" on the Riding Mower, "what has the truck cost me?" its own costs.
 Preparedness: a winter storm's checklist from his records, "what am I missing?" his kit's gaps.
+Money stress: "where can I cut back?" from his records.
 Open (needs a design): adding the bait to a catch after it's logged ("it was biting on a green pumpkin worm"): catches
 are life events, never rewritten, so it would be an amending event of its own.
 Next (no decision): more of her asks there as sweeps find them, and more sweeps (the corpus's areas); "why?" after a code answer needs a better idea than repeating its reasons. Waiting on
