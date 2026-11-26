@@ -124,4 +124,13 @@ CORPUS = {
         ["I had a rough day at work", "My boss yelled at me in front of everyone"],
         "Give me a quick survival tip", "Do you remember what I told you yesterday?", "Who are you?",
     ],
+    "picture": [
+        "What's the next thing I should work on?", "How's my fishing been lately?",
+        "When did I last change the oil in the truck?", "What do I need from the hardware store?",
+        "How many eggs did we get this week?", "Is it a good day to work outside?", "What's my best-selling product?",
+        "How much did the shop make last month?", "What should I practice on guitar today?",
+        "What's in my bug-out bag?", "How long would the generator run on the fuel I have?", "What's overdue?",
+        "Give me a summary of my week", "Did I work out this week?", "What's my net worth?",
+        "How much do I owe in total?",
+    ],
 }

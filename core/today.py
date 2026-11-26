@@ -31,6 +31,7 @@ Maintenance on something that belongs to someone else in the household
 
 Facts only, assembled in code; the Assistant only phrases them. Every
 source is optional, so a store this MIA doesn't have is just left out.
+`overdue_said` is "what's overdue?": everything overdue on the list, and an overdue filing from Compliance.
 """
 
 from __future__ import annotations
@@ -350,6 +351,32 @@ def week_days(context, today: Optional[date] = None, days: int = 7) -> list[dict
                 items.append(i.as_dict())
         out.append({"date": day.isoformat(), "items": items})
     return [d for d in out if d["items"] or d["date"] == today.isoformat()]
+
+
+def overdue_said(context, today: Optional[date] = None) -> str:
+    """For "what's overdue?" (the live sweep, 2026-11-26: it went to the tax deadlines): everything overdue on his
+    list (bills, upkeep, tasks, from `today_items`), the most overdue first as the list orders it, and an overdue
+    filing from Compliance when that's kept; else that nothing is, with what's due today."""
+    items = today_items(context, today)
+    late = [i for i in items if i.when == OVERDUE]
+    parts = []
+    if late:
+        parts.append(f"Overdue ({len(late)}): " + "; ".join(f"{i.title} ({i.detail})" if i.detail else i.title
+                                                            for i in late[:8])
+                     + (f"; and {len(late) - 8} more" if len(late) > 8 else "") + ".")
+    try:
+        from core.web_compliance import compliance_page
+
+        page = compliance_page(context, today) if today else compliance_page(context)
+        filings = page.get("groups", {}).get("overdue", []) if page.get("available") else []
+        if filings:
+            parts.append("Filings overdue: " + "; ".join(f"{c['title']} (due {c['due']})" for c in filings[:4]) + ".")
+    except Exception:  # noqa: BLE001
+        log.exception("Couldn't read the overdue filings")
+    if parts:
+        return " ".join(parts)
+    due = [i for i in items if i.when == TODAY]
+    return "Nothing's overdue." + (f" Due today: {'; '.join(i.title for i in due[:5])}." if due else "")
 
 
 def describe(items: list[TodayItem], limit: int = 8) -> str:

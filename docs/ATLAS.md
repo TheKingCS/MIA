@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1905 files, 400,162 lines; 1905 files describe themselves; 21,696 of 21,842 classes and functions are documented.
+1906 files, 400,288 lines; 1906 files describe themselves; 21,701 of 21,847 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-740 files, 209,790 lines; 10,373 of 10,452 classes and functions documented
+740 files, 209,861 lines; 10,375 of 10,454 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1039,7 +1039,7 @@
 
 ## tests/: the test suite: what each part must do
 
-755 files, 108,210 lines; 8,949 of 9,016 classes and functions documented
+756 files, 108,265 lines; 8,952 of 9,019 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1466,6 +1466,7 @@
 - `tests/test_outage.py`: The power outage clock (core/outage.py): when he said it went out read in code, the fridge's 4 hours and the freezer's 24 or 48 said as time left or past, the fish, hens and well only when they apply, and the end said with what to throw out; by voice and from the Power page. And a day without safe w
 - `tests/test_outage_plan.py`: Ready for the power going out (core/outage_plan.py, 2026-11-25): the first things to do in fixed words, then his own readiness from his records, then the drill; never his power bill, a solar panel or a power tool.
 - `tests/test_outdoor_work.py`: "Is it safe to work outside today?" (core/outdoor_work.py): the NWS heat index and wind chill match the Weather Service's own tables, a hot day names its level and cooler hours with the heat-stroke signs, a bitter day the minutes to frostbite, a mild day says so, and the forecast's hours come throug
+- `tests/test_overdue_said.py`: "What's overdue?" is his whole list's overdue (core/today.overdue_said, the live sweep 2026-11-26: it went to the tax deadlines and said "That's for a grown-up." with no Compliance store), and a missing store is said as that; and "what do I need from the hardware store?" is his projects' open needs,
 - `tests/test_ownership.py`: Whose is it (core/ownership.py), 2026-10-01: owner marks on vehicles, tools and appliances; Today shows your things and shared ones.
 - `tests/test_parity.py`: Full use both ways on every device (DEC-0125, core/parity.py): every app can be used by voice, on the PC, on the phone and on the glasses, or the gap is decided in work/parity.json; parity can only grow, and docs/PARITY.md is current. Each app's ask (its screen's "Say: …") reaches that app's own too
 - `tests/test_party.py`: Party and guild (DEC-0028): household raids share their jobs out and their reward; the leaderboard only shows people who joined, counting wins.

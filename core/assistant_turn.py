@@ -1553,6 +1553,13 @@ _MONTH_VS = re.compile(r"^\s*(?:hey mia,? )?(?=.*\b(?:spend|spent|spending)\b)(?
                        r"versus|compared? (?:to|with)|against|and|to)\s+(?:i did\s+|what i spent\s+)?last month\s*[?.!]*\s*$|^\s*(?:hey mia,? )?"
                        r"(?:my )?(?P<cat2>[\w&' -]{2,30}?)(?: spending)? this month (?:vs\.?|versus|compared (?:to|with)) "
                        r"last month\s*[?.!]*\s*$", re.I)
+_HARDWARE_NEEDS = re.compile(r"^\s*(?:hey mia,? )?(?:what do (?:i|we) (?:need|have to get|need to (?:get|buy|pick up)) (?:from|at) "
+                             r"(?:the )?(?:hardware store|lumber ?yard|lowe'?s|home depot|menards|tractor supply|farm store)|"
+                             r"what (?:do|does) (?:i|we|my projects?) (?:still )?need (?:to buy )?for (?:my|our|the) projects?)"
+                             r"\s*[?.!]*\s*$", re.I)
+_OVERDUE = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| am i)|whats|is (?:there )?anything|anything|do i have anything) "
+                      r"(?:overdue|past due|late|behind on)(?: (?:today|right now|now))?\s*[?.!]*\s*$|^\s*(?:show me |list )?"
+                      r"(?:what'?s |everything )?overdue\s*[?.!]*\s*$", re.I)
 _PROJECT_COST = re.compile(r"^\s*(?:hey mia,? )?(?:what|how much) (?:has|have|did) (?:the |my |our )?(?P<p>[\w' -]{2,40}?) "
                            r"(?:project |build )?cost (?:me|us)(?: so far| in all| in total| altogether)?\s*[?.!]*\s*$|"
                            r"^\s*(?:hey mia,? )?(?:what(?:'s| is) the )?(?:whole|total|full|true) cost of (?:the |my |our )?"
@@ -1662,7 +1669,9 @@ def _own_tool_reply(context, prompt: str):
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation (to finish the shed)" his own reasons and one small step (core/motivation), "teach me
     something" a lesson from her own courses (core/teach_something), "did I spend more this month than last month?" the
-    months side by side (core/money_periods.compare), "what has the shed cost me?" its money and hours
+    months side by side (core/money_periods.compare), "what do I need from the hardware store?" his
+    projects' open needs (never a guess from his expenses), "what's overdue?" everything overdue on his list
+    (core/today.overdue_said), "what has the shed cost me?" its money and hours
     (core/project_status.whole_cost), "how's the shed coming along?" that project's picture
     (core/project_status, only for a project his words name whole), "what should I be doing on the homestead this
     month?" (or "in march") that month's items and the season's usual work (core/homestead_year.this_month), "what should be in my truck's
@@ -1910,6 +1919,25 @@ def _own_tool_reply(context, prompt: str):
             return money_periods.compare(context, category)
         except Exception:
             log.exception("Couldn't compare the months")
+            return None
+    if _HARDWARE_NEEDS.match(said):  # "what do I need from the hardware store?": his projects' open needs
+        try:
+            from core.assistant_requirement_actions import needs_sentence
+
+            said_needs = needs_sentence(context, "")
+            if said_needs in ("Nothing's still needed.",):
+                return "Nothing's on your projects' needs lists right now, so nothing I know of to pick up."
+            return said_needs
+        except Exception:
+            log.exception("Couldn't read his projects' needs")
+            return None
+    if _OVERDUE.match(said):  # "what's overdue?": his whole list's overdue (core/today.overdue_said)
+        from core import today as _today
+
+        try:
+            return _today.overdue_said(context)
+        except Exception:
+            log.exception("Couldn't say what's overdue")
             return None
     costing = _PROJECT_COST.match(said)
     if costing:  # "what has the shed cost me?": its money and his hours (core/project_status.whole_cost)

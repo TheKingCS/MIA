@@ -181,16 +181,29 @@ def _sell_goods(context, arguments: dict) -> str:
 # ---------------------------------------------------------------- freedom and deadlines
 
 
+def _not_here(context, app: str) -> str:
+    """Why a grown-up's page isn't there: a child's account, or the app's store missing on this MIA (the live sweep,
+    2026-11-26: "what's overdue?" had "That's for a grown-up." for a missing store)."""
+    from core.child_accounts import is_child
+
+    try:
+        if is_child(context):
+            return "That's for a grown-up."
+    except Exception:  # noqa: BLE001
+        pass
+    return f"{app} isn't kept on this MIA."
+
+
 def _get_freedom(context, arguments: dict) -> str:
     """Tool get_freedom_progress: days to go and the date at their pace (or why there's no date yet, or that the
     fund is full), how much is saved of the goal, this week's total, and how much of a month the homestead covers.
-    Grown-ups only.
+    Grown-ups only; a missing store is said as that (`_not_here`).
     """
     from core.freedom import freedom_page
 
     page = freedom_page(context)
     if not page.get("available"):
-        return "That's for a grown-up."
+        return _not_here(context, "Freedom")
     p, t = page["plan"], page["plan"]["text"]
     if p["ready"]:
         lead = "The freedom fund is full: you're there."
@@ -208,13 +221,14 @@ def _get_freedom(context, arguments: dict) -> str:
 
 def _get_deadlines(context, arguments: dict) -> str:
     """Tool get_deadlines: overdue obligations, then the ones due soon (noting the unverified), or the next two
-    when nothing is due in 30 days, and how many are still to verify. Grown-ups only.
+    when nothing is due in 30 days, and how many are still to verify. Grown-ups only; a missing store is said as that
+    (`_not_here`).
     """
     from core.web_compliance import compliance_page
 
     page = compliance_page(context)
     if not page.get("available"):
-        return "That's for a grown-up."
+        return _not_here(context, "Compliance")
     g = page["groups"]
     if not page["counts"]["open"]:
         return "Nothing on your Compliance list yet. Apps → Compliance → Things To Check offers the usual ones to verify."
@@ -284,7 +298,8 @@ def _action_hatch_status(context, arguments: dict) -> str:
 
 def register_goods_actions(registry: AssistantActionRegistry) -> None:
     """Registers the flock, goods, freedom and compliance tools: get_eggs, log_eggs, list_goods_on_hand,
-    sell_goods, get_freedom_progress (never by "how far along", a project's) and get_deadlines; get_eggs is also reached by asking about the feed ("how long
+    sell_goods, get_freedom_progress (never by "how far along", a project's) and get_deadlines (never "what's overdue?"
+    alone, his whole list's: core/today.overdue_said); get_eggs is also reached by asking about the feed ("how long
     will the feed last?": its answer says how long the feed lasts, core/feed_runway.py) and what the eggs cost ("do the
     eggs pay for themselves?": its answer has the feed cost a dozen). Also start_hatch and hatch_status: eggs in the incubator as a
     mission with dated steps (core/hatch_tracker.py), start_broilers and broilers_status (a batch of meat birds to
@@ -421,7 +436,8 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
         name="get_deadlines", domain="compliance",
         description="Tax and compliance deadlines: overdue, the next 30 days, what's still to verify.",
         parameters=none, handler=_get_deadlines,
-        trigger_phrases=("due for taxes", "tax deadline", "deadlines", "what's overdue", "whats overdue",
-                         "permit", "licence", "license", "estimated tax", "compliance", "taxes due"),
-        subjects=("tax", "deadline", "overdue", "permit", "licence", "license", "compliance", "due"),
+        # never "what's overdue?" alone: that's his whole day's (core/today.overdue_said, the live sweep 2026-11-26)
+        trigger_phrases=("due for taxes", "tax deadline", "deadlines", "permit", "licence", "license", "estimated tax",
+                         "compliance", "taxes due"),
+        subjects=("tax", "deadline", "permit", "licence", "license", "compliance"),
     ))
