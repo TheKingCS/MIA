@@ -27,7 +27,10 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   (core/homestead_health.py: days of water, food, feed and generator fuel, the lowest first; "how's the homestead?";
   the morning briefing names water, food or fuel at a week or under, each once a week) and a money pulse
   (core/money_pulse.py: Sundays through the gate, and "how's my money this week?": the category drifting over its
-  usual pace, what's due this week, bills not marked paid, the tightest week ahead). 8648 passing.
+  usual pace, what's due this week, bills not marked paid, the tightest week ahead), what she learned this week
+  (core/learned_week.py: memories kept, skills taught, her changes he corrected; numbers only in the self-report)
+  and his hobbies' progress (core/hobby_progress.py: this month's practice, catches, workouts; projects said apart).
+  8655 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through

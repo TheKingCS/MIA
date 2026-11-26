@@ -8,8 +8,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 *Last updated: 2026-11-25 (Opus on the PC: interactive labs, the ESP32 simulator, scenario drills)*
 
 **2026-11-25, late: brainstorm round 16** (docs/future/JARVIS_BRAINSTORM.md). Built: the homestead's health line
-and the Sunday money pulse. At the PC: "how's the homestead?", "how's my money this week?". Next from round 16 (no
-decision needed): the weekly look-ahead, "before you go", watch-for, what she learned this week, hobbies' progress.
+the Sunday money pulse, what she learned this week and his hobbies' progress. At the PC: "how's the homestead?",
+"how's my money this week?", "what did you learn this week?", "how are my hobbies going?". Next from round 16 (no
+decision needed): the weekly look-ahead, "before you go", watch-for.
 
 **2026-11-25: interactive labs** (`docs/future/INTERACTIVE_LABS_PLAN.md`; CURRENT_STATE has the whole of it). At the
 PC: open Classroom > Hands-on labs; build the blink lab in the simulator; say "walk me through building the pot lab",
