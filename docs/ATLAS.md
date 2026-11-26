@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1879 files, 397,162 lines; 1879 files describe themselves; 21,564 of 21,705 classes and functions are documented.
+1883 files, 397,425 lines; 1883 files describe themselves; 21,575 of 21,718 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-734 files, 207,799 lines; 10,305 of 10,384 classes and functions documented
+735 files, 207,955 lines; 10,310 of 10,389 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -266,6 +266,7 @@
 - `core/flock.py`: Chickens (DEC-0037): a flock log that turns eggs into money you can see.
 - `core/flock_actions.py`: Chickens' actions (DEC-0037, core/flock.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/focus_presets.py`: What each person sees first (2026-10-01, accounts stage 2): MIA has dozens of apps, and a student, a homesteader and a small-business owner each need a different handful up front. A **focus** puts the most useful apps first and tucks the unlikely ones away. It never blocks anything: a tucked-away ap
+- `core/follow_through.py`: A short follow-up to one of her code answers, made whole (the live sweep, 2026-11-26: "What about this month?" after "How much did I spend last month?" got "check your bank statements", and "And the card?" after the truck loan's balance got a made-up balance). His last question and the new words are
 - `core/food_table.py`: MIA's built-in food table (DEC-0020): nutrition facts for about 7,800 everyday foods from the USDA's FoodData Central (public domain), per 100 g, in data/foods.tsv (tools/make_food_table.py builds it). Offline.
 - `core/free_build.py`: The free build: his own parts, wired to his board as he likes, checked by what each part's spec says (Zac, 2026-11-25: "tell what hardware I have and simulate connecting it"). Where a lab's circuit is judged against its own build (core/esp32_sim.py), here there's no build to follow: each part is jud
 - `core/freedom.py`: Freedom (DEC-0038; Life Runway, slice E of docs/COGNITIVE_EXTENSION_PROPOSAL.md): the way out of the job you're saving to leave, in numbers. The person's own plan, never a child's. Every figure says what it is (`figure_kind`: Fact, Calculation or Missing, DEC-0113).
@@ -1033,7 +1034,7 @@
 
 ## tests/: the test suite: what each part must do
 
-735 files, 107,201 lines; 8,885 of 8,947 classes and functions documented
+738 files, 107,308 lines; 8,891 of 8,955 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1245,6 +1246,7 @@
 - `tests/test_flock_and_harvests.py`: DEC-0037: chickens (eggs, feed, birds; cartons into goods, eggs into the bakery), Grow Lab harvests into stock, goods added by hand, and the starter recipes.
 - `tests/test_flow_loops.py`: The flow loops Night School's teacher drafted (T-0047, core/loops.py): actions that broke or were turned down, email drafts thrown away or left open, unprompted messages dismissed or expired. Each reads records the person already keeps; an action's record carries its kind only, never what was in it.
 - `tests/test_focus_presets.py`: Each person's Apps screen (core/focus_presets.py) and MIA's setup questions (gui/onboarding_dialog.py), 2026-10-01.
+- `tests/test_follow_through.py`: A short follow-up to a code answer, made whole (core/follow_through.py, the live sweep 2026-11-26): a period for a period, a thing for a thing, answered by the same code; "my card" is his one credit card.
 - `tests/test_food_table.py`: MIA's built-in food table (core/food_table.py, DEC-0020): matching an ingredient to a food, turning amounts into grams, and a recipe's nutrition per serving. Uses a small table in the real file's format (real USDA names and values for these foods).
 - `tests/test_free_build.py`: My Bench (core/free_build.py, core/part_specs.py): his own parts wired as he likes, checked by each part's spec and the board's limits (the HC-SR04's 5 V echo into a 3.3 V pin, a 3.3 V-only BME280 on 5 V, I2C off its pins, an analog output with no ADC, a pot across VIN, an LED without its resistor, 
 - `tests/test_freedom.py`: Freedom (DEC-0038): the fund that covers the gap between a month of living and what the homestead earns, plus the builds; the estimated day; progress by period; what a shift buys. Every number from the person's own records, or their own number, and it says which (and what it is: Fact, Calculation or
@@ -1413,6 +1415,7 @@
 - `tests/test_named_tool.py`: The tool a message names in its own words (2026-10-19, the PC model's misses): AssistantActionRegistry.named_action() and core/assistant_chat.settle_on_named_tool(). Pure logic, no model.
 - `tests/test_navigation_module.py`: Unit tests for modules.navigation.module's pure functions. format_sun_moon_summary() is tested against real coordinates (not mocked) since astral itself is the "real dependency" here (offline, deterministic, no network) — same reasoning as test_system_health.py mocking psutil but this module having 
 - `tests/test_navigation_web.py`: Navigation's web screen (core/navigation_web.py): waypoints with grid references, distance and bearing, the sun and the moon; and a waypoint changed with waypoint.edit, on the page and by voice.
+- `tests/test_needs_for.py`: "What do I need for the chili?" (core/assistant_domain_actions.needs_for, the live sweep 2026-11-26): a saved recipe's missing ingredients and the offer to list them; a name that isn't his recipe is the model's. *(1 undocumented)*
 - `tests/test_needs_now.py`: The front of "catch me up" (core/needs_now.py, brainstorm 2.1): the greenhouse's open alerts, tonight's weather against his plans and an update waiting; what the gate is holding; what she did on her own in the last day. *(1 undocumented)*
 - `tests/test_net_worth_history.py`: Tests for core/net_worth_history.py: one net worth point a day, the change this month, and the Overview's line.
 - `tests/test_net_worth_voice.py`: "What's my net worth?" by voice (get_net_worth): the Money page's figure (linked accounts and property equity), each part named, his other debts taken off too since that figure leaves them out, and nothing to add up said plainly, never a made-up zero.
@@ -1429,6 +1432,7 @@
 - `tests/test_observations_module.py`: Unit tests for modules.observations.module's pure functions, same style as tests/test_memories_module.py (no Qt event loop, no fixtures).
 - `tests/test_observations_web.py`: Observations' web screen (core/observations_web.py): findings across apps, and the open insights by source, each with its card (kind, the apps it used, where to settle it: DEC-0113).
 - `tests/test_ocr.py`: Reading photos and scans (core/ocr.py) and how the inbox and the textbook tutor use it. Most tests use a stand-in engine so they run anywhere; the ones marked `needs_tesseract` run the real program when it's installed.
+- `tests/test_offered_phrase.py`: A plain go-ahead to her own offer runs the words she said to say (core/conversation_state.offered_phrase, the live sweep 2026-11-26): only an offer she'd carry out, only one, never an undo, stop or delete. *(1 undocumented)*
 - `tests/test_offline_library.py`: Her offline library (core/offline_library.py, core/pack_index.py; Zac, 2026-11-22): the chosen packs and their sets, Kiwix's catalog read, a download resumed and checked against Kiwix's own hash (a wrong one never installed), one runner at a time, the older version replaced, her own index for packs 
 - `tests/test_offline_library_fallback.py`: With no packs or nothing matching (the live sweep, 2026-11-25), the offline library's look-up tells the model to answer from what it knows, never a sentence about "her library" said to him as the answer. And "what should I plant in the spring?", which the model had answered from nothing, is what's d
 - `tests/test_offline_maps.py`: Vector offline maps (core/offline_maps.py): names, the box around waypoints, a map file's header, the cut.

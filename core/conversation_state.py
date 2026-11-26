@@ -125,6 +125,32 @@ def agreed_to(conversation, prompt: str) -> Optional[str]:
     return sentences[-1]
 
 
+_GO_ON = re.compile(r"^(?:yes|yeah|yep|yup|sure|ok(?:ay)?|please|please do|do it|go ahead|sounds good|let'?s do it|"
+                    r"let'?s go|start it|start|let'?s start|set it up|do that)(?:[\s,!.]+(?:yes|ok(?:ay)?|please|start "
+                    r"it|do it|go ahead|set it up|let'?s go|thanks|thank you))*[\s!.]*$", re.I)
+_SAY_OFFER = re.compile(r"\bSay [\"“]([^\"”]{3,80})[\"”],? (?:and I'?ll|and I will)\b", re.I)
+_NEVER_ON_A_YES = re.compile(r"\b(?:undo|stop|cancel|delete|remove|take back|forget|turn off|unlearn|clear)\b", re.I)
+
+
+def offered_phrase(conversation, prompt: str) -> Optional[str]:
+    """Pure logic. When `prompt` is a plain go-ahead ("ok, start it") to her own last message's one offer to do
+    something ('Say "I want to learn guitar" and I'll set it up with you.'), the words she said to say; else None
+    (the live sweep, 2026-11-26: "Ok, start it" got "What would you like to learn?"). Only an offer she'd carry out
+    ("and I'll ..."), only one in the message, and never one that undoes, stops, cancels or deletes: a yes is never
+    a way to take something back."""
+    if not _GO_ON.match((prompt or "").strip()):
+        return None
+    before = [m for m in getattr(conversation, "messages", []) or []
+              if not (getattr(m, "role", "") == "user" and str(getattr(m, "content", "")) == prompt)]
+    last = before[-1] if before else None
+    if last is None or getattr(last, "role", "") != "assistant":
+        return None
+    offers = _SAY_OFFER.findall(str(getattr(last, "content", "") or ""))
+    if len(offers) != 1 or _NEVER_ON_A_YES.search(offers[0]):
+        return None
+    return offers[0].strip().rstrip(".!?")
+
+
 LOOK_BACK = 8  # messages searched for the last thing named
 FOLLOW_BACK = 4  # messages back a tool's follow-up may reach (the last exchange or two)
 

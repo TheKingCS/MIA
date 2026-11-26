@@ -80,6 +80,16 @@ CORPUS = {
         "What did I do yesterday?", "What's my plan for tomorrow?", "Good morning",
         "Thanks MIA", "You're awesome", "I'm tired", "I need motivation",
     ],
+    "followups": [
+        ["How much did I spend last month?", "What about this month?"],
+        ["How much is my truck loan?", "And the card?"],
+        ["Remind me tomorrow to call the vet", "Actually make it 10am"],
+        ["What should I cook for dinner?", "What do I need for the chili?"],
+        ["What's the weather tomorrow?", "Should I water the garden then?"],
+        ["Who are my best customers?", "When did they last order?"],
+        ["What's my next guitar lesson?", "Ok, start it"],
+        ["How many eggs did the hens lay this week?", "Is that normal?"],
+    ],
     "conversation": [
         ["I'm thinking about getting goats", "What breed would be good for milk?", "How much space do they need?",
          "Thanks, that's helpful"],

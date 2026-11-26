@@ -124,6 +124,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A reminder on a day too (`_reminder_reply`).
     A course's next lesson too (`_next_lesson_reply`).
     His upkeep (`_upkeep_reply`) and an LED's resistor (`_led_reply`) too.
+    A short follow-up to a code answer, made whole, too (`_follow_through_reply`: "what about this month?").
     What he spent on a category (`_spent_on_reply`) too.
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
@@ -205,6 +206,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _home_trouble_reply(context, prompt)  # a burst pipe, a flooded basement, as in a turn
     if walked is None:
         walked = _outage_reply(context, prompt)  # the power out, and his readiness, as in a turn
+    if walked is None:
+        walked = _follow_through_reply(context, conversation, prompt)  # "what about this month?", as in a turn
     if walked is None:
         walked = _records_reply(context, prompt)  # "did I pay the electric bill?", "how many cutting boards?", as in a turn
     if walked is None:
@@ -1370,6 +1373,8 @@ _DUE_MONTH = re.compile(r"^\s*(?:hey mia,? )?what(?:'s| is| bills are| bills do 
                         r"coming up)(?: for)? (?:this month|the rest of the month|in the next (?:30|thirty) days|next "
                         r"month|this coming month)\s*[?.!]*\s*$|^\s*what bills are due (?:this month|the rest of the "
                         r"month)\s*[?.!]*\s*$", re.I)
+_NEED_FOR = re.compile(r"^\s*(?:hey mia,? )?what (?:do|would) (?:i|we) (?:still )?need (?:for|to make|to cook) (?:the |my |a "
+                       r"|that )?(?P<dish>[\w' -]{2,40}?)\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1407,7 +1412,8 @@ def _own_tool_reply(context, prompt: str):
     off the card or the truck first?" his own debts compared (get_debt_payoff_plan), his reminders listed and one
     cancelled by its words (never all on one sentence), "good morning" back in kind with the day, and "what did I do
     yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
-    (core/assistant_today_actions.due_through), "tell me when..." a watch from his whole sentence
+    (core/assistant_today_actions.due_through), "what do I need for the chili?" a saved recipe's missing
+    ingredients (core/assistant_domain_actions.needs_for; anything not a recipe of his is the model's), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
     said = prompt.replace("’", "'")
@@ -1507,6 +1513,17 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't answer about reminders")
             return None
+    need = _NEED_FOR.match(said)
+    if need:  # "what do I need for the chili?": a saved recipe's missing ingredients, never a cure or a build
+        from core.assistant_domain_actions import needs_for
+
+        try:
+            found = needs_for(context, need.group("dish"))
+        except Exception:
+            log.exception("Couldn't say what a recipe needs")
+            found = None
+        if found:
+            return found
     if _DUE_MONTH.match(said):  # "what's due this month?": the month to its end, overdue first (get_week's sources)
         from core.assistant_today_actions import due_through
 
@@ -1568,7 +1585,8 @@ def _debt_line(context, prompt: str):
     """"How much is my truck loan?" from his debts (the live sweep, 2026-11-25: the word "truck" had offered the
     maintenance tools, and the model said the balance wasn't in them): the one debt his words name, its balance, rate
     and minimum. None otherwise.
-    Only with a debt word said (loan, card, owe, balance): "how much is my truck?" is its value."""
+    Only with a debt word said (loan, card, owe, balance): "how much is my truck?" is its value. "My card" alone is his
+    one credit card (none when he has two)."""
     found = _DEBT_ASK.match(prompt.replace("’", "'"))
     budget = getattr(context, "budget", None)
     if not found or budget is None or not hasattr(budget, "all_debts") or not re.search(
@@ -1577,6 +1595,8 @@ def _debt_line(context, prompt: str):
     generic = {"loan", "card", "debt", "balance", "the", "my", "credit"}
     said = set(re.findall(r"[a-z0-9]+", found.group("debt").lower())) - generic
     named = [d for d in budget.all_debts() if said and said == set(re.findall(r"[a-z0-9]+", d.name.lower())) - generic]
+    if not said and re.search(r"\bcard\b", found.group("debt"), re.I):  # "my card": his one credit card
+        named = [d for d in budget.all_debts() if "card" in str(getattr(d, "debt_type", "") or "").lower()]
     if len(named) != 1:
         return None
     from core.region import money
@@ -1591,6 +1611,27 @@ _PAID_ASK = re.compile(r"^\s*(?:did|have) (?:i|we) (?:already )?pa(?:y|id) (?:th
                        r"(?: yet| already| this month)?\s*\??\s*$", re.I)  # the bill's own name, whole (by_name)
 _HOW_MANY_HAVE = re.compile(r"^\s*how many (?!days\b|weeks\b|months\b|hours\b|years\b)(?P<what>[\w' -]+?) (?:do|have) (?:i|we) "
                             r"(?:have|got|got left|left)(?: in stock| on hand| left)?\s*\??\s*$", re.I)
+
+
+def _follow_through_reply(context, conversation, prompt: str):
+    """A short follow-up to one of her code answers, made whole (core/follow_through, the live sweep 2026-11-26:
+    "what about this month?" after last month's spending, "and the card?" after the truck loan): his last question
+    with the new words in place, answered by the same code answers (`_records_reply`, `_own_tool_reply`). None when it
+    isn't one, can't be joined, or no code answer takes the joined question (the model has it)."""
+    from core import follow_through
+
+    x = follow_through.follow_on(prompt)
+    if x is None or conversation is None:
+        return None
+    asked = [str(getattr(m, "content", "") or "") for m in getattr(conversation, "messages", []) or []
+             if getattr(m, "role", "") == "user"]
+    asked = [a for a in asked if a.strip() != prompt.strip()]
+    if not asked:
+        return None
+    whole = follow_through.merged(asked[-1], x)
+    if not whole:
+        return None
+    return _records_reply(context, whole) or _own_tool_reply(context, whole)
 
 
 def _records_reply(context, prompt: str):
@@ -1914,6 +1955,9 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A quote from a job's words, a draft for his yes (`_job_quote_reply`).
     A tool call written out as the answer is never said (GARBLED_REPLY).
     A reminder every day goes on the calendar daily (`_daily_reminder_reply`).
+    A plain go-ahead ("ok, start it") to her own 'Say "..." and I'll ...' runs those words
+    (core/conversation_state.offered_phrase); a short follow-up to a code answer is made whole
+    (`_follow_through_reply`).
     A reply is taken for a tool call only when it names one of her tools.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
@@ -1929,7 +1973,12 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         add_message(conversation, "assistant", stopped)
         return AssistantTurn(replies=[stopped], route="fixed")
     prepared = pre_turn(context, conversation, prompt)
+    from core.conversation_state import offered_phrase
+
+    offered = offered_phrase(conversation, prompt)  # "ok, start it" to her 'Say "..." and I'll ...': those words
     add_message(conversation, "user", prompt)
+    if offered and prepared.fixed_reply is None:
+        prompt = offered
     if prepared.fixed_reply is not None:
         add_message(conversation, "assistant", prepared.fixed_reply)
         after_fixed_reply(context, conversation)
@@ -2046,6 +2095,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _home_trouble_reply(context, prompt)  # the house's trouble: the main shutoff, the power first
         if walked is None:
             walked = _outage_reply(context, prompt)  # the power out: the first things, then his own stores
+        if walked is None:
+            walked = _follow_through_reply(context, conversation, prompt)  # a follow-up to a code answer, made whole
         if walked is None:
             walked = _records_reply(context, prompt)  # a bill paid or not, a product's stock, from his records
         if walked is None:

@@ -443,6 +443,27 @@ def _action_suggest_recipes(context: AppContext, arguments: dict) -> str:
     return " ".join(parts)
 
 
+def needs_for(context: AppContext, dish: str) -> Optional[str]:
+    """"What do I need for the chili?" (the live sweep, 2026-11-26: it had asked for the meat's weight to work out a
+    cure): a saved recipe his words name, what it still needs beyond his pantry, and the offer to put that on the
+    grocery list (add_recipe_ingredients_to_grocery_list, on his yes). None when no recipe of his is named."""
+    kitchen = getattr(context, "kitchen", None)
+    if kitchen is None or not dish.strip():
+        return None
+    recipe, error = _find_recipe(context, dish)
+    if error or recipe is None:
+        return None
+    missing = next((m for r, m in kitchen.recipes_makeable_now() if r.recipe_id == recipe.recipe_id), None)
+    if missing is None:
+        names = [str(i.get("name", "")) for i in recipe.ingredients if i.get("name")]
+        return f"{recipe.name} takes: {', '.join(names)}." if names else f"{recipe.name} has no ingredients saved."
+    if not missing:
+        return f"You have everything for {recipe.name}."
+    short = recipe.name.lower()
+    return (f"For {recipe.name} you still need: {', '.join(missing)}; the rest is in your pantry. Say \"add what I need "
+            f"for the {short} to my grocery list\" and I'll put {'it' if len(missing) == 1 else 'them'} on.")
+
+
 def _action_log_meal(context: AppContext, arguments: dict) -> str:
     """Assistant tool `log_meal`: records that a recipe was made (the kitchen's log_meal: XP, the unlock mission, the history) and how many
     times it has been. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
