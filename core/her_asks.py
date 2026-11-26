@@ -40,10 +40,18 @@ _BUILD = re.compile(r"materials and cuts for an? (?P<kind>[\w' -]+?) at your siz
 _SIZE = re.compile(r"^\s*(?:(?:ok(?:ay)?|so|and|hmm|well),?\s+)?(?:what about|how about|make it|let'?s (?:do|say)|maybe|say|about|"
                    r"go with)?\s*(?:an?\s+)?(?P<size>\d+(?:\.\d+)?\s*(?:'|ft|feet|foot)?\s*(?:by|x)\s*\d+(?:\.\d+)?)\s*"
                    r"(?:'|ft|feet|foot)?(?:\s+(?:one|size|feet))?\s*[?.!]*\s*$", re.I)
-_BUILD_COST = re.compile(r"^\s*(?:and\s+|so\s+)?(?:how much|what)\s+(?:would|will|does|do)\s+(?:the\s+)?(?:it|that|one|lumber|"
-                         r"materials|wood)\s+(?:cost|run(?: me)?|be)\b.{0,20}[?.!]*\s*$", re.I)
-_BUILD_ADD = re.compile(r"^\s*(?:ok(?:ay)?,?\s+|great,?\s+|yes,?\s+)?(?:please\s+)?(?:add|put|make)\s+(?:it|that|this)\s+"
-                        r"(?:to|in|on|as)\s+(?:my|the|a)\s+(?:projects?|project list)\s*[.!]*\s*$", re.I)
+_BUILD_COST = re.compile(r"^\s*(?:and\s+|so\s+)?(?:how much\s+(?:would|will|does|do)\s+(?:the\s+)?(?:it|that|one|lumber|"
+                         r"materials|wood)\s+(?:cost|run(?: me)?)|what\s+(?:would|will)\s+(?:the\s+)?(?:it|that|one|"
+                         r"lumber|materials|wood)\s+cost)(?:\s+(?:me|us))?\s*[?.!]*\s*$", re.I)
+_BUILD_ADD = re.compile(r"^\s*(?:ok(?:ay)?,?\s+|great,?\s+|yes,?\s+)?(?:please\s+)?(?:(?:add|put)\s+(?:it|that|this)\s+"
+                        r"(?:to|in|on)\s+(?:my|the)\s+(?:projects?|project list)|make\s+(?:it|that|this)\s+(?:a|into a)\s+"
+                        r"project)(?:\s+please)?\s*[.!]*\s*$", re.I)
+_LUMBER = {(2, 2), (2, 3), (2, 4), (2, 6), (2, 8), (2, 10), (2, 12), (4, 4), (4, 6), (6, 6), (1, 2), (1, 4), (1, 6),
+           (1, 8)}  # nominal lumber, never a build's size ("what about a 2 by 4?")
+_FEET = re.compile(r"^\s*(?:(?:ok(?:ay)?|so|and|maybe|about|say|make it|what about|how about),?\s+)*(?P<n>\d+(?:\.\d+)?)\s*"
+                   r"(?:'|ft|feet|foot)(?:\s+(?:long|of (?:it|fence)))?\s*[?.!]*\s*$", re.I)
+# her replies that are still the build's own thread: her size ask, or a materials list (core/plan_library's lines)
+_BUILD_THREAD = re.compile(r"^For the [\w' -]+, what size\?|^\d+(?:\.\d+)? x \d+(?:\.\d+)? ft |^\d+ ft (?:of )?\w*\s*fence", re.I)
 
 _FUEL_ONLY = re.compile(r"^\s*(?:about |around |maybe |probably |like |i have |we have |i'?ve got |we'?ve got )?(?:\d+(?:\.\d+)?|"
                         r"a couple(?: of)?|half an?|a half|an?|one|two|three|four|five|six|seven|eight|nine|ten)\s*"
@@ -63,7 +71,9 @@ _NOT_A_TOWN = re.compile(r"^(?:home|here|there|work|the farm|same|idk|skip|cance
 def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional[str]:
     """His answer to her last question, kept or worked out in code; None when she didn't ask, or his words aren't
     that answer. `recent` is her last few replies, newest last: the build she offered is found there too, so "add it
-    to my projects" after its materials list still means the shed."""
+    to my projects" after its materials list still means the shed, but only when every reply since was the build's
+    own thread; a board's size ("a 2 by 4") is never the build's, a fence takes its feet, and a project of that name
+    already kept is said so, never added twice (the Fable review)."""
     asked, said = str(last_reply or ""), str(prompt or "").strip()
     if not asked or not said or len(said) > 60:
         return None
@@ -93,27 +103,44 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
 
             kept = f"{kept} {generator_runtime(context, fuel.group(1))}"
         return kept
-    build = _BUILD.search(asked) or next((found for found in (_BUILD.search(r) for r in reversed(recent[-3:])) if found),
-                                         None)
+    build = _BUILD.search(asked)
+    if build is None and _BUILD_ADD.match(said):  # "add it" after its list: an older offer, only along its own thread
+        for i in range(len(recent) - 1, max(-1, len(recent) - 4), -1):
+            found = _BUILD.search(recent[i])
+            if found:
+                if all(_BUILD.search(r) or _BUILD_THREAD.search(r.strip()) for r in recent[i + 1:]):
+                    build = found
+                break
     if build:
         kind = (build.group("kind") or build.group("kind2")).strip()
-        if _BUILD.search(asked) is None and not _BUILD_ADD.match(said):
-            return None  # a size or a price leans only on her last reply; adding it, on the last few
-        sized = _SIZE.match(said)
-        if sized:  # "a 10 by 12": the calculators' list for it (core/assistant_plan_actions.materials_reply)
-            from core.assistant_plan_actions import materials_reply
+        from core.assistant_plan_actions import materials_reply
 
+        fence = "fence" in kind.lower()
+        feet = _FEET.match(said) if fence else None
+        if feet:  # "100 feet": a fence's length
+            return materials_reply(context, f"materials for {feet.group('n')} feet of {kind}")
+        sized = None if fence else _SIZE.match(said)
+        if sized:  # "a 10 by 12": the calculators' list for it (core/assistant_plan_actions.materials_reply)
             size = re.sub(r"\s*(?:'|ft|feet|foot)\s*", " ", sized.group("size")).strip()
             size = re.sub(r"\s*(?:by|x)\s*", " by ", size, flags=re.I)
+            a, b = (float(n) for n in size.split(" by "))
+            if (int(min(a, b)), int(max(a, b))) in _LUMBER or min(a, b) < 3:
+                return None  # "a 2 by 4" is a board, never the build's footprint
             return materials_reply(context, f"materials for a {size} {kind}")
         if _BUILD_COST.match(said):
-            return (f"For the {kind}, what size? Say it like \"a 10 by 12\" and I'll work out the materials and price "
+            example = "100 feet" if fence else "a 10 by 12"
+            return (f"For the {kind}, what size? Say it like \"{example}\" and I'll work out the materials and price "
                     f"them from your records.")
         if _BUILD_ADD.match(said):
             actions = getattr(context, "assistant_actions", None)
             if actions is None:
                 return None
-            return actions.execute(context, "add_project", {"name": kind[:1].upper() + kind[1:]})
+            name = kind[:1].upper() + kind[1:]
+            from core import project_time
+
+            if project_time.project_named(context, name, whole=True) is not None:
+                return f"{name} is already one of your projects."  # never a second Shed (the Fable review)
+            return actions.execute(context, "add_project", {"name": name})
     town = _TOWN.match(said) if TOWN_ASK in asked else None
     if town and not _NOT_A_TOWN.match(said) and not said.lower().startswith(("my town is", "set my town")):
         actions = getattr(context, "assistant_actions", None)

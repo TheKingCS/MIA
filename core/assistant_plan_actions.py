@@ -330,7 +330,8 @@ _OTHER_FENCE = re.compile(r"\b(?:barbed|barb|electric|hot wire|woven wire|field 
 def materials_reply(context, words: str) -> Optional[str]:
     """Pure logic but for the plans shelf. A materials question naming a structure MIA can work out and its size
     ("how many fence posts for 200 feet?", "what do I need to build a 10 by 12 shed?") answered by material_list in
-    code, never saved (her own offer's words, "materials for a 10 by 12 shed", too); with no size, the size asked for (and a fence's post spacing: the model had said "2-3 posts
+    code, never saved (her own offer's words, "materials for a 10 by 12 shed", too, but never said as a statement:
+    "materials for the shed are in the garage"); with no size, the size asked for (and a fence's post spacing: the model had said "2-3 posts
     per 8-foot section"); None when the words aren't a question, name no structure she knows, say something done or
     paid, give a count of posts or a perimeter, ask posts of anything but a fence, or name a fence the calculator
     doesn't build (barbed, electric, rail: `_OTHER_FENCE`)."""
@@ -342,6 +343,9 @@ def materials_reply(context, words: str) -> Optional[str]:
             r"\s*(?:how|what|can you|could you|(?:give me |show me |work out |make )?(?:the |a )?materials?(?: list)? for)\b",
             said, re.I):
         return None
+    if not re.match(r"\s*(?:how|what|can you|could you)\b", said, re.I) and re.search(
+            r"\b(?:are|were|was|is|came|arrived|cost|costs|got here|showed up)\b", said, re.I):
+        return None  # her offer's words as a statement ("materials for the shed are in the garage": the Fable review)
     if re.search(r"\bposts?\b", said, re.I) and calc != "fence":
         return None  # "how many posts for the deck": the deck's list has no posts (the sixth review)
     if calc == "fence" and _OTHER_FENCE.search(said):
