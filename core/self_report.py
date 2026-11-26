@@ -10,7 +10,8 @@ benchmarks, the task queue); nothing in it is a model's guess.
 
 Only on the PC with the development platform, only to the device's owner
 (the first profile made on it), and only numbers and names of her own
-loops and tasks: never anything from a person's records.
+loops and tasks; from his records only numbers (what she learned from him
+this week, core/learned_week.counts), never their words.
 """
 
 from __future__ import annotations

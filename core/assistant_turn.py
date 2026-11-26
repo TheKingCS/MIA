@@ -1275,7 +1275,7 @@ _HOMESTEAD_HEALTH = re.compile(r"^\s*(?:how(?:'s| is) (?:the |my |our )?homestea
                                r"(?:here|at home|on what (?:we|i) have)|how many days (?:could|can|will) we last)"
                                r"\s*[?.!]*\s*$", re.I)
 _LEARNED_WEEK = re.compile(r"^\s*what(?: did you| have you|'ve you|'d you) learn(?:ed|t)? (?:(?:from|about) me )?"
-                           r"this week\s*[?.!]*\s*$", re.I)
+                           r"(?:this|the) (?:past |last )?week(?: (?:from|about) me)?(?:,? mia)?\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "

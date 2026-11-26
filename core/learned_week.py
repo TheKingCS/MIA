@@ -27,8 +27,8 @@ SHOWN = 3
 
 
 def _short(text: str, limit: int = 60) -> str:
-    """A memory's text cut to a few words for a line."""
-    text = " ".join(str(text or "").split())
+    """A memory's text cut to a few words for a line, without its own closing stop."""
+    text = " ".join(str(text or "").split()).rstrip(".!;, ")
     return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + "..."
 
 
@@ -36,13 +36,15 @@ def facts(context, now: Optional[datetime] = None) -> dict:
     """{memories: [texts kept this week], skills: [names taught this week], areas: {area: {changes, corrected}},
     memories_fixed: count}; a store that's missing or can't be read gives nothing for its part."""
     now = now or datetime.now()
+    if now.tzinfo is not None:  # the stores' stamps are naive local time
+        now = now.astimezone().replace(tzinfo=None)
     since = (now - timedelta(days=DAYS)).isoformat(timespec="seconds")
     out = {"memories": [], "skills": [], "areas": {}, "memories_fixed": 0}
     store = getattr(context, "user_memories", None)
     if store is not None:
         try:
             out["memories"] = [m.text for m in store.all_memories() if (m.created_at or "") >= since]
-            out["memories_fixed"] = len(store.corrections(DAYS))
+            out["memories_fixed"] = sum(1 for c in store.corrections(DAYS + 1) if str(c.get("at", "")) >= since)
         except Exception:  # noqa: BLE001 - one part that can't be read never takes the rest
             log.exception("What she learned: the memories couldn't be read")
     book = getattr(context, "taught_skills", None)
@@ -54,7 +56,8 @@ def facts(context, now: Optional[datetime] = None) -> dict:
     try:
         from core import corrections
 
-        out["areas"] = {a: r for a, r in corrections.summary(context, DAYS, now).items() if r.get("changes")}
+        out["areas"] = {a: r for a, r in corrections.summary(context, DAYS, now).items()
+                        if r.get("changes") or r.get("corrected")}  # a correction of an older change counts too
     except Exception:  # noqa: BLE001
         log.exception("What she learned: the corrections couldn't be read")
     return out
@@ -76,9 +79,10 @@ def line(context, now: Optional[datetime] = None) -> str:
         made = sum(r["changes"] for r in areas.values())
         fixed = sorted(((a, r["corrected"]) for a, r in areas.items() if r.get("corrected")), key=lambda x: -x[1])
         if fixed:
-            where = ", ".join(f"{n} in {a}" for a, n in fixed[:SHOWN])
+            where = ", ".join(f"{n} in {'other things' if a == 'other' else a}" for a, n in fixed[:SHOWN])
             total = sum(n for _a, n in fixed)
-            parts.append(f"You corrected {total} of the {made} changes I made ({where}).")
+            parts.append(f"I made {made} change{'s' if made != 1 else ''} for you and you corrected me {total} "
+                         f"time{'s' if total != 1 else ''} ({where}).")
         else:
             parts.append(f"You didn't have to correct any of the {made} changes I made.")
     if f["memories_fixed"]:
@@ -89,7 +93,7 @@ def line(context, now: Optional[datetime] = None) -> str:
 
 def counts(context, now: Optional[datetime] = None) -> str:
     """The week's learning as numbers only, for the self-report ("From you this week: 3 memories kept, 1 skill taught,
-    2 of my 14 changes corrected."); "" with nothing to count."""
+    14 changes made, 2 corrected."); "" with nothing to count."""
     f = facts(context, now)
     made = sum(r["changes"] for r in f["areas"].values())
     fixed = sum(r.get("corrected", 0) for r in f["areas"].values())
@@ -98,8 +102,8 @@ def counts(context, now: Optional[datetime] = None) -> str:
         bits.append(f"{len(f['memories'])} memor{'ies' if len(f['memories']) != 1 else 'y'} kept")
     if f["skills"]:
         bits.append(f"{len(f['skills'])} skill{'s' if len(f['skills']) != 1 else ''} taught")
-    if made:
-        bits.append(f"{fixed} of my {made} changes corrected")
+    if made or fixed:
+        bits.append(f"{made} change{'s' if made != 1 else ''} made, {fixed} corrected")
     return ("From you this week: " + ", ".join(bits) + ".") if bits else ""
 
 

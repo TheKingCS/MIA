@@ -31,10 +31,10 @@ def test_the_week_says_memories_skills_and_corrections(monkeypatch):
     said = learned_week.say(_context(), NOW)
     assert "I kept 1 thing about you: Likes his coffee black." in said and "Old one" not in said
     assert "You taught me Logging the eggs." in said
-    assert "You corrected 2 of the 12 changes I made (2 in money)." in said
+    assert "I made 12 changes for you and you corrected me 2 times (2 in money)." in said
     assert "You fixed 1 thing I'd remembered wrong." in said
     counted = learned_week.counts(_context(), NOW)
-    assert counted == "From you this week: 1 memory kept, 1 skill taught, 2 of my 12 changes corrected."
+    assert counted == "From you this week: 1 memory kept, 1 skill taught, 12 changes made, 2 corrected."
     assert "coffee" not in counted
 
 
@@ -49,6 +49,7 @@ def test_a_quiet_week_says_so(monkeypatch):
 def test_the_words_reach_it(monkeypatch):
     monkeypatch.setattr(learned_week, "say", lambda c, n=None: "the week")
     for words in ("What did you learn this week?", "what have you learned from me this week",
-                  "what've you learned this week"):
+                  "what've you learned this week", "what have you learned this past week about me",
+                  "what did you learn this week, MIA?"):
         assert assistant_turn._own_tool_reply(SimpleNamespace(), words) == "the week", words
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "what have you learned about me") != "the week"
