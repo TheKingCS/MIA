@@ -34,7 +34,8 @@ _LEAD = re.compile(r"^\s*(?:ok(?:ay)?,?\s+|so,?\s+|and\s+|but\s+)?(?:what about|
 _THING_ASKS = (
     # "when should I start tomatoes?" then "and peppers?" (the garden conversation check, 2026-11-26)
     re.compile(r"^(?P<ask>\s*when (?:should|do|can|would) (?:i|we) (?:start|plant|sow|transplant|put out|set out) )"
-               r"(?P<thing>[\w' -]+?)(?P<end>(?: seeds| indoors| inside| outside| out)?\s*\??\s*)$", re.I),
+               r"(?P<thing>(?!\w+ing\b(?<!spring)(?<!string))[\w' -]+?)(?P<end>(?: seeds| indoors| inside| outside| out)?\s*\??\s*)$",
+               re.I),  # never "when should I start selling eggs?" (the Fable review)
     # "how much did I spend on gas last month?" then "and groceries?": the thing swapped, its period kept (a thread;
     # the debt question is [2], the days-until question last)
     re.compile(r"^(?P<ask>\s*how much (?:did|have) (?:i|we) (?:spent|spend) on )(?P<thing>[\w' -]+?)(?P<end>(?:\s+(?:this|"

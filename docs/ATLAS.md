@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1918 files, 401,474 lines; 1918 files describe themselves; 21,741 of 21,887 classes and functions are documented.
+1918 files, 401,511 lines; 1918 files describe themselves; 21,742 of 21,888 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,556 lines; 10,385 of 10,464 classes and functions documented
+741 files, 210,569 lines; 10,385 of 10,464 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-767 files, 108,756 lines; 8,982 of 9,049 classes and functions documented
+767 files, 108,780 lines; 8,983 of 9,050 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1267,7 +1267,7 @@
 - `tests/test_freedom.py`: Freedom (DEC-0038): the fund that covers the gap between a month of living and what the homestead earns, plus the builds; the estimated day; progress by period; what a shift buys. Every number from the person's own records, or their own number, and it says which (and what it is: Fact, Calculation or
 - `tests/test_gamification.py`: Unit tests for core.gamification.grant_xp() — the shared "credit XP credits + raise a real notification" helper every routine-completion hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed; fakes stand in for context.profiles/context.notifications/context.skills, same shape as test
 - `tests/test_garage_module.py`: Unit tests for modules.garage.module's pure functions, same style as tests/test_dashboard_module.py (no Qt event loop, no fixtures).
-- `tests/test_garden_thread.py`: The garden conversation check's fixes (2026-11-26): "my last frost is April 20" kept (her own suggested words had kept nothing), a bare date after her frost ask kept too, and "and peppers?" after "when should I start tomatoes?".
+- `tests/test_garden_thread.py`: The garden conversation check's fixes (2026-11-26): "my last frost is April 20" kept (her own suggested words had kept nothing), a bare date after her frost ask kept too, undoable, never a frost that happened or a date out of its season; and "and peppers?" after "when should I start tomatoes?", neve
 - `tests/test_garden_week.py`: This week in the garden (core/garden_week.py): his confirmed garden plans' steps in the next seven days, said once a week through the gate, with their days; nothing said when nothing's due; and asked, whether no plan is confirmed or the confirmed ones have nothing this week. *(1 undocumented)*
 - `tests/test_geo_grid.py`: Grid references and TAK (build plan step 14, DEC-0099): MGRS worked out in code (checked against pyproj and the mgrs package: 4,000 random points agreed to the metre, 2026-11-06; the reference outputs are pinned here), and MIA's waypoints as a TAK data package of Cursor on Target events and KML.
 - `tests/test_glasses.py`: The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041 Phase 2; core/glasses.py): the person's own apps as cards, each with a menu; a panel's lines carry only glasses-safe actions, and money stays readouts; a change goes Propose -> Approve like everywhere else. Every ask reaches one o

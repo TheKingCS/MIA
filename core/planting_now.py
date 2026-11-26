@@ -127,10 +127,12 @@ def _when(days: int, on: date) -> str:
     return f"in {days} day{'s' if days != 1 else ''} ({on:%b} {on.day})"
 
 
-_MONTH_DAY = (r"(?P<day>(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?|"
-              r"\d{1,2}/\d{1,2})")
-_KEEP_FROST = re.compile(r"^\s*(?:hey mia,? )?(?:ok(?:ay)?,?\s+)?(?:my|our|the)\s+(?:average\s+)?(?P<which>last|first)\s+(?:spring\s+|"
-                         r"fall\s+|autumn\s+)?frost(?:\s+date)?\s+(?:is|'s|was|falls on|is on|is around|is about|is usually)"
+_MONTH_DAY = (r"(?P<day>(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|"
+              r"oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{1,2}(?:st|nd|rd|th)?|\d{1,2}/\d{1,2})")
+# his own average date ("my last frost is"), never a frost that happened ("the last frost was November 20": the
+# Fable review)
+_KEEP_FROST = re.compile(r"^\s*(?:hey mia,? )?(?:ok(?:ay)?,?\s+)?(?:my|our)\s+(?:average\s+)?(?P<which>last|first)\s+(?:spring\s+|"
+                         r"fall\s+|autumn\s+)?frost(?:\s+date)?\s+(?:is|'s|falls on|is on|is around|is about|is usually)"
                          r"\s+(?:around\s+|about\s+|usually\s+|on\s+)?" + _MONTH_DAY + r"\s*[.!]?\s*$", re.I)
 _BARE_DAY = re.compile(r"^\s*(?:it'?s\s+|around\s+|about\s+|usually\s+)*" + _MONTH_DAY + r"\s*[.!]?\s*$", re.I)
 
@@ -139,7 +141,9 @@ def keep_frost(context, said: str, which: str = "") -> Optional[str]:
     """"My last frost is April 20" (or "my first frost is October 15"), kept as his frost date (`garden.last_frost` /
     `garden.first_frost`, the household's, saved so "undo that" restores it), then what's due to plant from it: the
     garden conversation check (2026-11-26) found her own suggested words kept nothing. `which` given ("last") reads a
-    bare date ("April 20", after her ask). None when the words aren't that."""
+    bare date ("April 20", after her ask). Only his own average ("my last frost is"), a month spelled whole or short,
+    a last frost from January to July and a first from August to December, recorded for "undo that". None when the
+    words aren't that."""
     from core.garden_plans import parse_day
 
     found = _KEEP_FROST.match(said or "") if not which else _BARE_DAY.match(said or "")
@@ -152,14 +156,21 @@ def keep_frost(context, said: str, which: str = "") -> Optional[str]:
         month, day = day_words.split("/")
         day_words = f"{int(month):02d}-{int(day):02d}"
     on = parse_day(day_words, date.today().year)
-    if on is None:
-        return None
+    if on is None or (which == "last" and not 1 <= on.month <= 7) or (which == "first" and not 8 <= on.month <= 12):
+        return None  # a spring frost in December is no average last frost
     key = "garden.last_frost" if which == "last" else "garden.first_frost"
-    config.set(key, on.strftime("%m-%d"))
-    try:
-        config.save()
-    except Exception:  # noqa: BLE001 - kept in memory either way
-        pass
+    from core import undo_log
+    from core.person_settings import person_id
+
+    with undo_log.recording(f"frost_{which}", person_id(context)) as change:  # "undo that" takes this back
+        config.set(key, on.strftime("%m-%d"))
+        try:
+            config.save()
+        except Exception:  # noqa: BLE001 - kept in memory either way
+            pass
+    undo = getattr(context, "undo", None)
+    if undo is not None:
+        undo.add(change)
     said_back = f"Kept: your {which} {'spring' if which == 'last' else 'fall'} frost is {on:%B} {on.day}."
     if which == "last":
         return said_back + " " + say_now(context)

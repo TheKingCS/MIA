@@ -121,7 +121,8 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
 
             kept = f"{kept} {generator_runtime(context, fuel.group(1))}"
         return kept
-    if "When's your last spring frost?" in asked or "I need your last spring frost" in asked:
+    if any(m in asked for m in ("When's your last spring frost?", "I need your last spring frost",
+                                "When is your last spring frost")):  # the garden plan's own ask too
         from core import planting_now
 
         kept = planting_now.keep_frost(context, said, "last")  # "April 20" after her frost ask
