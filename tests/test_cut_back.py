@@ -20,11 +20,14 @@ def test_chosen_spending_and_recurring_bills():
              SimpleNamespace(name="Rent", amount=900, recurrence="monthly", category="Mortgage/Rent", entity_id="")]
     context = SimpleNamespace(budget=SimpleNamespace(total_expenses_by_category=by, all_bills=lambda: bills))
     said = money_periods.cut_back(context, date(2026, 11, 26))
-    assert said.startswith("Where your money goes that you choose, this month: Groceries $300.00 (usually $300.00")
+    assert said.startswith("Where your money goes that you choose, this month so far: Groceries $300.00 (usually about "
+                           "$260.00 by now")
     assert "Netflix $15.50 monthly" in said and "Rent $" not in said and "Mortgage" not in said
 
 
 def test_the_words_reach_it(monkeypatch):
     monkeypatch.setattr(money_periods, "cut_back", lambda c, t=None: "cuts")
-    for words in ("where can I cut back?", "what can I cut?", "help me spend less", "where could we save money?"):
+    for words in ("where can I cut back?", "where can I cut spending?", "help me spend less", "where could we save money?"):
         assert assistant_turn._own_tool_reply(SimpleNamespace(), words) == "cuts", words
+    for words in ("what should I cut?", "what can I trim?"):
+        assert assistant_turn._own_tool_reply(SimpleNamespace(), words) != "cuts", words

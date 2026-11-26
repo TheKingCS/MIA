@@ -1657,8 +1657,9 @@ _STORM_READY = re.compile(r"^\s*(?:hey mia,? )?(?:how (?:prepared|ready) am i|am
                           r"(?:prepared|ready) are we) for (?:a |an |the )?(?:big |bad )?(?P<kind>(?:winter |ice |snow )?storm|snowstorm|"
                           r"thunderstorm|blizzard|ice storm|hurricane|tornado|power outage|outage)(?: this weekend| this week|"
                           r" tomorrow| tonight)?\s*[?.!]*\s*$", re.I)
-_CUT_BACK = re.compile(r"^\s*(?:hey mia,? )?(?:so\s+|ok(?:ay)?,?\s+)?(?:where|what) (?:can|could|should) (?:i|we) (?:cut back|cut|"
-                       r"spend less|save money|trim)(?: on| back on)?(?: spending| money)?(?: this month)?\s*[?.!]*\s*$|"
+_CUT_BACK = re.compile(r"^\s*(?:hey mia,? )?(?:so\s+|ok(?:ay)?,?\s+)?(?:where|what) (?:can|could|should) (?:i|we) (?:(?:cut back|spend "
+                       r"less|save money)(?: on| back on)?(?: spending| money)?|(?:cut|trim)(?: back)? (?:on )?(?:spending|"
+                       r"money|costs|expenses))(?: this month)?\s*[?.!]*\s*$|"
                        r"^\s*(?:hey mia,? )?(?:help me )?(?:cut back|spend less)(?: on spending)?\s*[?.!]*\s*$", re.I)
 _DUE_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is)|whats|what do i have) due (?:today|for today)\s*[?.!]*\s*$|"
                         r"^\s*(?:hey mia,? )?what(?:'s| is) (?:on )?(?:my )?(?:list|plate) (?:for )?today\s*[?.!]*\s*$", re.I)

@@ -222,13 +222,15 @@ def best_sellers(context, words: str = "", today: Optional[date] = None) -> str:
     return f"Your best seller {said_when} is " + said[0] + (". Then " + "; ".join(said[1:]) if len(said) > 1 else "") + "."
 
 
-FIXED = {"Mortgage/Rent", "Insurance", "Taxes", "Bank Fees", "Medical"}
+FIXED = {"Mortgage/Rent", "Insurance", "Taxes", "Bank Fees", "Medical", "Debt Payment"}  # never a cut
+_PER_MONTH = {"weekly": 52 / 12, "biweekly": 26 / 12, "monthly": 1, "quarterly": 1 / 3, "yearly": 1 / 12}
 
 
 def cut_back(context, today: Optional[date] = None) -> str:
-    """Where his money goes that he chooses: this month's spending by category (never a fixed cost, `FIXED`), each
-    against its usual month (the average of the last three full months, when there are any), the three biggest; then
-    his recurring household bills outside the fixed costs (subscriptions, the phone), biggest first."""
+    """Where his money goes that he chooses: this month's spending so far by category (never a fixed cost or a debt
+    payment, `FIXED`), each against its usual by this day of the month (the average of the last three months with
+    spending), the three biggest; then his recurring household bills outside the fixed costs (subscriptions, the
+    phone), biggest a month first."""
     today = today or date.today()
     budget = getattr(context, "budget", None)
     if budget is None:
@@ -250,24 +252,28 @@ def cut_back(context, today: Optional[date] = None) -> str:
     parts = []
     if now:
         top = sorted(now.items(), key=lambda kv: -kv[1])[:3]
+        days_in = calendar.monthrange(today.year, today.month)[1]
+        share = today.day / days_in  # this month so far against the usual by now, never a whole month
         said = []
         for c, v in top:
             line = f"{c} {_money(v)}"
             if months and usual.get(c):
-                avg = usual[c] / months
-                line += f" (usually {_money(avg)} a month)"
+                by_now = usual[c] / months * share
+                line += f" (usually about {_money(by_now)} by now)" if today.day < days_in else \
+                    f" (usually {_money(usual[c] / months)} a month)"
             said.append(line)
-        parts.append("Where your money goes that you choose, this month: " + "; ".join(said) + ".")
+        parts.append("Where your money goes that you choose, this month so far: " + "; ".join(said) + ".")
     bills = [b for b in _household(budget.all_bills() if hasattr(budget, "all_bills") else [])
              if b.recurrence and b.category not in FIXED and float(b.amount or 0) > 0]
     if bills:
-        bills.sort(key=lambda b: -float(b.amount))
+        bills.sort(key=lambda b: -float(b.amount) * _PER_MONTH.get(str(b.recurrence).lower(), 1))  # per month
         parts.append("Recurring bills to look at again: " + "; ".join(
             f"{b.name} {_money(float(b.amount))} {str(b.recurrence).lower()}" for b in bills[:5]) + ".")
     if not parts:
         return ("Nothing logged yet that I could point to: tell me as you spend (\"I spent $30 on groceries\") and "
                 "I'll show you where it goes.")
-    return " ".join(parts) + " Rent, insurance, taxes and your debts' minimums are left out: those aren't cuts."
+    return " ".join(parts) + (" Rent, insurance, taxes, medical costs, bank fees and your debt payments are left out: "
+                              "those aren't cuts.")
 
 
 def afford(context, amount: Optional[float], today: Optional[date] = None) -> str:
