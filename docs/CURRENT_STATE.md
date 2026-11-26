@@ -117,7 +117,9 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   Fable-reviewed.
 - The guitar conversation check: "I practiced for 30 minutes today" is a session on his course (it had only been
   noted), "what should I work on next?" after her course reply is its next step (it had suggested a project).
-  Fable-reviewed. 8818 passing.
+  Fable-reviewed.
+- The vehicle conversation check: "the mower needs new blades" is a task on his Riding Mower (the said words the end
+  of one asset's name), and "what has the truck cost me?" is that machine's own costs. Fable-reviewed. 8820 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
