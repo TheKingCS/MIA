@@ -66,6 +66,8 @@ REASONS: dict[str, tuple[str, str]] = {
                     "what's due in the next seven days and the tightest week ahead, all from your own budget"),
     "condition_watch": ("something you asked me to watch", "you said \"tell me when...\": I check it in code each "
                         "day and say it when it comes true, once unless you said every time"),
+    "trip_eve": ("the day before a trip", "you planned a trip: the afternoon before, I say what isn't packed, "
+                 "tomorrow's weather and the checks for that kind of trip"),
     "market_eve": ("the day before a market", "you set a market day: the day before, I say what to bring from what "
                    "usually sells at yours, and what's short"),
     "evening_wrap": ("the evening wrap", "you said yes to it (DEC-0292): once an evening, what got done today and "

@@ -481,6 +481,10 @@
    "status": "none",
    "why": "adding or stopping a watch he asked for, read from his words in code and said back as it's kept; undo takes it back"
   },
+  "check:trip_eve": {
+   "status": "none",
+   "why": "his own trip's packing list and the forecast, joined in code, once per trip; the gate's pacing learns from what he opens or dismisses (topic trip_eve)"
+  },
   "check:market_eve": {
    "status": "none",
    "why": "his market days and goods, with how much to bring worked out in code from his own closed markets (core/goods.demand, already a figure that learns from each market); said once per market day, paced by the gate"

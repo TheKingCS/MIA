@@ -29,6 +29,7 @@
   "tests/test_seed_check.py": 1,
   "tests/test_specialist_work.py": 2,
   "tests/test_spoken_approval.py": 1,
+  "tests/test_trip_eve.py": 2,
   "tests/test_ual.py": 1,
   "tests/test_unusual.py": 1,
   "tests/test_weather_watch.py": 2,

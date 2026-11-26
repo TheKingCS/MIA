@@ -120,6 +120,8 @@
       "glasses": "view",
       "voice": true
     },
-    "background": []
+    "background": [
+      "trip_eve"
+    ]
   }
 }

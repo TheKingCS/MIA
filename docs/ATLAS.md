@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1863 files, 394,972 lines; 1863 files describe themselves; 21,454 of 21,586 classes and functions are documented.
+1865 files, 395,167 lines; 1865 files describe themselves; 21,465 of 21,599 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-729 files, 206,391 lines; 10,245 of 10,324 classes and functions documented
+730 files, 206,530 lines; 10,252 of 10,331 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -634,6 +634,7 @@
 - `core/trail_map_library.py`: A catalog of official state park / trail map PDFs — the "state park maps and trail maps" half of the Maps module's offline-maps upgrade, alongside core.map_tile_cache's real basemap tiles.
 - `core/training_actions.py`: The live workout session's changes (DEC-0055, core/training_session.py) as action kinds on the contract in core/actions.py, so the Workout screen, the glasses and voice all move the one session the same way: start today's training, a set done (with how it was counted), skip the rest, skip an exercis
 - `core/training_session.py`: The live workout session (DEC-0055, docs/ACTIVE_TRAINING_PLAN.md): one per person, shared by every surface (the PC, the phone, the glasses, voice), moving set by set through today's training.
+- `core/trip_eve.py`: "Before you go" (brainstorm round 16, 2026-11-25): the afternoon before a planned trip (core/trip_manager.py, a trip starting tomorrow and still planned), one message through the gate: what on its packing list isn't packed yet, tomorrow's forecast here (core/weather.card: his town, not the trip's), 
 - `core/trip_manager.py`: Backs the Expeditions module (modules/expeditions/module.py) — docs/ROADMAP.md milestone 12.1, Expedition Mode. A Trip is one outing — a hike, paddle, ride, fishing trip, etc. (see `ACTIVITY_TYPES`) — always belonging to a core.expedition_manager.Expedition via the required `expedition_id`. It ties 
 - `core/trip_route.py`: A trip's route and checkpoints on every device (DEC-0125; docs/WEB_PARITY.md Expeditions "not yet: route, splits"). The desktop's trip dialog plans a route from saved waypoints and logs "arrived here" at each one (core/trip_manager.py: `waypoint_ids`, `record_split`, `leg_summaries`); the web and vo
 - `core/tts_worker.py`: Runs `VoiceManager.synthesize()` + `.play()` off the GUI thread — docs/ROADMAP.md milestone 5.3. Same reasoning as `core/chat_worker.py`: `play()`'s `sd.wait()` blocks for the full duration of the spoken reply, which scales with reply length and would freeze the GUI thread for that whole time otherw
@@ -1028,7 +1029,7 @@
 
 ## tests/: the test suite: what each part must do
 
-724 files, 106,450 lines; 8,835 of 8,888 classes and functions documented
+725 files, 106,506 lines; 8,839 of 8,894 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1649,6 +1650,7 @@
 - `tests/test_training_session.py`: The live workout session (DEC-0055, core/training_session.py): prescribed from the plan, performed set by set with how each count was made, rest by itself (and thirty more seconds of it, tapped or said), pauses, corrections, counting aloud kept honest, and finishing as one ordinary workout log.
 - `tests/test_trigger_hygiene.py`: Trigger phrases that fired inside sentences meant for another app (found by laying every tool's phrases over the routing corpus, 2026-11-24): a bought drill isn't clothing, "my own time" isn't whose a tool is, "what depends on selling the lot" isn't an app's record, "add to my notes" and "what's in 
 - `tests/test_trip_detail_dialog.py`: Unit tests for gui.trip_detail_dialog's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
+- `tests/test_trip_eve.py`: "Before you go" (core/trip_eve.py, 2026-11-25): the afternoon before a planned trip, what isn't packed, tomorrow's weather here and the checks for that kind of trip (telling someone where you're going first), once per trip through the gate; "what do I need for my trip?" reaches it. *(2 undocumented)*
 - `tests/test_trip_manager.py`: Unit tests for core.trip_manager. Isolates _DATA_DIR/_TRIPS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_waypoint_manager.py's isolated_paths). planned_route_distance_km() is checked against the same known real-world distance test_waypoint_manager.py already uses (New York <->
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.
 - `tests/test_trip_route.py`: A trip's route and checkpoints on the web and by voice (core/trip_route.py, core/assistant_trip_route_actions.py): stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, undo, the glasses' On The Trail panel, and a trip's log with its weather.

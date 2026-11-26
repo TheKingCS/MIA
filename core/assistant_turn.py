@@ -1286,6 +1286,9 @@ _MY_WEEK = re.compile(r"^\s*(?:(?:what(?:'s| is| does)|whats) (?:my|the) week (?
 _WATCH_ASK = re.compile(r"^\s*(?:please |hey mia,? )?(?:(?:tell|let|warn|alert|ping) me(?: know)?|remind me) "
                         r"(?:when(?:ever)?|if|once|every time|each time)\b", re.I)
 _WATCHING = re.compile(r"^\s*what (?:are|r) you (?:watching|keeping an eye on)(?: for)?(?: for me)?\s*[?.!]*\s*$", re.I)
+_TRIP_EVE = re.compile(r"^\s*(?:what do i need (?:for|to pack for|to bring (?:on|for)) (?:my |the |tomorrow'?s )?trip(?: tomorrow)?|"
+                       r"am i ready for (?:my |the |tomorrow'?s )?trip(?: tomorrow)?|before i go|what(?:'s| is) left to pack"
+                       r"(?: for (?:my |the )?trip)?)\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1301,8 +1304,8 @@ def _own_tool_reply(context, prompt: str):
     money this week?" its pulse (core/money_pulse), "what did you learn this week?" the week's learning
     (core/learned_week), "how are my hobbies going?" this month across them (core/hobby_progress), "what does
     my week look like?" the week with its look-ahead (get_week), "tell me when..." a watch from his whole sentence
-    when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches).
-    None otherwise."""
+    when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
+    "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
     said = prompt.replace("’", "'")
     if _HOMESTEAD_HEALTH.match(said):  # "how's the homestead?": its days in one line (core/homestead_health)
         from core import homestead_health
@@ -1345,6 +1348,14 @@ def _own_tool_reply(context, prompt: str):
             except Exception:
                 log.exception("Couldn't run %s", name)
                 return None
+    if _TRIP_EVE.match(said):  # "what do I need for my trip?": tomorrow's trip, before he goes (core/trip_eve)
+        from core import trip_eve
+
+        try:
+            return trip_eve.say(context)
+        except Exception:
+            log.exception("Couldn't say the trip's list")
+            return None
     if _MY_WEEK.match(said):  # "what does my week look like?": the week and its look-ahead (get_week, core/week_ahead)
         actions = getattr(context, "assistant_actions", None)
         if actions is not None and "get_week" in getattr(actions, "_actions", {"get_week": 1}):
