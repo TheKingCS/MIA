@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1896 files, 399,225 lines; 1896 files describe themselves; 21,660 of 21,805 classes and functions are documented.
+1897 files, 399,309 lines; 1897 files describe themselves; 21,663 of 21,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-739 files, 209,217 lines; 10,358 of 10,437 classes and functions documented
+739 files, 209,271 lines; 10,359 of 10,438 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1038,7 +1038,7 @@
 
 ## tests/: the test suite: what each part must do
 
-747 files, 107,846 lines; 8,928 of 8,994 classes and functions documented
+748 files, 107,876 lines; 8,930 of 8,996 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1298,6 +1298,7 @@
 - `tests/test_homestead_goods.py`: Homestead goods (DEC-0036): batches in kitchen units, stock with a made date and a sell-by, sold oldest first, leftovers tossed as a loss, a market day's tally read from the books, the Builds tab's Sell First and Best Earner (DEC-0113), and cups against pounds for materials on the density table.
 - `tests/test_homestead_health.py`: The homestead's health in one line (core/homestead_health.py, 2026-11-25): its days of water, food, feed and fuel, the lowest first, what isn't counted said; "how's the homestead?" reaches it; the morning briefing names what's low.
 - `tests/test_homestead_manager.py`: Unit tests for core.homestead_manager — mirrors tests/test_finance_manager.py's structure exactly (same isolated tmp_path watched folder, same _FakeConfig pattern), since core.homestead_manager is a deliberate sibling of core.finance_manager, not a shared abstraction (see that module's own docstring
+- `tests/test_homestead_month.py`: "What should I be doing on the homestead this month?" (core/homestead_year.this_month, brainstorm round 18): his own month first, then the season's usual work, the flock's only with hens.
 - `tests/test_homestead_sums.py`: Three homestead sums worked out in code (core/homestead_sums.py; live sweep, 2026-11-25, each had been answered from memory): water to store at a gallon a person a day for the days and people said (or his settings), a generator's hours on the fuel said at his burn rate (or how to tell MIA his rate, 
 - `tests/test_homestead_year.py`: The homestead's year (core/homestead_year.py, brainstorm 4.4): his confirmed garden plans' crop dates and his recurring upkeep, month by month over the next twelve, from his own records (a frequent task once a month, with how many times). *(1 undocumented)*
 - `tests/test_hourly_earnings.py`: What his work really makes an hour (core/hourly_earnings.py): finished jobs' revenue less materials and expenses over their hours, added up by hours, the best and lowest named, a finished job with no sale linked counted apart and never as zero, a batch sold later from stock counted for the job that 

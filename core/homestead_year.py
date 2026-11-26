@@ -12,7 +12,8 @@ month by month, from his own records, never a generic calendar:
 
 `year(context, today)` is the months, each {month: "2027-04", label: "April 2027", items: [...]} with the empty ones left
 out; `say` reads the next few months out ("what's coming on the homestead this year?"). Everything here is already a
-record of his: this only puts it in order.
+record of his: this only puts it in order. `this_month` is "what should I be doing on the homestead this month?":
+this month's own items, then the season's usual work (`SEASON`), said as general advice.
 """
 
 from __future__ import annotations
@@ -120,3 +121,42 @@ def say(context, today: Optional[date] = None) -> str:
     more = len(months) - SAID_MONTHS
     return " ".join(parts) + (f" Then {more} more month{'s' if more != 1 else ''} with something in them." if more > 0
                               else "")
+
+
+# The season's usual work, by month, said as general advice beside his own records (brainstorm round 18): (months,
+# what, whether it's the flock's)
+SEASON = (
+    ((12, 1, 2), "keep the hens' water from freezing (a heated base, or swap it morning and evening) and the coop "
+                 "vented but draft-free", True),
+    ((12, 1, 2), "order seeds and plan the garden before spring's rush; check what you saved and what sold out", False),
+    ((11, 12, 1, 2), "keep the firewood dry and stacked ahead, and check the chimney and stovepipe", False),
+    ((3, 4), "start the seeds that go out after the last frost, and clean the coop out deep for spring", False),
+    ((5, 6), "hill the potatoes, mulch the beds, and watch the hens' shade and water as it warms", False),
+    ((7, 8), "water deeply and early, keep the canning gear ready for the harvest, and split next winter's wood",
+     False),
+    ((9, 10), "put up the harvest, plant garlic, and get the coop and the water ready for cold", False),
+    ((11,), "drain and store the hoses and mulch the beds for winter", False),
+    ((11,), "check the flock's lights and water for the short, cold days", True),
+)
+
+
+def this_month(context, today: Optional[date] = None) -> str:
+    """For "what should I be doing on the homestead this month?" (brainstorm round 18): this month's own items from his
+    records (the garden's dates and his upkeep, as `year` has them), then the season's usual work (`SEASON`, said as
+    general advice), the flock's only when he has hens."""
+    today = today or date.today()
+    key = _key(today)
+    mine = next((m for m in year(context, today) if m["month"] == key), None)
+    parts = []
+    if mine:
+        items = mine["items"]
+        parts.append(f"From your records this {today:%B}: " + "; ".join(what for _d, what in items[:6])
+                     + (f"; and {len(items) - 6} more" if len(items) > 6 else "") + ".")
+    else:
+        parts.append(f"Nothing from your garden plans or upkeep falls in {today:%B}.")
+    flock = getattr(context, "flock", None)
+    hens = any(max(0, getattr(f, "hens", 0) or 0) for f in getattr(flock, "flocks", []) or []) if flock else False
+    usual = [what for months, what, flock_only in SEASON if today.month in months and (hens or not flock_only)]
+    if usual:
+        parts.append("The season's usual work: " + "; ".join(usual) + ".")
+    return " ".join(parts)
