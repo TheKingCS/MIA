@@ -315,7 +315,7 @@ def _action_material_list(context, arguments: dict) -> str:
 _MATERIALS_ASK = re.compile(r"\bhow many (?:fence posts|posts|t-posts|rails|pickets|bags of concrete|studs|2x4s|2x6s|"
                             r"joists|rafters|sheets(?: of plywood)?|boards)\b|\bwhat do (?:i|we) need to build\b|"
                             r"\bhow much (?:lumber|wood|concrete) (?:for|to build|do i need)\b|"
-                            r"\bmaterials?(?: list)? for (?:a|an|the|my)\b", re.I)
+                            r"\bmaterials?(?: list)? for (?:a|an|the|my|\d)", re.I)
 
 
 # Not a materials question for the calculators (the sixth review): something done or paid ("I built 200 feet of
@@ -330,13 +330,17 @@ _OTHER_FENCE = re.compile(r"\b(?:barbed|barb|electric|hot wire|woven wire|field 
 def materials_reply(context, words: str) -> Optional[str]:
     """Pure logic but for the plans shelf. A materials question naming a structure MIA can work out and its size
     ("how many fence posts for 200 feet?", "what do I need to build a 10 by 12 shed?") answered by material_list in
-    code, never saved; with no size, the size asked for (and a fence's post spacing: the model had said "2-3 posts
+    code, never saved (her own offer's words, "materials for a 10 by 12 shed", too); with no size, the size asked for (and a fence's post spacing: the model had said "2-3 posts
     per 8-foot section"); None when the words aren't a question, name no structure she knows, say something done or
     paid, give a count of posts or a perimeter, ask posts of anything but a fence, or name a fence the calculator
     doesn't build (barbed, electric, rail: `_OTHER_FENCE`)."""
     said = str(words or "")
     calc = structure_for(said) if _MATERIALS_ASK.search(said) or re.search(r"\bhow many posts\b", said, re.I) else ""
-    if not calc or _NOT_MATERIALS.search(said) or not re.match(r"\s*(?:how|what|can you|could you)\b", said, re.I):
+    # a question, or her own offer's words said back ("materials for a 10 by 12 shed": the conversation check,
+    # 2026-11-26, where the phrase she'd suggested got nothing in code)
+    if not calc or _NOT_MATERIALS.search(said) or not re.match(
+            r"\s*(?:how|what|can you|could you|(?:give me |show me |work out |make )?(?:the |a )?materials?(?: list)? for)\b",
+            said, re.I):
         return None
     if re.search(r"\bposts?\b", said, re.I) and calc != "fence":
         return None  # "how many posts for the deck": the deck's list has no posts (the sixth review)

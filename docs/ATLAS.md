@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1910 files, 400,715 lines; 1910 files describe themselves; 21,713 of 21,859 classes and functions are documented.
+1911 files, 400,797 lines; 1911 files describe themselves; 21,715 of 21,861 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,128 lines; 10,378 of 10,457 classes and functions documented
+741 files, 210,168 lines; 10,378 of 10,457 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-759 files, 108,425 lines; 8,961 of 9,028 classes and functions documented
+760 files, 108,467 lines; 8,963 of 9,030 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1292,6 +1292,7 @@
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while.
 - `tests/test_hen_laying.py`: "Why did my hens stop laying?" (core/hen_laying.py): short winter days counted from the sun for his town with the day they're back over 14 hours, molt season by hemisphere, a young or old flock by when it came, a change in the flock first, and his log's lay rate this week against before; with no flo
 - `tests/test_her_asks.py`: His bare answer to her own last question finished in code (core/her_asks, brainstorm round 19): the generator's fuel and burn rate, his town (only when found, never a command of his), and "is it a good day to work outside?" said in her forecast's own words so her ask reaches him as hers.
+- `tests/test_her_asks_build.py`: A build she offered to work out, kept up across turns (core/her_asks, the conversation check 2026-11-26): its size is its materials, "how much would it cost?" asks the size, and "add it to my projects" adds it.
 - `tests/test_his_words_reach_the_tool.py`: A calculator whose one detail is his question (canning_time, feed_mix, bleach_for_water, meat_cure) gets his own words, never the model's (core/tool_loop.his_words; live check, 2026-11-25: "how long do I pressure can quart jars of green beans?" reached canning_time with the tool's own description as
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
 - `tests/test_hobby_lessons.py`: His hobbies' courses answer their own how-tos (core/lesson_answer.py, the live sweep 2026-11-25): tuning, a chord progression, barre and power chords, the pentatonic, string bends, wood joints and finishes, progressive overload; never a car's finish or an oil change.

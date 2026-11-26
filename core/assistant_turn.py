@@ -2107,8 +2107,8 @@ def _follow_through_reply(context, conversation, prompt: str):
     with the new words in place (the last one that wasn't itself a follow-up, each follow-up since folded in:
     core/follow_through.thread, so "and groceries?" after "what about this month?" is groceries this month), answered by the same code answers (`_records_reply`,
     `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_everyday_reply`). His bare answer to her own
-    last question ("about 4" after her firewood ask, "5 gallons" after "How much fuel?", his town) is kept first
-    (core/her_asks). None when it isn't one, can't be joined, or no code answer takes the joined question (the
+    last question ("about 4" after her firewood ask, "5 gallons" after "How much fuel?", his town, a build's size) is
+    kept first (core/her_asks, given her last three replies so "add it to my projects" still finds the build). None when it isn't one, can't be joined, or no code answer takes the joined question (the
     model has it)."""
     from core import follow_through
 
@@ -2119,7 +2119,7 @@ def _follow_through_reply(context, conversation, prompt: str):
             try:
                 from core import her_asks
 
-                kept = her_asks.reply(context, said[-1], prompt)
+                kept = her_asks.reply(context, said[-1], prompt, tuple(said[-3:]))
                 if kept:
                     return kept
             except Exception:
