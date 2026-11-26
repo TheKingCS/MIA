@@ -1233,15 +1233,17 @@ def _load_watts_reply(context, prompt: str):
 
 
 _PAID_ASK = re.compile(r"^\s*(?:did|have) (?:i|we) (?:already )?pa(?:y|id) (?:the |my |our )?(?P<bill>[\w' -]+?)(?: bill)?"
-                       r"(?: yet| already| this month)?\s*\??\s*$", re.I)
-_HOW_MANY_HAVE = re.compile(r"^\s*how many (?P<what>[\w' -]+?) (?:do|have) (?:i|we) (?:have|got|got left|left)(?: in stock| on hand| "
-                            r"left)?\s*\??\s*$", re.I)
+                       r"(?: yet| already| this month)?\s*\??\s*$", re.I)  # the bill's own name, whole (by_name)
+_HOW_MANY_HAVE = re.compile(r"^\s*how many (?!days\b|weeks\b|months\b|hours\b|years\b)(?P<what>[\w' -]+?) (?:do|have) (?:i|we) "
+                            r"(?:have|got|got left|left)(?: in stock| on hand| left)?\s*\??\s*$", re.I)
 
 
 def _records_reply(context, prompt: str):
     """Two of his own records, in code (the live sweep, 2026-11-25: the model was unsure and asked where the cutting
     boards were): "did I pay the electric bill?" from his bills (paid, or when it's due), and "how many cutting
-    boards do I have?" from his products' stock. None otherwise, or when no record of his is named."""
+    boards do I have?" from his products' stock. None otherwise, or when no record of his is named.
+    A recurring bill paid within its period is paid; a bill's and a product's names are matched whole (`by_name`),
+    and the stock is the Product's quantity_in_stock."""
     said = prompt.replace("’", "'")
     found = _PAID_ASK.match(said)
     budget = getattr(context, "budget", None)
@@ -1255,9 +1257,20 @@ def _records_reply(context, prompt: str):
 
         from core.budget_manager import days_until_bill_due
 
-        left = days_until_bill_due(bill, _date.today())
+        today = _date.today()
+        period = {"weekly": 7, "biweekly": 14, "monthly": 31, "quarterly": 92, "yearly": 366}.get(
+            str(bill.recurrence or "").lower())
+        try:
+            paid = _date.fromisoformat(str(bill.last_paid_date or "")[:10])
+        except ValueError:
+            paid = None
+        if paid is not None and (period is None or 0 <= (today - paid).days < period):
+            # paid this time round (a monthly one paid today is paid: the Fable review), never "not yet"
+            return f"Yes: {bill.name} was paid {paid:%B} {paid.day}." + (
+                "" if period is None else f" The next one is due in {days_until_bill_due(bill, today)} days.")
+        left = days_until_bill_due(bill, today)
         if left is None:
-            return f"Yes: {bill.name} is paid."
+            return f"I don't have a due date for {bill.name}, and no payment kept for it."
         if left < 0:
             return f"Not yet: {bill.name} is {-left} day{'' if left == -1 else 's'} overdue."
         return f"Not yet: {bill.name} is due {'today' if left == 0 else f'in {left} day' + ('' if left == 1 else 's')}."
@@ -1269,11 +1282,10 @@ def _records_reply(context, prompt: str):
         product = by_name(products.all_products(), found.group("what"))
         if product is None:
             return None
-        count = getattr(product, "quantity", None)
-        if count is None:
-            return None
-        return f"{count:g} {product.name}{'' if count == 1 else 's'} on hand." if isinstance(count, (int, float)) \
-            else None
+        count = getattr(product, "quantity_in_stock", getattr(product, "quantity", None))  # the Product's own field
+        if not isinstance(count, (int, float)) or count != count or count < 0:
+            return None  # none kept, NaN or below zero: the model's to ask
+        return f"{product.name}: {count:g} on hand."
     return None
 
 

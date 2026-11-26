@@ -303,6 +303,8 @@ def _debts(context, sheet, prompt, today):
     asked, else 200) to the first debt. Missing minimums are said. A purchase asked about ("can I buy a $900 welder and still pay off the loan?", `buying`) is never taken as extra a
     month: it's worked out as the same money put on the first debt instead (`instead`). Extra on a debt he names ("an
     extra $100 a month on the truck") goes to that debt first, and its payoff date is said both ways.
+    A debt counts as named only where the extra goes ("on the truck"), never a word of its name said elsewhere; an
+    extra of $0 adds nothing.
     """
     from core.debt_math import simulate
 
@@ -330,9 +332,17 @@ def _debts(context, sheet, prompt, today):
         for kind, line in instead(ranked, _amount_in(prompt), _monthly(prompt), now, today, lambda a: _money(context, a)):
             sheet.add(kind, line, "a payoff calculation")
         return
-    extra = _amount_in(prompt) or 200.0
-    said = set(re.findall(r"[a-z]{3,}", str(prompt or "").lower())) - {"the", "loan", "card", "debt", "pay", "off"}
-    named = [d for d in ranked if said & set(re.findall(r"[a-z]{3,}", d.name.lower())) - {"loan", "card"}]
+    asked = _amount_in(prompt)
+    if asked is not None and asked <= 0:
+        return  # "an extra $0": nothing more to work out
+    extra = asked or 200.0
+    # a debt named where the extra goes ("on the truck", "toward my Visa"), never a word of its name said elsewhere
+    # ("the best way", "which one": the Fable review)
+    where = " ".join(m.group(1) for m in re.finditer(r"\b(?:on|to|toward|towards|into|at)\s+(?:the|my|our)\s+"
+                                                     r"([a-z][\w ]{1,30}?)(?=[,.?!]|\s+(?:first|instead|every|each|a "
+                                                     r"month|per)|$)", str(prompt or "").lower()))
+    said = set(re.findall(r"[a-z]{3,}", where)) - {"loan", "card", "debt", "debts", "balance", "bill"}
+    named = [d for d in ranked if said & (set(re.findall(r"[a-z]{3,}", d.name.lower())) - {"loan", "card"})]
     if len(named) == 1 and named[0] is not ranked[0]:
         # "an extra $100 a month on the truck": that debt first, and when it's paid off now and with it (the live sweep)
         target = named[0]
@@ -343,7 +353,7 @@ def _debts(context, sheet, prompt, today):
             sheet.add(CALCULATION, f"With {_money(context, extra)} more a month to {target.name}: it's paid off "
                                    f"{after.paid_off}" + (f" instead of {before.paid_off}" if before and before.paid_off
                                                           else "") + ".", "a payoff calculation")
-        return
+            return
     more = simulate(ranked, extra, today)
     if more.months is not None and (now.months is None or more.months < now.months):
         saved = now.interest - more.interest
@@ -1496,7 +1506,7 @@ _LEARNING = r"homework|lessons?|practi[cs]e\w*|woodworking|bushcraft|fitness pla
 # this week is the bills', not the week's review; having enough for rent is money ahead's).
 NOT_FOR = {
     # a debt's balance is the debts' plan, never what he can afford (the live sweep, 2026-11-25)
-    "afford": re.compile(r"\bhow much is (?:my|the) [\w ]*?(?:loan|card|debt|balance)\b", re.I),
+    "afford": re.compile(r"^(?!.*\bafford\b).*\bhow much is (?:my|the) [\w ]*?(?:loan|card|debt|balance)\b", re.I),
     # who he owes is his debts', never what his assets return (the live sweep)
     "returns": re.compile(r"\b(?:who|what|how much) do (?:i|we) owe\b|\bwho (?:do )?i owe\b", re.I),
     # what he told her before is his past conversations' (list_past_conversations), never one person's (the live

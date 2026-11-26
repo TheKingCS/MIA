@@ -192,8 +192,9 @@ MAINTENANCE_QUERY_CATEGORIES = {
 
 def by_name(items, said: str):
     """Pure logic. The one record whose name his words give: exactly, else as a plural or singular ("cutting boards" is
-    the Cutting Board), else the only one whose name's words are all in his; None otherwise (the live sweep,
-    2026-11-25: "I sold 2 cutting boards" had been refused)."""
+    the Cutting Board, "shelves" the Shelf); None otherwise (the live sweep, 2026-11-25: "I sold 2 cutting boards" had
+    been refused). Never a record whose name is only some of his words: "cutting boards" is never the Board (the
+    Fable review: a sale had been recorded against it)."""
     import re as _re
 
     said = " ".join(str(said or "").lower().split())
@@ -202,9 +203,14 @@ def by_name(items, said: str):
     items = list(items)
 
     def one(word):
-        """A word as its singular."""
-        return word[:-2] if _re.search(r"(?:ch|sh|x|ss)es$", word) else word[:-1] if word.endswith("s") and len(word) > 3 \
-            else word
+        """A word as its singular ("benches", "shelves", "knives", "tomatoes", "berries")."""
+        if _re.search(r"(?:ch|sh|x|ss|z)es$", word) or _re.search(r"oes$", word):
+            return word[:-2]
+        if word.endswith("ves") and len(word) > 4:
+            return word[:-3] + ("fe" if word in ("knives", "wives", "lives") else "f")
+        if word.endswith("ies") and len(word) > 4:
+            return word[:-3] + "y"
+        return word[:-1] if word.endswith("s") and not word.endswith("ss") and len(word) > 3 else word
 
     def words(text):
         """Its words, each as its singular."""
@@ -213,11 +219,11 @@ def by_name(items, said: str):
     exact = [i for i in items if str(getattr(i, "name", "")).lower() == said]
     if len(exact) == 1:
         return exact[0]
-    same = [i for i in items if words(getattr(i, "name", "")) == words(said)]
-    if len(same) == 1:
-        return same[0]
-    inside = [i for i in items if words(getattr(i, "name", "")) and set(words(getattr(i, "name", ""))) <= set(words(said))]
-    return inside[0] if len(inside) == 1 else None
+    if exact:
+        return None  # two the same name: which one is his to say
+    said_words = [w for w in words(said) if not w.isdigit()]  # "2 cutting boards": the count is no part of the name
+    same = [i for i in items if words(getattr(i, "name", "")) == said_words]
+    return same[0] if len(same) == 1 else None
 
 
 class AssistantTools:
