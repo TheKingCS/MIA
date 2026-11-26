@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1859 files, 394,070 lines; 1859 files describe themselves; 21,398 of 21,529 classes and functions are documented.
+1861 files, 394,213 lines; 1861 files describe themselves; 21,408 of 21,539 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-727 files, 205,710 lines; 10,205 of 10,284 classes and functions documented
+728 files, 205,806 lines; 10,211 of 10,290 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -711,6 +711,7 @@
 - `core/web_why.py`: "My Why" on the web (DEC-0125: the why chain was voice-only; "Remember Why", docs/COGNITIVE_EXTENSION_PROPOSAL.md slice B). The person's reasons as chains ("Factory work → Pay off debt → Control over my time"), each link with the reason in their own words, whether it's done (and why), and the facts 
 - `core/web_world_intel.py`: The World page (DEC-0170, W1): what World Intelligence found, the watches, and the sources it reads, assembled here so the web only draws (DEC-0017) and the voice tools say the same thing (DEC-0125).
 - `core/web_worlds.py`: Living Worlds on the web (web/worlds.html, DEC-0134 Phases 1 and 2, approved): the person's fictional universes, the campaigns in each, their central character and its version in each world, and each campaign's quests, over the living_worlds store (core/living_worlds.py). Everything here is fiction:
+- `core/week_ahead.py`: The weekly look-ahead (brainstorm round 16, 2026-11-25): "what does my week look like?" answered with more than what's due. After the week's bills, upkeep, events, tasks and birthdays (core/today.week_days, said by the tool get_week), it joins what the rest of MIA already knows about the coming seve
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead.
 - `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
 - `core/whimsy.py`: A little grounded inspiration toward the slow, made, hand-crafted life — the whimsy and art Zac asked MIA to keep alive (2026-11-08: "slow down, draw, create, think about forest creatures, make stuff, dream, do", and his shift from consumer to producer). The standing directions (`core/direction.py`)
@@ -1026,7 +1027,7 @@
 
 ## tests/: the test suite: what each part must do
 
-722 files, 106,229 lines; 8,819 of 8,871 classes and functions documented
+723 files, 106,276 lines; 8,823 of 8,875 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1724,6 +1725,7 @@
 - `tests/test_web_voice.py`: MIA's voice from Settings and by voice (core/web_voice.py, core/assistant_voice_choice_actions.py): the voices installed, switching one, the AI voice effect and the volume; only the PC's owner changes them.
 - `tests/test_web_why.py`: My Why on the web (core/web_why.py): the chains of reasons with their facts, and linking, unlinking and achieving goals as why.* actions, the same goals the voice tools keep (DEC-0125).
 - `tests/test_web_worlds.py`: Living Worlds on the web (DEC-0134 Phases 1 and 2): the screen, its world.* actions (playing a turn too) and the voice tools, all fiction.
+- `tests/test_week_ahead.py`: The weekly look-ahead (core/week_ahead.py, 2026-11-25): "what does my week look like?" (get_week) ends with what the rest of MIA knows about the coming week: a holiday, the weather against his plans, feed running out, the garden's steps and low supplies; a part that can't be read never stops the res
 - `tests/test_week_without_alarms.py`: The week said by voice (get_week, and the weekend plan through it) never lists an alarm as something due (the live sweep, 2026-11-25: the weekend plan said "you've got to pay your electric bill and wake up on time"); the evening wrap and the morning briefing leave alarms out the same way.
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py).
 - `tests/test_what_i_used.py`: What I Used (DEC-0029, ALICE pick 1): a turn gets the memories that match what was asked, returns them with the reply, and each can be fixed or forgotten (and the forgetting undone).
