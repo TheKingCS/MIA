@@ -136,11 +136,20 @@ def polish(text: str, prompt: str = "") -> str:
     his words (`prompt`) are given, go. Lists, markdown and length stay.
     A paragraph or sentence said twice is said once (`without_repeats`), and his request said back as her opening
     ("I want to learn about tying a bowline.") goes.
-    "I don't know what that means." before a real answer goes."""
+    "I don't know what that means." before a real answer goes, and so does the model writing out its own lookup
+    ('Tool call: "..." Response: "..."': only the answer stays)."""
     from core.personality import without_copied_example
 
     text = without_copied_example((text or "").strip(), prompt)  # never a humor example's line said as hers
     text = without_repeats(text) or text  # never the same paragraph or sentence twice
+    # 'Tool call: "What is the best goat for milk?"  Response: "The best..."' (the live sweep, 2026-11-26): the model
+    # wrote out its own lookup; only the answer stays
+    framed = re.match(r'^\s*(?:tool call|function call|query|search)\s*:\s*"?[^"\n]*"?\s*(?:\n\s*)*response\s*:\s*(.+)$',
+                      text, re.I | re.S)
+    if framed and framed.group(1).strip():
+        text = framed.group(1).strip()
+        if len(text) > 1 and text[0] == '"' and text.rstrip()[-1] == '"':
+            text = text.strip()[1:-1].strip()
     # "Honestly, I don't know what that means. But ..." before a real answer (the live sweep): the answer stays
     text = re.sub(r"^\s*(?:honestly,?\s+)?i (?:don't|do not) (?:know|understand) what (?:that|you) means?\.\s*"
                   r"(?:but\s+)?(?=\S.{40,})", "", text, flags=re.I | re.S) or text

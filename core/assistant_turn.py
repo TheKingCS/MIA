@@ -1291,10 +1291,30 @@ _TRIP_EVE = re.compile(r"^\s*(?:hey mia,? )?(?:what (?:do i need|should i (?:pac
                        r"(?: tomorrow)?)?|am i (?:ready|packed) for (?:my |the |tomorrow'?s )?(?:\w+ )?trip(?: tomorrow)?|"
                        r"am i packed|before i go|what(?:'s| is) left to pack(?: for (?:my |the )?(?:\w+ )?trip)?)"
                        r"\s*[?.!]*\s*$", re.I)
+_OUT_OF = re.compile(r"^\s*(?:we'?re|i'?m|we are|i am|we|i)\s+(?:all |completely |totally )?(?:out of|ran out of|have run "
+                     r"out of|are out of)\s+([a-z][a-z' -]{1,30}?)\s*(?:again|now)?\s*[.!]*\s*$", re.I)
+_NOT_GROCERIES = re.compile(r"^(?:town|time|here|luck|it|breath|money|cash|options|ideas|patience|work|gas|fuel|"
+                            r"propane|the house|range|order|control|shape|my mind|space|room|battery)$", re.I)
+_REMEMBER_TALK = re.compile(r"^\s*(?:hey mia,? )?(?:do you |can you |did you )?remember what (?:i|we) (?:told you|said|"
+                            r"talked about)(?: (?:yesterday|last night|last time|earlier|the other day))?\s*[?.!]*\s*$|"
+                            r"^\s*what did (?:we talk about|i tell you)(?: (?:yesterday|last night|last time|earlier))?"
+                            r"\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
                           r"(?:on|with) money this week)\s*[?.!]*\s*$", re.I)
+
+
+def _run_own(context, name: str, arguments: dict):
+    """Runs one of her tools for a code route, or None when it isn't on this MIA or fails (the model then answers)."""
+    actions = getattr(context, "assistant_actions", None)
+    if actions is None or name not in getattr(actions, "_actions", {name: 1}):
+        return None
+    try:
+        return actions.execute(context, name, arguments)
+    except Exception:
+        log.exception("Couldn't run %s", name)
+        return None
 
 
 def _own_tool_reply(context, prompt: str):
@@ -1305,7 +1325,9 @@ def _own_tool_reply(context, prompt: str):
     her grants (list_grants). "How's the homestead?" is its days in one line (core/homestead_health), "how's my
     money this week?" its pulse (core/money_pulse), "what did you learn this week?" the week's learning
     (core/learned_week), "how are my hobbies going?" this month across them (core/hobby_progress), "what does
-    my week look like?" the week with its look-ahead (get_week), "tell me when..." a watch from his whole sentence
+    my week look like?" the week with its look-ahead (get_week), "we're out of milk" the grocery list
+    (add_grocery_item, never the pantry; "out of time" or "out of gas" aren't groceries), "do you remember what I told
+    you yesterday?" her record of it (list_past_conversations), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
     said = prompt.replace("’", "'")
@@ -1358,6 +1380,11 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't say the trip's list")
             return None
+    out = _OUT_OF.match(said)
+    if out and not _NOT_GROCERIES.match(out.group(1).strip()):  # "we're out of milk": the grocery list, never the pantry
+        return _run_own(context, "add_grocery_item", {"items": out.group(1).strip(), "question": said})
+    if _REMEMBER_TALK.match(said):  # "do you remember what I told you yesterday?": her own record of it
+        return _run_own(context, "list_past_conversations", {"question": said})
     if _MY_WEEK.match(said):  # "what does my week look like?": the week and its look-ahead (get_week, core/week_ahead)
         actions = getattr(context, "assistant_actions", None)
         if actions is not None and "get_week" in getattr(actions, "_actions", {"get_week": 1}):

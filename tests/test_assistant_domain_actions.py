@@ -251,7 +251,7 @@ def test_add_recipe_duplicate_is_refused(ctx):
 
 def test_grocery_list_add_list_check_off(ctx):
     assert say(ctx, "add_grocery_item", items="eggs and 2 gallons milk") == "Added eggs, milk to the grocery list."
-    assert "eggs already on it" in say(ctx, "add_grocery_item", items=["eggs"]).replace("was ", "")
+    assert say(ctx, "add_grocery_item", items=["eggs"]) == "Eggs is already on the grocery list."
     assert say(ctx, "list_grocery_list") == "On the grocery list: eggs, 2 gallons milk."
     assert say(ctx, "check_off_grocery_item", items=["the eggs"]) == "Checked off eggs."
     assert say(ctx, "list_grocery_list") == "On the grocery list: 2 gallons milk."

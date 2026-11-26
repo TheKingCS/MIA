@@ -233,6 +233,21 @@ def asks_not_tells(prompt: str) -> bool:
     return looks_like_question(prompt) and not said.startswith(_REQUEST_STARTS) and first not in CHANGE_VERBS
 
 
+_TROUBLE = re.compile(r"\b(?:mak(?:ing|es) (?:a |an |this |that )?(?:\w+ )?(?:noise|sound)|squeal\w*|grind\w*|rattl\w*|"
+                      r"clunk\w*|knock\w*|leak\w*|smok(?:ing|es)|stall\w*|won'?t (?:start|turn on|run|crank|stop)|"
+                      r"(?:feels?|sounds?|smells?|looks?) (?:off|weird|funny|soft|wrong|bad)|keeps? (?:dying|beeping))\b", re.I)
+_DONE_IT = re.compile(r"\b(?:i|we) (?:just )?(?:changed|replaced|fixed|did|finished|swapped|put in|installed|"
+                      r"sharpened|cleaned|serviced|rotated|flushed|topped)\b", re.I)
+
+
+def tells_trouble(prompt: str, reply: ChatReply) -> bool:
+    """Pure logic. He describes a problem ("my truck makes a squealing noise when I brake") and the model reached to
+    mark a job done (a complete_ or mark_ tool): a question to answer, never a job done (the live sweep, 2026-11-26:
+    "I don't have a maintenance task called 'it'")."""
+    done_calls = [c for c in reply.tool_calls if c.name.startswith(("complete_", "mark_"))]
+    return bool(done_calls) and bool(_TROUBLE.search(prompt or "")) and not _DONE_IT.search(prompt or "")
+
+
 def _wants_change(context, reply: ChatReply) -> bool:
     """Whether a reply asks for any tool call that changes a record (core/main_thread.call_changes: material_list
     without keep only works a size out)."""
@@ -346,7 +361,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     (OUTSIDE_WHAT) is framed as information before the model reads it
     (WP-03). Only lookups offered in `tools` run,
     and a change asked for after a lookup that brought in outside text
-    is held and said back (held_after_outside_text). A question only her
+    is held and said back (held_after_outside_text). A question, or a problem he describes reached to mark a job
+    done (`tells_trouble`), is answered instead of changed (`_answer_instead`). A question only her
     library's look-up was offered for is read from it first
     (`_read_first`); a library answer's figures are held to its text
     strictly (when every result is the library's), and one still
@@ -373,7 +389,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         reply = _read_first(context, tools, prompt, reply)
     if reply is not None and not reply.tool_calls and tools and loop_ok(context):
         reply = _look_first(context, llm, messages, tools, prompt, reply)
-    if reply is not None and tools and loop_ok(context) and _wants_change(context, reply) and asks_not_tells(prompt):
+    if reply is not None and tools and loop_ok(context) and _wants_change(context, reply) and \
+            (asks_not_tells(prompt) or tells_trouble(prompt, reply)):
         reply = _answer_instead(context, llm, messages, tools, reply)
     if reply is None or not tools or not loop_ok(context) or not _lookups_only(context, reply.tool_calls):
         return reply

@@ -437,7 +437,7 @@ def _action_log_meal(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_grocery_item(context: AppContext, arguments: dict) -> str:
-    """Assistant tool `add_grocery_item`: adds items to the grocery list from phrases ("2 lb ground beef"), skipping ones already on it. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """Assistant tool `add_grocery_item`: adds items to the grocery list from phrases ("2 lb ground beef"), skipping ones already on it (said as already on the grocery list when nothing was added). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
     Given his words, it asks before adding when they don't ask for the list ("I want to start selling eggs").
     Only a sentence clearly about something else (selling, a price, a recipe) asks first; "milk too" and "yes" are
     the list's."""
@@ -465,7 +465,10 @@ def _action_add_grocery_item(context: AppContext, arguments: dict) -> str:
         added.append(name)
     reply = f"Added {', '.join(added)} to the grocery list." if added else ""
     if skipped:
-        reply += f" {', '.join(skipped)} {'was' if len(skipped) == 1 else 'were'} already on it."
+        names = ", ".join(skipped)
+        names = names[:1].upper() + names[1:]  # a sentence of its own when nothing was added ("Milk is ...")
+        reply += (f" {names} {'was' if len(skipped) == 1 else 'were'} already on it." if added else
+                  f" {names} {'is' if len(skipped) == 1 else 'are'} already on the grocery list.")
     return reply.strip() or "Nothing new to add."
 
 
