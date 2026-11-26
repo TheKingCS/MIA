@@ -85,7 +85,10 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   his shop rate) and the "picture" live sweep's fixes: "what's overdue?" is his whole list (core/today.overdue_said;
   it had gone to the tax deadlines and said "That's for a grown-up."), "what do I need from the hardware store?" his
   projects' open needs (the model had invented lawn supplies), "what's my best-selling product?" by units sold
-  (core/money_periods.best_sellers, never stock). Each Fable-reviewed. 8793 passing.
+  (core/money_periods.best_sellers, never stock). Each Fable-reviewed.
+- Her own questions finished by a bare answer, in code (core/her_asks): "5 gallons" after "How much fuel?", "half a
+  gallon an hour" after her burn-rate ask (then the runtime), his town after "I don't know your town yet" (only when
+  the weather service finds it, never a command of his), the firewood a winter. 8796 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
