@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1846 files, 392,810 lines; 1846 files describe themselves; 21,349 of 21,474 classes and functions are documented.
+1849 files, 393,007 lines; 1849 files describe themselves; 21,355 of 21,480 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -969,7 +969,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-47 files, 5,309 lines; 161 of 161 classes and functions documented
+48 files, 5,425 lines; 164 of 164 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -995,6 +995,7 @@
 - `tools/import_properties.py`: Import Zac's properties (data/_import/muse_assets.json) into MIA's Real Estate through the real RealEstateManager, so every write is undoable. Companion to tools/import_life_data.py; run only while MIA is stopped.
 - `tools/intelligence_check.py`: Zac's Intelligence Benchmark, asked for real: every question in tests/intelligence_bench.py through the same steps a turn takes (a question plan, a lookup answered by code, or the model with the tool loop), on this computer's model and the person's real records. Read-only: lookups run, but a change 
 - `tools/lab.py`: MIA's development lab from the command line (DEC-0058, core/dev_lab.py).
+- `tools/live_sweep.py`: The live sweep, kept (brainstorm round 15, 2026-11-25: nine sweeps that day, each a scratch script, found most of the day's bugs): everyday phrasings (`tests/live_sweep_corpus.py`) asked through the WHOLE turn (core/assistant_turn.run_assistant_turn) on this computer's model, against made-up records
 - `tools/make_food_table.py`: Builds data/foods.tsv, MIA's built-in food table (DEC-0020), from the USDA's FoodData Central "SR Legacy" download: about 7,800 everyday foods, public domain (CC0, https://fdc.nal.usda.gov). Kept per 100 g: calories, protein, fat, carbohydrate, fiber, sugars, sodium; plus each food's household measu
 - `tools/make_model_bench.py`: Freezes MIA's golden set (tests/live_model_check.py) into data/model_bench_cases.json for the model test (core/model_bench.py, docs/PHONE_MODEL_TEST.md): for each case, the exact messages and offered tools MIA's request builder makes with the PC's full set of tools, against the live check's placehol
 - `tools/migration_manifest.py`: The move's checklist on the command line (FW-07a; core/migration.py). Before the move, on Windows:
@@ -1021,7 +1022,7 @@
 
 ## tests/: the test suite: what each part must do
 
-714 files, 105,794 lines; 8,793 of 8,839 classes and functions documented
+716 files, 105,875 lines; 8,796 of 8,842 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1032,6 +1033,7 @@
 - `tests/engine_world.py`: A small, real MIA world for the Engine Phase 1 tests (life events, relationships, Life State v2, the state export): real stores in a temp folder, a household folder and each person's own, placeholder names only. `build_world(tmp_path, monkeypatch)` returns the context.
 - `tests/intelligence_bench.py`: Zac's Intelligence Benchmark (docs/INTELLIGENCE_BENCHMARK.md, Draft 1, 2026-10-30): every question MIA should be able to answer, by ID. Pure data, shared by the routing audit (tools/bench_audit.py), the unit tests and the live bench on the PC's model (tests/live_model_check.py).
 - `tests/live_model_check.py`: Golden-set regression check for the Assistant's tool-gating/grounding decision (`modules.assistant.module.build_chat_request()`) against a REAL running Ollama server — milestone 5.11. Not a pytest test (no `test_` prefix, so pytest never collects it): every prior round of this kind of verification (
+- `tests/live_sweep_corpus.py`: The everyday phrasings tools/live_sweep.py asks through the whole turn on the PC's model, by area: the ones the sweeps of 2026-11-25 found answered wrong, kept so each fix stays checked against the real model, plus a few conversations (a list of turns in one conversation). Not a pytest test (no `tes
 - `tests/run_module.py`: tests/run_module.py
 - `tests/test_accessibility.py`: Accessibility (core/accessibility.py, gui/theme_manager.py, gui/read_aloud.py), 2026-10-01: text size, high contrast, and reading a screen aloud; each person's own.
 - `tests/test_accounts_households.py`: Accounts and households (2026-10-01): sign in with an email, recover a forgotten password with a recovery code, and share household things only after joining a household with a current member's approval (core/profile_manager.py, core/household_manager.py, core/personal_data.py).
@@ -1327,6 +1329,7 @@
 - `tests/test_linux_apps.py`: FW-11, the first version's part (REQ-DSK-007, REQ-DSK-023, REQ-FUN-003, REQ-ARC-013): MIA's launcher lists the computer's Linux apps from its own desktop entries (hidden ones and other desktops' left out, each once), never in her registry, opened by the desktop's launcher with fixed arguments; MIA's
 - `tests/test_lite_capture_manager.py`: Unit tests for core.lite_capture_manager. format_capture_journal_title() is tested directly (pure). LiteCaptureManager itself is tested against a real tmp_path watched folder (genuine file moves/reads, same reasoning test_finance_manager.py already gives for not mocking the filesystem) with a _FakeC
 - `tests/test_lite_captures_tool.py`: Unit tests for modules.toolbox.tools.lite_captures_tool's pure format_capture_card_text(), same style as tests/test_discovery_tool.py (no Qt event loop, no fixtures).
+- `tests/test_live_sweep.py`: The live sweep's checks (tools/live_sweep.py, 2026-11-25): each sign the day's sweeps found is flagged, and a plain good answer is flagged with nothing; the corpus holds only strings and conversations of strings.
 - `tests/test_living_system.py`: The Living System doctrine's invariants that had no test yet (DEC-0173, `docs/mia_os/MIA_OS_LIVING_SYSTEM.md` section 8): Identity:** MIA's identity is written in one place (core/personality.py). The files that already frame a task prompt as "You are MIA" in their own words are listed here and may o
 - `tests/test_living_worlds.py`: Living Worlds Phase 1 (core/living_worlds.py, DEC-0134): universes, campaigns, characters and per-universe versions are created and persisted so a campaign survives sessions; a version's growth is its own and never touches another's; ids are validated; and a campaign can be paused and resumed. The s
 - `tests/test_llm_manager.py`: Unit tests for core.llm_manager. No real Ollama server involved — urllib.request.urlopen is monkeypatched to a fake so these exercise the manager/backend's success and graceful-degradation paths in isolation, same fake-dependency approach as test_reference_library_manager.py's _FakeConfig. And (T-00
