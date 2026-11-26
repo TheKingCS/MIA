@@ -22,8 +22,12 @@ def test_practice_goes_to_his_course(monkeypatch):
     for words in ("I practiced for 30 minutes today", "practiced guitar for an hour", "I played guitar for 45 minutes"):
         assert assistant_turn._own_tool_reply(context, words) == "Logged.", words
     assert [a["minutes"] for _n, a in ran] == [30.0, 60, 45.0]
-    assert assistant_turn._own_tool_reply(context, "I played golf for 2 hours") != "Logged."
+    for words in ("I played golf for 2 hours", "I played guitar hero for 2 hours", "I practiced for 30 minutes on Tuesday",
+                  "I played for an hour", "I played for 30 minutes on the xbox"):
+        assert assistant_turn._own_tool_reply(context, words) != "Logged.", words
     monkeypatch.setattr(paths, "next_step", lambda b, p: f"next[{p.name}]")
     assert her_asks.reply(context, "Logged. Guitar this week: 1 of 1 days, 30 minutes.", "what should I work on next?") \
         == "next[Guitar]"
     assert her_asks.reply(context, "Done.", "what should I work on next?") is None
+    assert her_asks.reply(context, "From Guitar (a plan I drafted with you), stage 1 (First): ...",
+                          "what's next?") == "next[Guitar]"

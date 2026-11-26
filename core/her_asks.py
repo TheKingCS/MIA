@@ -61,7 +61,7 @@ _BARE_LEFT = re.compile(r"^\s*(?:and\s+|so\s+|ok(?:ay)?,?\s+)?(?:how much (?:is|
                         r"what(?:'s| is) left)(?:\s+(?:now|after that))?\s*[?.!]*\s*$", re.I)
 # her own course replies ("Guitar, stage 1 ...", "From Guitar, stage 1", "Logged. Guitar this week:"): "what should I
 # work on next?" is that course's next step (core/paths.next_step), never a project's (the guitar conversation check)
-_COURSE_SAID = re.compile(r"(?:^|\. |\n)(?:From )?(?P<prog>[A-Z][\w' ]{1,40}?), stage \d+|\bLogged\. (?P<prog2>[A-Z][\w' ]{1,40}?) "
+_COURSE_SAID = re.compile(r"(?:^|\. |\n)(?:From )?(?P<prog>[A-Z][\w' ]{1,40}?)(?: \([^)]*\))?, stage \d+|\bLogged\. (?P<prog2>[A-Z][\w' ]{1,40}?) "
                           r"this week:")
 _NEXT = re.compile(r"^\s*(?:so\s+|ok(?:ay)?,?\s+|and\s+)?(?:what(?:'s| is) next|what next|what (?:should|do) i (?:work on|do|practi[cs]e)"
                    r" next|what(?:'s| is) my next step)\s*[?.!]*\s*$", re.I)

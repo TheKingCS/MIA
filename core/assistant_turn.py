@@ -1767,7 +1767,8 @@ def _own_tool_reply(context, prompt: str):
     electric bill" that bill of his marked paid (mark_bill_paid; never twice for one time round, and "pay the electric
     bill" is what's due and how to mark it, since she pays nothing),
     "I practiced for 30 minutes today" a session on his
-    course (log_practice), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
+    course (log_practice: the course named whole, never "guitar hero"; unnamed only as "practiced", never a day or a
+    game), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
     me?" and "stop the Sunday one" her standing reports (core/standing_reports), "what's overdue?" everything
     overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
@@ -2088,9 +2089,19 @@ def _own_tool_reply(context, prompt: str):
         try:
             started = [paths.program_of(context, p) for p in (book.started() if book is not None else [])]
             started = [p for p in started if p is not None]
-            named = paths.find_program(context, practiced.group("what")) if practiced.group("what") else None
+            what = re.sub(r"^(?:the|my)\s+", "", (practiced.group("what") or "").strip().lower())
+            named = paths.find_program(context, what) if what else None
+            if named is not None and what not in {named.name.lower(), named.id.lower()} | set(
+                    re.findall(r"[a-z]+", named.name.lower())) - {"and", "the", "basics", "with", "of"}:
+                named = None  # "guitar hero", "go fish", "survival mode": never the course (the Fable review)
+            on = (practiced.group("on") or "").lower()
+            unnamed_ok = not what and practiced.group(0).lower().lstrip().lstrip("i ").startswith(("practiced", "practised",
+                                                                                                    "just practi"))
+            if re.search(r"\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|yesterday|weekend|xbox|"
+                         r"playstation|phone|computer|switch)\b", on):
+                named, unnamed_ok = None, False  # a day it doesn't read, or a game, is never a session today
             program = named if named is not None and named in started else (
-                started[0] if len(started) == 1 and not practiced.group("what") else None)
+                started[0] if len(started) == 1 and unnamed_ok else None)
             if program is not None:
                 n = practiced.group("n").lower()
                 amount = {"a": 1, "an": 1, "one": 1, "two": 2, "half a": 0.5, "half an": 0.5}.get(n) or float(n)
