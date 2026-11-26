@@ -7,6 +7,7 @@
   "tests/test_budget_nudges.py": 2,
   "tests/test_change_history.py": 1,
   "tests/test_condition_watch.py": 1,
+  "tests/test_debt_first.py": 1,
   "tests/test_debt_missions.py": 6,
   "tests/test_evening_wrap.py": 1,
   "tests/test_fable_review_claims.py": 1,

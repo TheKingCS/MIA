@@ -1355,6 +1355,9 @@ _SHOP_MADE = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|how much) did (?:i|we) m
                         r")?(?:shop|workshop|woodshop|business)|how much did (?:the|my) (?:shop|workshop|woodshop|"
                         r"business) make|what(?:'s| are| were) (?:the|my) shop'?s? (?:sales|revenue|profit))"
                         r"(?P<rest>[^?]*?)\s*[?.!]*\s*$", re.I)
+_DEBT_FIRST = re.compile(r"^\s*(?:hey mia,? )?(?:(?:should|do) i pay (?:off |down )?(?:the |my )?[\w ]{2,30}? or (?:the |my )?"
+                         r"[\w ]{2,30}? first|which (?:debt|one|loan|card) (?:should|do) i pay (?:off |down )?first|what "
+                         r"should i pay (?:off |down )?first|which debt first)\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1388,7 +1391,8 @@ def _own_tool_reply(context, prompt: str):
     workout (core/workout_today), "what woodworking project should I do next?" his next piece
     (core/woodworking.next_project; "build next ... shop", the business's, stays make_next's), "how much did I
     spend last month?", "my biggest expense category this year" and "what did I make from the shop this month?"
-    (core/money_periods; only when what follows is a period: "at Costco last month" is the model's), "tell me when..." a watch from his whole sentence
+    (core/money_periods; only when what follows is a period: "at Costco last month" is the model's), "should I pay
+    off the card or the truck first?" his own debts compared (get_debt_payoff_plan), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
     said = prompt.replace("’", "'")
@@ -1463,6 +1467,10 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't say the money for that period")
             return None
+    if _DEBT_FIRST.match(said):  # "should I pay off the card or the truck first?": his own debts, in code
+        found = _run_own(context, "get_debt_payoff_plan", {"question": said})
+        if found:
+            return found
     if _WOOD_NEXT.match(said) and ("wood" in low or ("shop" in low and "next" not in low)):  # his next piece
         from core import woodworking
 

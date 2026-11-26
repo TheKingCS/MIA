@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1874 files, 396,689 lines; 1874 files describe themselves; 21,543 of 21,682 classes and functions are documented.
+1875 files, 396,759 lines; 1875 files describe themselves; 21,546 of 21,686 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-733 files, 207,503 lines; 10,294 of 10,373 classes and functions documented
+733 files, 207,536 lines; 10,295 of 10,374 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1032,7 +1032,7 @@
 
 ## tests/: the test suite: what each part must do
 
-731 files, 107,024 lines; 8,875 of 8,935 classes and functions documented
+732 files, 107,061 lines; 8,877 of 8,938 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1170,6 +1170,7 @@
 - `tests/test_data_recovery.py`: Unit tests for core.data_recovery.notify_data_corruption.
 - `tests/test_data_recovery_named.py`: REQ-FUN-221: an answer built from several stores names the parts it couldn't read, rather than leaving them out silently: a store reset to empty at start is remembered for the run and named in her context, with the rule to say so.
 - `tests/test_data_root.py`: Where MIA keeps a person's files (core/data_root.py, MIA_HOME): the code's folder unless it's set; with it set, nothing at all is written into the code's folder; and tools/move_home copies a MIA to a new home, checked.
+- `tests/test_debt_first.py`: "Should I pay off the card or the truck first?" (the live sweep, 2026-11-26: "put extra toward #1"): his own debts by name, the two he named compared, in code. *(1 undocumented)*
 - `tests/test_debt_math.py`: The payoff arithmetic behind "when will my debts be paid off?" and "what if I put an extra $200 toward it?" (core/debt_math.py).
 - `tests/test_debt_missions.py`: His debt payoff plan as a mission (core/debt_missions.py, brainstorm 6.2): the order and months worked out in code, one mission with an objective for each debt on his press, each ticked when that debt (by its id) reaches zero, the mission completed when all are, one running at a time. *(6 undocumented)*
 - `tests/test_degraded_intelligence.py`: FW-12, the first version's part (REQ-AI-013, REQ-HW-029, DEC-0204): when the chosen local model fails or times out, the next one the computer has answers and MIA says which; and one model call runs at a time, a conversation before background work, so his turn waits at most for the one call already r

@@ -323,16 +323,41 @@ def _action_record_debt_payment(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_debt_payoff_plan(context: AppContext, arguments: dict) -> str:
-    """Assistant tool `get_debt_payoff_plan`: the top five debts in payoff order (hybrid by default, or the strategy asked for), each with why. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
+    """Assistant tool `get_debt_payoff_plan`: the top five debts in payoff order (hybrid by default, or the strategy asked for), each with why, by name (never "#1": the live sweep, 2026-11-26); two his words name ("the card or the truck first?") are compared. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     strategy = str(arguments.get("strategy", "") or "hybrid").strip().lower()
     ranked = context.budget.debt_payoff_priority(strategy=strategy)
     if not ranked:
         return "You don't have any open debts to plan around."
-    lines = [f"#{p.rank} {p.debt.name} ({_money(p.debt.balance)}): {p.reason}" for p in ranked[:5]]
-    return (
-        f"Pay the minimums on everything, then put extra toward #1. "
-        + " ".join(lines)
-    )
+    asked = str(arguments.get("question") or "")
+    named = _debts_named(ranked, asked)
+    if len(named) == 2:  # "the card or the truck first?": those two, by name
+        first, second = named
+        return (f"{first.debt.name} first: {first.reason[:1].lower() + first.reason[1:]}, against {second.debt.name} at "
+                f"{second.effective_apr:g}%. Pay the minimums on both and put any extra on {first.debt.name}.")
+    first = ranked[0]
+    said = (f"Pay the minimums on everything, then put extra toward {first.debt.name} ({_money(first.debt.balance)}): "
+            f"{first.reason[:1].lower() + first.reason[1:]}.")
+    if len(ranked) > 1:
+        said += " After it: " + "; then ".join(f"{p.debt.name} ({p.reason[:1].lower() + p.reason[1:]})"
+                                               for p in ranked[1:5]) + "."
+    return said
+
+
+_DEBT_WORDS = {"card": ("credit card",), "truck": ("auto", "vehicle", "car"), "car": ("auto", "vehicle"),
+               "house": ("mortgage",), "mortgage": ("mortgage",), "student": ("student",), "loan": ("loan",)}
+
+
+def _debts_named(ranked: list, words: str) -> list:
+    """The ranked debts his words name, in payoff order: by a word of the debt's name ("truck" in "Truck Loan"), or its
+    type ("the card" for a Credit Card), each word naming one debt only; [] unless two are named."""
+    said = set(re.findall(r"[a-z]+", (words or "").lower()))
+    found = []
+    for word in said:
+        hits = [p for p in ranked if word in set(re.findall(r"[a-z]+", p.debt.name.lower()))
+                or any(f" {t} " in f" {(p.debt.debt_type or '').lower()} " for t in _DEBT_WORDS.get(word, ()))]
+        if len(hits) == 1 and hits[0] not in found and word not in ("loan", "the", "or", "first", "pay", "off"):
+            found.append(hits[0])
+    return sorted(found, key=lambda p: p.rank) if len(found) == 2 else []
 
 
 def _action_set_budget_target(context: AppContext, arguments: dict) -> str:
