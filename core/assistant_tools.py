@@ -284,6 +284,7 @@ class AssistantTools:
         add_expense offers the Animals & Feed category.
         add_calendar_event offers a daily repeat.
         The hours he puts into his projects too (core/project_time.py).
+        complete_maintenance_task is never for a problem he describes (a squealing noise).
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -2035,7 +2036,9 @@ class AssistantTools:
                 "Mark an EXISTING maintenance task complete/done because the user is reporting they already "
                 "did it (past tense — 'I changed the oil in the truck', 'sharpened the mower blades', 'I "
                 "watered the tomatoes'). Use the user's own words for title and asset; MIA matches them to "
-                "the real task. Do NOT use this to set up a new task — use add_maintenance_task instead."
+                "the real task. Do NOT use this to set up a new task — use add_maintenance_task instead. Never for a "
+                "problem he describes ('it's making a squealing noise', 'the brakes feel soft'): that's a question to "
+                "answer, not a job done."
             ),
             parameters={
                 "type": "object",

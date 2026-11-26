@@ -130,7 +130,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A monthly reminder (`_monthly_reminder_reply`) too, a unit conversion (`_convert_reply`) and a holiday's date
     (`_holiday_reply`), and the house's trouble (`_home_trouble_reply`), and when to fish (`_fish_when_reply`), and the
     power out (`_outage_reply`), and the small everyday answers (`_everyday_reply`), and a load's watts
-    (`_load_watts_reply`), and a bill paid or a product's stock (`_records_reply`).
+    (`_load_watts_reply`), and a bill paid, a product's stock or a debt's balance (`_records_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -1232,6 +1232,31 @@ def _load_watts_reply(context, prompt: str):
         return None
 
 
+_DEBT_ASK = re.compile(r"^\s*how much (?:is|do (?:i|we) (?:still )?owe on|is left on|do (?:i|we) have left on) (?:my|the|our) "
+                       r"(?P<debt>[\w' -]+?)(?: balance)?\s*\??\s*$", re.I)
+
+
+def _debt_line(context, prompt: str):
+    """"How much is my truck loan?" from his debts (the live sweep, 2026-11-25: the word "truck" had offered the
+    maintenance tools, and the model said the balance wasn't in them): the one debt his words name, its balance, rate
+    and minimum. None otherwise."""
+    found = _DEBT_ASK.match(prompt.replace("’", "'"))
+    budget = getattr(context, "budget", None)
+    if not found or budget is None or not hasattr(budget, "all_debts"):
+        return None
+    generic = {"loan", "card", "debt", "balance", "the", "my", "credit"}
+    said = set(re.findall(r"[a-z0-9]+", found.group("debt").lower())) - generic
+    named = [d for d in budget.all_debts() if said and said == set(re.findall(r"[a-z0-9]+", d.name.lower())) - generic]
+    if len(named) != 1:
+        return None
+    from core.region import money
+
+    d = named[0]
+    rate = f" at {float(d.interest_rate):g}%" if getattr(d, "interest_rate", None) else ""
+    minimum = f", {money(float(d.minimum_payment))} a month minimum" if getattr(d, "minimum_payment", None) else ""
+    return f"{d.name}: {money(float(d.balance))} left{rate}{minimum}."
+
+
 _PAID_ASK = re.compile(r"^\s*(?:did|have) (?:i|we) (?:already )?pa(?:y|id) (?:the |my |our )?(?P<bill>[\w' -]+?)(?: bill)?"
                        r"(?: yet| already| this month)?\s*\??\s*$", re.I)  # the bill's own name, whole (by_name)
 _HOW_MANY_HAVE = re.compile(r"^\s*how many (?!days\b|weeks\b|months\b|hours\b|years\b)(?P<what>[\w' -]+?) (?:do|have) (?:i|we) "
@@ -1243,8 +1268,12 @@ def _records_reply(context, prompt: str):
     boards were): "did I pay the electric bill?" from his bills (paid, or when it's due), and "how many cutting
     boards do I have?" from his products' stock. None otherwise, or when no record of his is named.
     A recurring bill paid within its period is paid; a bill's and a product's names are matched whole (`by_name`),
-    and the stock is the Product's quantity_in_stock."""
+    and the stock is the Product's quantity_in_stock.
+    And "how much is my truck loan?" from his debts (`_debt_line`)."""
     said = prompt.replace("’", "'")
+    line = _debt_line(context, said)
+    if line is not None:
+        return line
     found = _PAID_ASK.match(said)
     budget = getattr(context, "budget", None)
     if found and budget is not None and hasattr(budget, "all_bills"):

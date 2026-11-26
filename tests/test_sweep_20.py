@@ -6,6 +6,7 @@ The fourteenth live sweep's fixes (2026-11-25): a product or material is found b
 cutting boards"); extra on a debt he names goes to that debt, its payoff said both ways; "did I pay the electric
 bill?" and "how many cutting boards do I have?" are read from his records; a debt's balance is never what he can
 afford. The Fable review of it: a name is matched whole, a paid monthly bill is paid, ordinary words pick nothing.
+And a debt's balance, from the first live sweep run as a command.
 """
 
 from datetime import date, timedelta
@@ -58,3 +59,14 @@ def test_the_fable_review_of_sweep_20():
         assert assistant_turn._records_reply(context, words) is None, words
     assert question_plans._not_for("afford", "How much is my truck loan?")
     assert not question_plans._not_for("afford", "How much is the new truck and can I afford it with my loan?")
+
+
+def test_a_debts_balance_is_read_from_his_debts():
+    """"How much is my truck loan?" is the Truck Loan's line; "my card" with two cards is the model's."""
+    debts = [SimpleNamespace(name="Truck Loan", balance=18250, interest_rate=6.9, minimum_payment=345),
+             SimpleNamespace(name="Chase Freedom", balance=4200, interest_rate=24.99, minimum_payment=200)]
+    context = SimpleNamespace(budget=SimpleNamespace(all_debts=lambda: debts))
+    said = assistant_turn._records_reply(context, "How much is my truck loan?")
+    assert said.startswith("Truck Loan: $18,250.00 left at 6.9%")
+    assert assistant_turn._records_reply(context, "how much do I still owe on the chase freedom?").startswith("Chase")
+    assert assistant_turn._records_reply(context, "how much is my phone?") is None
