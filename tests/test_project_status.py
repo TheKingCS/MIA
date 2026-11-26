@@ -21,6 +21,11 @@ def test_status_due_tasks_and_hours():
     assert said.startswith("Shed is active, due December 6 (10 days left).")
     assert "Tasks: 1 of 2 done; next up, Roof." in said
     assert "You've put 6.5 hours into it, last on November 24." in said
+    needs = SimpleNamespace(for_project=lambda pid: [SimpleNamespace(quantity=3, have=0, unit="bundles",
+                                                                     item="shingles", status="needed")])
+    done = SimpleNamespace(project_id="p1", name="Shed", status="Complete", due_date="", time_log=[{"hours": 1}])
+    said = project_status.say(SimpleNamespace(tasks=tasks, requirements=needs), done, date(2026, 11, 26))
+    assert "next up" not in said and "1 hour into it" in said and "It still needs 3 bundles shingles." in said
 
 
 def test_past_due_and_the_words_reach_it(monkeypatch):
@@ -29,7 +34,8 @@ def test_past_due_and_the_words_reach_it(monkeypatch):
     assert "104 days past its due date (August 14)" in said and "No hours logged" in said
     from core import project_time
 
-    monkeypatch.setattr(project_time, "project_named", lambda c, w, whole=False: late if "rewire" in w else None)
+    monkeypatch.setattr(project_time, "project_named",
+                        lambda c, w, whole=False: late if whole and "rewire" in w else None)
     monkeypatch.setattr(project_status, "say", lambda c, p, t=None: f"picture of {p.name}")
     for words in ("How's the garage rewire coming along?", "where am I on the garage rewire?",
                   "status of the garage rewire project"):

@@ -34,6 +34,8 @@ def test_to_the_same_day_with_what_moved():
     assert "All of October came to $290.00." in said and "Moved most: Groceries (up $120.00)" in said
     one = money_periods.compare(SimpleNamespace(budget=_budget(ROWS)), "Transportation", date(2026, 11, 15))
     assert one.startswith("$10.00 less: $30.00 on Transportation this month so far")
+    assert money_periods.compare(SimpleNamespace(budget=_budget(ROWS)), today=date(2026, 12, 1)).startswith(
+        "Nothing logged this month yet")
 
 
 def test_the_words_reach_it(monkeypatch):
@@ -46,4 +48,11 @@ def test_the_words_reach_it(monkeypatch):
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "groceries this month vs last month?") == "compare[Groceries]"
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "spending this month vs last month") == "compare[]"
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "the kids this month vs last month") is None
+    for words in ("what did I spend this month vs last month?", "compare my spending this month to last month",
+                  "did we spend more this month than last month?"):
+        assert assistant_turn._own_tool_reply(SimpleNamespace(), words) == "compare[]", words
+    for words in ("did I spend more hours this month than last month?", "did I spend more time on the fence this month "
+                  "than last month?", "did I spend more at Costco this month than last month?",
+                  "did I spend more on groceries and gas this month than last month?"):
+        assert assistant_turn._own_tool_reply(SimpleNamespace(), words) != "compare[]", words
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "did I make more this month than last month?") != "compare[]"

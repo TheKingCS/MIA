@@ -1541,9 +1541,10 @@ _TEACH_SOMETHING = re.compile(r"^\s*(?:hey mia,? )?(?:teach me something(?: new|
                               r"(?:new|useful) to learn|what can i learn today|give me a lesson|teach me a skill)\s*[.!?]*\s*$",
                               re.I)
 _MONTH_VS = re.compile(r"^\s*(?:hey mia,? )?(?=.*\b(?:spend|spent|spending)\b)(?!.*\b(?:income|earn\w*|made|make|saved?|"
-                       r"save)\b)(?:did i|have i been|am i|was i|how does|how's|how is|compare|is|what's|my)\b.{0,60}?"
-                       r"(?:\bon (?P<cat>[\w&' -]{2,30}?)\s+)?(?:(?:so far )?this month\s+)?(?:than|vs\.?|versus|"
-                       r"compared? (?:to|with)|against|and)\s+(?:i did\s+|what i spent\s+)?last month\s*[?.!]*\s*$|^\s*(?:hey mia,? )?"
+                       r"save|time|hours?|minutes?|at|business|shop)\b)(?:did (?:i|we)|have (?:i|we) been|am i|"
+                       r"are we|was i|were we|what did (?:i|we) spend|how does|how's|how is|compare|is|what's|my)\b"
+                       r".{0,60}?(?:\bon (?P<cat>[\w&' -]{2,30}?)\s+)?(?:(?:so far )?this month\s+)?(?:than|vs\.?|"
+                       r"versus|compared? (?:to|with)|against|and|to)\s+(?:i did\s+|what i spent\s+)?last month\s*[?.!]*\s*$|^\s*(?:hey mia,? )?"
                        r"(?:my )?(?P<cat2>[\w&' -]{2,30}?)(?: spending)? this month (?:vs\.?|versus|compared (?:to|with)) "
                        r"last month\s*[?.!]*\s*$", re.I)
 _PROJECT_COMING = re.compile(r"^\s*(?:hey mia,? )?(?:how(?:'s| is| are) (?:the |my |our )?(?P<a>[\w' -]{2,40}?) "
@@ -1652,7 +1653,7 @@ def _own_tool_reply(context, prompt: str):
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation (to finish the shed)" his own reasons and one small step (core/motivation), "teach me
     something" a lesson from her own courses (core/teach_something), "did I spend more this month than last month?" the
     months side by side (core/money_periods.compare), "how's the shed coming along?" that project's picture
-    (core/project_status, only for a project of his), "what should I be doing on the homestead this
+    (core/project_status, only for a project his words name whole), "what should I be doing on the homestead this
     month?" (or "in march") that month's items and the season's usual work (core/homestead_year.this_month), "what should be in my truck's
     emergency kit?" Ready.gov's car kit against his records (core/ready_kit.say_vehicle), "what's a good side
     hustle for me?" from what he already sells,
@@ -1887,6 +1888,8 @@ def _own_tool_reply(context, prompt: str):
         category = ""
         if versus.group("cat") or versus.group("cat2"):
             what = (versus.group("cat") or versus.group("cat2")).strip()
+            if re.search(r"\b(?:and|or)\b|,", what):
+                return None  # "groceries and gas": two categories are the model's
             category = next((c for c in EXPENSE_CATEGORIES if c.lower() == what.lower()), None) or next(
                 (c for c, words in _SPENT_ON if re.search(words, what, re.I)), None)
             if category is None and not (versus.group("cat2") and what.lower() in ("spending", "money")):
@@ -1903,7 +1906,7 @@ def _own_tool_reply(context, prompt: str):
 
         try:
             named = next(g for g in coming.groups() if g)
-            project = project_time.project_named(context, named)
+            project = project_time.project_named(context, named, whole=True)  # "the garden" is never Garden Fence
             if project is not None:
                 return project_status.say(context, project)
         except Exception:

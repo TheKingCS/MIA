@@ -143,7 +143,7 @@ def shop_made(context, words: str, today: Optional[date] = None) -> str:
 def compare(context, category: str = "", today: Optional[date] = None) -> str:
     """This month so far against last month to the same day (a month half gone never against a whole one), with last
     month's whole said beside it; for every category, the two that moved most; for one (`category`, a budget
-    category's name), only its own. From his household's expenses."""
+    category's name), only its own; nothing yet this month said as that. From his household's expenses."""
     today = today or date.today()
     budget = getattr(context, "budget", None)
     if budget is None:
@@ -166,7 +166,9 @@ def compare(context, category: str = "", today: Optional[date] = None) -> str:
     if not w:
         return f"You've spent {_money(a)} {what}this month; nothing's logged {what}for {last_start:%B} to compare."
     day = f"{last_start:%B} {same_day.day}"
-    if abs(a - b) < 0.005:
+    if not a:
+        head = f"Nothing logged {what}this month yet; by {day} it was {_money(b)}."
+    elif abs(a - b) < 0.005:
         head = f"About the same: {_money(a)} {what}this month so far, and {_money(b)} by {day}."
     else:
         word = "more" if a > b else "less"

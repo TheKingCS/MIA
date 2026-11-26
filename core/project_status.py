@@ -5,7 +5,7 @@ core.project_status
 "How's the shed coming along?" (brainstorm round 19, 2026-11-26: the live check had "I'm not aware of any information
 about a garage rewire" with the Garage Rewire in his projects): one project's picture from his own records, in code.
 Its status and due date (days left, or how far past), its tasks (how many done, the next open one), the hours he's
-logged on it (core/project_time) and when last, and what it still needs (core/assistant_requirement_actions). Read
+logged on it (core/project_time) and when last, and what it still needs (its own requirements). Read
 only; each part that can't be read is left out.
 """
 
@@ -16,7 +16,8 @@ from typing import Optional
 
 
 def say(context, project, today: Optional[date] = None) -> str:
-    """One project's picture in a few sentences: status and due date, tasks, hours, needs."""
+    """One project's picture in a few sentences: status and due date, tasks (the next one only while it isn't done),
+    hours, its own needs (by its id)."""
     from core import project_time
 
     today = today or date.today()
@@ -37,7 +38,7 @@ def say(context, project, today: Optional[date] = None) -> str:
         done = sum(1 for t in tasks if t.done)
         open_ = [t for t in tasks if not t.done]
         line = f"Tasks: {done} of {len(tasks)} done"
-        if open_:
+        if open_ and str(project.status or "").lower() not in ("done", "complete", "completed"):
             first = sorted(open_, key=lambda t: (not t.due_date, t.due_date or ""))[0]
             line += f"; next up, {first.title}"
         parts.append(line + ".")
@@ -45,16 +46,18 @@ def say(context, project, today: Optional[date] = None) -> str:
     if hours:
         last = max((str(e.get("date") or "") for e in (project.time_log or []) if isinstance(e, dict)), default="")
         on = _day(last)
-        parts.append(f"You've put {hours:g} hours into it" + (f", last on {on:%B} {on.day}" if on else "") + ".")
+        parts.append(f"You've put {hours:g} hour{'s' if hours != 1 else ''} into it" + (f", last on {on:%B} {on.day}" if on else "") + ".")
     else:
         parts.append("No hours logged on it yet.")
-    try:
-        from core.assistant_requirement_actions import needs_sentence
-
-        if getattr(context, "requirements", None) is not None:
-            needs = needs_sentence(context, project.name)
-            if "still needs" in needs:
-                parts.append(needs)
+    try:  # its own needs, by its id (never another project's whose name holds this one's)
+        book = getattr(context, "requirements", None)
+        lines = [r for r in (book.for_project(project.project_id) if book is not None else [])
+                 if r.status in ("needed", "partial", "found")]
+        if lines:
+            said = [f"{r.quantity - r.have:g} {r.unit + ' ' if r.unit else ''}{r.item}"
+                    + (" (some on hand)" if r.status == "partial" else "") for r in lines[:6]]
+            more = f", and {len(lines) - 6} more" if len(lines) > 6 else ""
+            parts.append(f"It still needs {', '.join(said)}{more}.")
     except Exception:  # noqa: BLE001
         pass
     return " ".join(parts)
