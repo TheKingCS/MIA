@@ -272,11 +272,18 @@ def his_words(registry, call: ToolCall, prompt: str) -> dict:
     model's (live check, 2026-11-25: "how long do I pressure can quart jars of green beans?" reached canning_time with
     the tool's own description as the question, and was refused). Only for HIS_WORDS_TOOLS, and only when the
     model's question is empty or the tool's own description: any other question of the model's stands (the sixth
-    review: describe_app's two apps, a budget, two foods in two calls had all become the whole prompt)."""
+    review: describe_app's two apps, a budget, two foods in two calls had all become the whole prompt). Any other tool
+    with a prompt_arg gets his words only when the model left that field empty (2026-11-25, K-0499)."""
     arguments = dict(call.arguments or {})
     action = getattr(registry, "_actions", {}).get(call.name)
     field = getattr(action, "prompt_arg", "") if action is not None else ""
-    if call.name not in HIS_WORDS_TOOLS or not field or not str(prompt or "").strip():
+    if not field or not str(prompt or "").strip():
+        return arguments
+    if call.name not in HIS_WORDS_TOOLS:
+        # any other tool that reads his words gets them when the model left them out (K-0499: guards on his words
+        # had never run in a real turn); a question the model gave stands, as for the rest
+        if not str(arguments.get(field) or "").strip():
+            arguments[field] = str(prompt).strip()
         return arguments
     given = " ".join(str(arguments.get(field) or "").lower().split())
     described = " ".join(str(getattr(action, "description", "") or "").lower().split())

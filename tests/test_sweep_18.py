@@ -6,7 +6,8 @@ The twelfth live sweep's fixes (2026-11-25): the time, the date, days until a ho
 walk logged and an egg price from his feed cost are worked out in code; the library's note to the model is never
 said; a grocery list written as JSON is its items, and nothing goes on it unless he asked; what's on the grocery list
 is never the day's plan. The Fable review of it: the guard reaches the tool and stops only what isn't a list; each
-everyday route takes only its own; his own product is found by its name's words.
+everyday route takes only its own; his own product is found by its name's words; any tool that reads his words gets them when the model left
+them out.
 """
 
 from types import SimpleNamespace
@@ -73,3 +74,15 @@ def test_the_fable_review_of_sweep_18():
     for words in ("what do I do when the power is out right now", "what can I do for more power in my truck",
                   "if I lose power in my legs", "what do I need for a grid tie inverter"):
         assert outage_plan.reply(None, words) is None, words
+
+
+def test_every_tool_that_reads_his_words_gets_them_when_the_model_leaves_them_out():
+    """A tool's prompt_arg left empty by the model is his words; one the model gave stands."""
+    from core import tool_loop
+    from core.llm_manager import ToolCall
+
+    registry = SimpleNamespace(_actions={"what_can_you_do": SimpleNamespace(prompt_arg="question", description="d")})
+    assert tool_loop.his_words(registry, ToolCall("what_can_you_do", {}), "what can you do for my farm?") == \
+        {"question": "what can you do for my farm?"}
+    assert tool_loop.his_words(registry, ToolCall("what_can_you_do", {"question": "farm"}), "what can you do?") == \
+        {"question": "farm"}
