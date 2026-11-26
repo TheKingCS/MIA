@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1845 files, 392,620 lines; 1845 files describe themselves; 21,343 of 21,468 classes and functions are documented.
+1846 files, 392,760 lines; 1846 files describe themselves; 21,348 of 21,473 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-723 files, 204,873 lines; 10,183 of 10,262 classes and functions documented
+723 files, 204,973 lines; 10,185 of 10,264 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1021,7 +1021,7 @@
 
 ## tests/: the test suite: what each part must do
 
-713 files, 105,732 lines; 8,789 of 8,835 classes and functions documented
+714 files, 105,772 lines; 8,792 of 8,838 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1603,6 +1603,7 @@
 - `tests/test_sweep_16.py`: The tenth live sweep's fixes (2026-11-25): a unit conversion and a holiday's date are worked out in code (the model had said "The conversion is complete." and "I don't have that information"); "I don't know what that means" before a real answer goes; "do you remember what I told you yesterday?" is h
 - `tests/test_sweep_18.py`: The twelfth live sweep's fixes (2026-11-25): the time, the date, days until a holiday, a floor's square footage, a walk logged and an egg price from his feed cost are worked out in code; the library's note to the model is never said; a grocery list written as JSON is its items, and nothing goes on i
 - `tests/test_sweep_19.py`: The thirteenth live sweep's fixes (2026-11-25): "we're out of milk" goes on the grocery list, never into the pantry; "my freezer uses 150 watts" is kept as one of his loads; what's on his calendar and who he owes are never the week's review or his assets' returns. The Fable review of it: each guard 
+- `tests/test_sweep_20.py`: The fourteenth live sweep's fixes (2026-11-25): a product or material is found by its name as a plural too ("I sold 2 cutting boards"); extra on a debt he names goes to that debt, its payoff said both ways; "did I pay the electric bill?" and "how many cutting boards do I have?" are read from his rec
 - `tests/test_sweep_8_conversation.py`: The third live sweep's conversation fixes (2026-11-25): an expense's date is a real date or today (the model sent "null", and no month counted it), feed has its own category, the tone examples are other people's and never this conversation (the model brought up "that marathon you're running next wee
 - `tests/test_sweep_9_automation.py`: The fourth live sweep's fixes (2026-11-25): "remind me every Monday to check the water filter" and "can you automate a reminder every Monday to ..." go on the calendar as a weekly event in code (no tool had been called, and the model promised a notification); a promise with words between ("I'll also
 - `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does (and an edit made on the phone while it answers, which survives), the PC's own endpoints, and a phone paired again taking the computer's copies 

@@ -6,7 +6,8 @@ The desktop's own Assistant tools, without the window (the MIA Runtime,
 DEC-0155, step 4).
 
 What it is: `_register_assistant_actions` and the 111 tool handlers it
-registers inline (`_action_*`, with the `_resolve_*` helpers they share),
+registers inline (`_action_*`, with the `_resolve_*` helpers they share, and `by_name`: a record by its name, a
+plural too),
 plus the 62 tool families it registers from their own modules
 (`core/assistant_*_actions.py`). Together they are MIA's full tool
 registry. Until 2026-11-15 they were methods of the Qt window's
@@ -186,6 +187,37 @@ MAINTENANCE_QUERY_CATEGORIES = {
     "garden": "Garden/Plant", "greenhouse": "Garden/Plant", "plant": "Garden/Plant", "garden/plant": "Garden/Plant",
     "tool": "Tool",
 }
+
+
+
+def by_name(items, said: str):
+    """Pure logic. The one record whose name his words give: exactly, else as a plural or singular ("cutting boards" is
+    the Cutting Board), else the only one whose name's words are all in his; None otherwise (the live sweep,
+    2026-11-25: "I sold 2 cutting boards" had been refused)."""
+    import re as _re
+
+    said = " ".join(str(said or "").lower().split())
+    if not said:
+        return None
+    items = list(items)
+
+    def one(word):
+        """A word as its singular."""
+        return word[:-2] if _re.search(r"(?:ch|sh|x|ss)es$", word) else word[:-1] if word.endswith("s") and len(word) > 3 \
+            else word
+
+    def words(text):
+        """Its words, each as its singular."""
+        return [one(w) for w in _re.findall(r"[a-z0-9]+", str(text).lower())]
+
+    exact = [i for i in items if str(getattr(i, "name", "")).lower() == said]
+    if len(exact) == 1:
+        return exact[0]
+    same = [i for i in items if words(getattr(i, "name", "")) == words(said)]
+    if len(same) == 1:
+        return same[0]
+    inside = [i for i in items if words(getattr(i, "name", "")) and set(words(getattr(i, "name", ""))) <= set(words(said))]
+    return inside[0] if len(inside) == 1 else None
 
 
 class AssistantTools:
@@ -3345,13 +3377,14 @@ class AssistantTools:
     @staticmethod
     def _action_consume_material(context: AppContext, arguments: dict) -> str:
         """Assistant tool `consume_material`: records a quantity of a material used on a job (stock goes down). Returns the reply in words (a missing or unknown name says so, nothing changes).
-        A quantity of 0 or less asks."""
+        A quantity of 0 or less asks.
+        The material is found by its name as a plural too (`by_name`)."""
         job_name = str(arguments.get("job_name", "")).strip().lower()
         material_name = str(arguments.get("material_name", "")).strip().lower()
         job = next((j for j in context.jobs.all_jobs() if j.name.lower() == job_name), None)
         if job is None:
             return f"I don't have a job called '{arguments.get('job_name', '')}'."
-        material = next((m for m in context.materials.all_materials() if m.name.lower() == material_name), None)
+        material = by_name(context.materials.all_materials(), material_name)  # "2x4s" too
         if material is None:
             return f"I don't have a material called '{arguments.get('material_name', '')}'."
         try:
@@ -3366,13 +3399,14 @@ class AssistantTools:
     @staticmethod
     def _action_produce_product(context: AppContext, arguments: dict) -> str:
         """Assistant tool `produce_product`: records a quantity of a product a job made (stock goes up). Returns the reply in words (a missing or unknown name says so, nothing changes).
-        A quantity of 0 or less asks."""
+        A quantity of 0 or less asks.
+        The product is found by its name as a plural too (`by_name`)."""
         job_name = str(arguments.get("job_name", "")).strip().lower()
         product_name = str(arguments.get("product_name", "")).strip().lower()
         job = next((j for j in context.jobs.all_jobs() if j.name.lower() == job_name), None)
         if job is None:
             return f"I don't have a job called '{arguments.get('job_name', '')}'."
-        product = next((p for p in context.products.all_products() if p.name.lower() == product_name), None)
+        product = by_name(context.products.all_products(), product_name)  # "cutting boards" too
         if product is None:
             return f"I don't have a product called '{arguments.get('product_name', '')}'."
         try:
@@ -3387,9 +3421,10 @@ class AssistantTools:
     @staticmethod
     def _action_record_sale(context: AppContext, arguments: dict) -> str:
         """Assistant tool `record_sale`: records a product sale in the ledger (quantity and amount). Returns the reply in words (a missing or unknown name says so, nothing changes).
-        A sale needs a quantity and an amount above zero, or it asks."""
+        A sale needs a quantity and an amount above zero, or it asks.
+        The product is found by its name as a plural too (`by_name`: "cutting boards")."""
         product_name = str(arguments.get("product_name", "")).strip().lower()
-        product = next((p for p in context.products.all_products() if p.name.lower() == product_name), None)
+        product = by_name(context.products.all_products(), product_name)  # "cutting boards" too
         if product is None:
             return f"I don't have a product called '{arguments.get('product_name', '')}'."
         try:

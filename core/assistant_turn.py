@@ -130,7 +130,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A monthly reminder (`_monthly_reminder_reply`) too, a unit conversion (`_convert_reply`) and a holiday's date
     (`_holiday_reply`), and the house's trouble (`_home_trouble_reply`), and when to fish (`_fish_when_reply`), and the
     power out (`_outage_reply`), and the small everyday answers (`_everyday_reply`), and a load's watts
-    (`_load_watts_reply`).
+    (`_load_watts_reply`), and a bill paid or a product's stock (`_records_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -204,6 +204,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _home_trouble_reply(context, prompt)  # a burst pipe, a flooded basement, as in a turn
     if walked is None:
         walked = _outage_reply(context, prompt)  # the power out, and his readiness, as in a turn
+    if walked is None:
+        walked = _records_reply(context, prompt)  # "did I pay the electric bill?", "how many cutting boards?", as in a turn
     if walked is None:
         walked = _load_watts_reply(context, prompt)  # "my freezer uses 150 watts", as in a turn
     if walked is None:
@@ -1230,6 +1232,51 @@ def _load_watts_reply(context, prompt: str):
         return None
 
 
+_PAID_ASK = re.compile(r"^\s*(?:did|have) (?:i|we) (?:already )?pa(?:y|id) (?:the |my |our )?(?P<bill>[\w' -]+?)(?: bill)?"
+                       r"(?: yet| already| this month)?\s*\??\s*$", re.I)
+_HOW_MANY_HAVE = re.compile(r"^\s*how many (?P<what>[\w' -]+?) (?:do|have) (?:i|we) (?:have|got|got left|left)(?: in stock| on hand| "
+                            r"left)?\s*\??\s*$", re.I)
+
+
+def _records_reply(context, prompt: str):
+    """Two of his own records, in code (the live sweep, 2026-11-25: the model was unsure and asked where the cutting
+    boards were): "did I pay the electric bill?" from his bills (paid, or when it's due), and "how many cutting
+    boards do I have?" from his products' stock. None otherwise, or when no record of his is named."""
+    said = prompt.replace("’", "'")
+    found = _PAID_ASK.match(said)
+    budget = getattr(context, "budget", None)
+    if found and budget is not None and hasattr(budget, "all_bills"):
+        from core.assistant_tools import by_name
+
+        bill = by_name(budget.all_bills(), found.group("bill"))
+        if bill is None:
+            return None
+        from datetime import date as _date
+
+        from core.budget_manager import days_until_bill_due
+
+        left = days_until_bill_due(bill, _date.today())
+        if left is None:
+            return f"Yes: {bill.name} is paid."
+        if left < 0:
+            return f"Not yet: {bill.name} is {-left} day{'' if left == -1 else 's'} overdue."
+        return f"Not yet: {bill.name} is due {'today' if left == 0 else f'in {left} day' + ('' if left == 1 else 's')}."
+    found = _HOW_MANY_HAVE.match(said)
+    products = getattr(context, "products", None)
+    if found and products is not None and hasattr(products, "all_products"):
+        from core.assistant_tools import by_name
+
+        product = by_name(products.all_products(), found.group("what"))
+        if product is None:
+            return None
+        count = getattr(product, "quantity", None)
+        if count is None:
+            return None
+        return f"{count:g} {product.name}{'' if count == 1 else 's'} on hand." if isinstance(count, (int, float)) \
+            else None
+    return None
+
+
 def _outage_reply(context, prompt: str):
     """Ready for the power going out: the first things to do and his own readiness (core/outage_plan.reply); the
     power going out now is the outage clock's (core/outage.py). None otherwise."""
@@ -1479,7 +1526,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     flooded basement is said in fixed words (`_home_trouble_reply`), and when to fish from his catches
     (`_fish_when_reply`), and the power out with his own readiness (`_outage_reply`); the time, days until a holiday,
     square feet, a walk logged and an egg price are worked out in code (`_everyday_reply`); a load's watts are kept
-    (`_load_watts_reply`). A turn the
+    (`_load_watts_reply`); a bill paid or a product's stock is read from his records (`_records_reply`). A turn the
     model answers ends a question plan's thread
     (core/conversation_state.forget), and a reply that is only a humor example is never said.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
@@ -1627,6 +1674,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _home_trouble_reply(context, prompt)  # the house's trouble: the main shutoff, the power first
         if walked is None:
             walked = _outage_reply(context, prompt)  # the power out: the first things, then his own stores
+        if walked is None:
+            walked = _records_reply(context, prompt)  # a bill paid or not, a product's stock, from his records
         if walked is None:
             walked = _load_watts_reply(context, prompt)  # a load's watts, kept for the power picture
         if walked is None:
