@@ -30,7 +30,11 @@ _DONE = re.compile(
 # temperature to 350", "I set sail at dawn", "I changed my mind" claim nothing of his)
 _RECORD = re.compile(r"\b(?:reminders?|alarms?|timers?|events?|calendar|appointments?|tasks?|to-?dos?|lists?|notes?|"
                      r"notifications?|missions?|entr(?:y|ies)|logs?|budget|routines?|orders?|invoices?|"
-                     r"schedule|recurring)\b", re.I)
+                     r"schedule|recurring|"
+                     # his other records (the conversation check, 2026-11-26: "I've added the lumber cost to your
+                     # Garage Rewire project" with nothing done)
+                     r"projects?|expenses?|costs?|inventory|pantry|stock|ledger|bills?|debts?|shopping list|grocery "
+                     r"list|maintenance|upkeep|flock|garden plan|watch list|records?)\b", re.I)
 # The "it's set" forms ("your alarm is set for 6:30") also say what a lookup found, so they count only when he asked
 # for a change (a lookup's "Your alarm is set for 6:30 tomorrow" stays)
 _PASSIVE = re.compile(r"\byou(?:'ve| have) been reminded\b|\b(?:reminder|alarm|event|task|appointment|note)\s+(?:is|has "

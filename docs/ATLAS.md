@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1911 files, 400,797 lines; 1911 files describe themselves; 21,715 of 21,861 classes and functions are documented.
+1912 files, 400,817 lines; 1912 files describe themselves; 21,716 of 21,862 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,168 lines; 10,378 of 10,457 classes and functions documented
+741 files, 210,172 lines; 10,378 of 10,457 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-760 files, 108,467 lines; 8,963 of 9,030 classes and functions documented
+761 files, 108,483 lines; 8,964 of 9,031 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1140,6 +1140,7 @@
 - `tests/test_chronicle_issue.py`: The Chronicles' weekly issue (build plan step 17, core/chronicle_issue.py): told from approved series events, oldest first; captions in code with the event named; lines from the model in the characters' voices; the Story Bible's five rules checked in code; Zac's approval marks the events as told and
 - `tests/test_ci_workflows.py`: FW-02, CI as the gate (DEC-0264; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): every action a workflow uses is pinned to a commit, not a tag that could be moved; every workflow says what its token may do; the Linux suite runs on every push; the image's own Python runs the whole suite ins
 - `tests/test_claim_check.py`: Never "I've added a reminder" when nothing was added (core/claim_check.py; live sweep, 2026-11-25), and the three calendar fixes from the same sweep: "remind me to X on a day" goes on the calendar in code (core/assistant_turn._reminder_reply), the day his words name wins over the model's made-up dat
+- `tests/test_claim_check_records.py`: A claim of a change to any of his records is caught (core/claim_check._RECORD, the conversation check 2026-11-26: "I've added the lumber cost to your Garage Rewire project" with nothing done), and a plain answer isn't.
 - `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_less
 - `tests/test_classroom_manager.py`: Unit tests for core.classroom_manager. Isolates _DATA_DIR/the three per-level file constants into a tmp_path scratch area, same pattern as tests/test_workout_manager.py.
 - `tests/test_classroom_module.py`: Unit tests for modules.classroom.module's pure functions, same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures).
