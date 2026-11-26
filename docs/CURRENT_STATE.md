@@ -71,8 +71,10 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   homestead this month?" (or "in March": core/homestead_year.this_month, his own items then the season's usual work,
   the flock's only with hens, the firewood's only when he burns it); two things in one sentence
   (assistant_turn._two_things_reply: "I spent $40 on screws and 2 hours on the shed" keeps both, one never swallowed
-  into the other's record, a question never writes). Next from round 18: a conversation's thread across three or four
-  turns, and "what she noticed today" in the evening wrap. 8775 passing.
+  into the other's record, a question never writes); a conversation's thread (core/follow_through.thread: "gas last
+  month?", "what about this month?", "and groceries?" is groceries this month; "same for the card"); and what she
+  noticed today in the evening wrap (core/evening_wrap.noticed_today: the first unusual thing that reached him today).
+  Round 18's ideas needing no decision are all built; Q-0018 and Q-0019 wait on Zac. 8780 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through

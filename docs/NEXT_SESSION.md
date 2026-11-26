@@ -10,8 +10,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **2026-11-26: conversation, money and automation sweeps.** At the PC: "what about this month?" after a spending
 question, "and the card?", "every Sunday tell me what's due this week", "can I afford a $500 purchase this month?",
 "what's a good side hustle for me?", and from round 18: "teach me something", "what should I be doing on the
-homestead this month?", "I spent $40 on screws and 2 hours on the shed" (both kept, said together). Next to build
-(no decision): a conversation's thread across 3-4 turns, "what she noticed today" in the evening wrap. Waiting on
+homestead this month?", "I spent $40 on screws and 2 hours on the shed" (both kept, said together). Also built: a
+conversation's thread across turns ("and groceries?" after "what about this month?") and "Something I flagged today"
+in the evening wrap; round 18's no-decision ideas are done, so next is a round 19 brainstorm. Waiting on
 Zac: Q-0018 (the writing shortcuts), Q-0019 (a fire how-to through the emergency floor).
 
 **2026-11-25, late: brainstorm round 16** (docs/future/JARVIS_BRAINSTORM.md). Built: the homestead's health line
