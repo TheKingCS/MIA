@@ -266,7 +266,9 @@ HIS_WORDS_TOOLS = frozenset({"canning_time", "feed_mix", "bleach_for_water", "me
                              "add_grocery_item", "set_power_load", "list_past_conversations", "add_pantry_item",
                              # better given his whole question (the Fable review of the general fill)
                              "get_mia_docs", "ask_specialist", "generator_runtime", "hens_for_eggs", "water_to_store",
-                             "get_capability"})
+                             "get_capability",
+                             # "tell me when..." is read from his own words in code (core/condition_watch.parse)
+                             "watch_condition", "stop_condition_watch"})
 
 
 def his_words(registry, call: ToolCall, prompt: str) -> dict:

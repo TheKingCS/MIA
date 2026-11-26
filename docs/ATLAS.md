@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1861 files, 394,275 lines; 1861 files describe themselves; 21,411 of 21,542 classes and functions are documented.
+1863 files, 394,882 lines; 1863 files describe themselves; 21,450 of 21,582 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-728 files, 205,835 lines; 10,211 of 10,290 classes and functions documented
+729 files, 206,335 lines; 10,244 of 10,323 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -168,6 +168,7 @@
 - `core/code_atlas.py`: Documentation for everything MIA is made of (DEC-0104, Zac 2026-11-06: "every line of code ... should have documentation that explains what it is and what it does and how it does it, so that if MIA ever needed to redo this entire process herself, she could. And this should be an ongoing thing").
 - `core/communication_gate.py`: "Know when to speak", slice C of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the one path every proactive (unprompted) message from MIA goes through, so a context-aware assistant never turns into a nag.
 - `core/component_manager.py`: Backs the Component DB (modules/workshop/module.py) — docs/ROADMAP.md milestone 8.3. Same persisted-JSON pattern as core/inventory_manager.py: data/components.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
+- `core/condition_watch.py`: "Tell me when..." (brainstorm round 16, 2026-11-25): a condition in his own world he asks her to watch, checked in code every day and said through the communication gate when it comes true. World Intelligence watches the news (core/world_intel); this watches his own records and his forecast:
 - `core/config_manager.py`: Handles reading, writing, and defaulting MIA's configuration.
 - `core/connections.py`: The magic is in the connections (Zac, 2026-11-08). Something said in passing ("picked up chicken feed today") can matter to a project started three weeks ago, an idea set aside, a goal still open. MIA notices that tie, holds it, and brings it up naturally in a later conversation, once, then lets it 
 - `core/connectivity.py`: What MIA can do with and without the internet, and whether she has it right now — so if the connection drops she keeps acting sensibly instead of promising things she can't deliver.
@@ -1027,7 +1028,7 @@
 
 ## tests/: the test suite: what each part must do
 
-723 files, 106,309 lines; 8,826 of 8,878 classes and functions documented
+724 files, 106,416 lines; 8,832 of 8,885 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1133,6 +1134,7 @@
 - `tests/test_code_routes_corpus.py`: MIA's code routes (the answers taken in code before the model: a course's lesson, a materials list, a course's next lesson, days of water, a reminder on a day or every week, a drill, a first-aid how-to, a lab to build or simulate) each take only what they're for. Review after review (2026-11-25) fou
 - `tests/test_communication_gate.py`: Slice C, "Know when to speak" (core/communication_gate.py): every rule with a fake clock, the persisted gate with delivery and deferral, the daily checks routed through it, a scripted day, and the learned pace per kind of message that replaced the fixed daily cap (DEC-0171).
 - `tests/test_component_manager.py`: Unit tests for core.component_manager. Isolates _DATA_DIR/_COMPONENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
+- `tests/test_condition_watch.py`: "Tell me when..." (core/condition_watch.py, 2026-11-25): his words read in code into a watch on tonight's low, tomorrow's rain, a pantry item, the feed or his supplies; checked each day and said once through the gate (every day it's true when he said "whenever"); kept in his own folder, added and st *(1 undocumented)*
 - `tests/test_config_manager.py`: Unit tests for core.config_manager.ConfigManager.
 - `tests/test_connections.py`: The magic is in the connections (core/connections.py, Zac 2026-11-08): a remark that ties into something started weeks ago is noticed, held, raised once in a later conversation if it fits, then let go. These check the two ways a tie is found (the link graph, shared words), the guards (a week old at 
 - `tests/test_connectivity.py`: core.connectivity: the online/offline monitor (with an injected fake connect function and clock, so no real network and no real waiting), the system-prompt text, and the get_connectivity_status action.

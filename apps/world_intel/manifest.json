@@ -29,6 +29,7 @@
     },
     "services": [],
     "data": [
+      "condition_watches",
       "prices",
       "requirements",
       "world_intel"
@@ -44,6 +45,7 @@
       "compare_need",
       "drop_need",
       "got_need",
+      "list_condition_watches",
       "list_watches",
       "mute_source",
       "not_for_me",
@@ -52,13 +54,17 @@
       "record_price",
       "save_find",
       "set_trip_cost",
+      "stop_condition_watch",
       "stop_watching",
+      "watch_condition",
       "watch_for",
       "what_is_worth_buying",
       "world_finds",
       "world_intelligence_switch"
     ],
     "actions": [
+      "condition_watch.add",
+      "condition_watch.remove",
       "price.record",
       "price.trip_cost",
       "requirement.add",
@@ -106,7 +112,12 @@
       "world_watch.add": "act_within_grant",
       "world_watch.pause": "act_within_grant",
       "world_watch.remove": "act_within_grant",
-      "what_is_worth_buying": "observe"
+      "what_is_worth_buying": "observe",
+      "list_condition_watches": "observe",
+      "stop_condition_watch": "act_within_grant",
+      "watch_condition": "act_within_grant",
+      "condition_watch.add": "act_within_grant",
+      "condition_watch.remove": "act_within_grant"
     },
     "outside": [
       "world_finds"
@@ -114,6 +125,7 @@
   },
   "uses": [],
   "permissions": [
+    "stores.write:condition_watches",
     "stores.write:prices",
     "stores.write:requirements",
     "stores.write:world_intel"
@@ -127,7 +139,8 @@
       "voice": true
     },
     "background": [
-      "world_intel"
+      "world_intel",
+      "condition_watch"
     ]
   }
 }

@@ -119,6 +119,7 @@ if TYPE_CHECKING:
     from core.work_dungeon import DungeonBook
     from core.smart_closet import ClosetBook
     from core.world_intel import WorldBook
+    from core.condition_watch import WatchList
     from core.requirements import RequirementBook
     from core.price_book import PriceBook
     from core.taught_skills import SkillBook
@@ -151,8 +152,8 @@ class AppContext:
     sensors that send readings), the one store lock the server and the background schedule share, each person's
     stores, the skills they taught her among them (core/taught_skills.py) and the record of everything she runs in
     steps (core/runs.py), what he's working on (core/activity_watch.py), his recall index (core/recall_index.py) and
-    the plans made together (core/project_plans.py),
-    and, when MIA runs with no window, the
+    the plans made together (core/project_plans.py), what he asked her to watch in his own world
+    (core/condition_watch.py), and, when MIA runs with no window, the
     runtime she belongs to and its schedule (core/runtime.py)."""
 
     config: ConfigManager
@@ -293,6 +294,7 @@ class AppContext:
     dungeon: Optional["DungeonBook"] = field(default=None, repr=False)  # DEC-0046 work as a dungeon: runs, loot
     closet: Optional["ClosetBook"] = field(default=None, repr=False)  # DEC-0162 Smart Closet: clothes, outfits
     world_intel: Optional["WorldBook"] = field(default=None, repr=False)  # DEC-0170 World Intelligence: watches, finds
+    condition_watches: Optional["WatchList"] = field(default=None, repr=False)  # "tell me when..." (condition_watch)
     requirements: Optional["RequirementBook"] = field(default=None, repr=False)  # DEC-0172 what each project needs
     prices: Optional["PriceBook"] = field(default=None, repr=False)  # DEC-0172 prices seen, per product
     taught_skills: Optional["SkillBook"] = field(default=None, repr=False)  # DEC-0123 what the person taught her

@@ -204,6 +204,8 @@ SEALED = frozenset({
     "private_journal.json",
     "private_journal_keys.json",
     "game.json",
+    # 2026-11-25: what he asked her to watch in his own world (core/condition_watch.py), in his words
+    "condition_watches.json",
 })
 # Sealed a line at a time (2026-11-08): an append-only history, where a whole-file envelope would mean rewriting it
 # (CLAUDE.md: never rewrite it). Each line is its own envelope as it's appended (seal_line); a file can hold plain lines

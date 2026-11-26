@@ -469,6 +469,18 @@
    "status": "none",
    "why": "his own budget's numbers worked out in code (core/spending_pace, core/money_ahead) and said once a week; the gate's pacing already learns from what he opens or dismisses (topic money_pulse)"
   },
+  "check:condition_watch": {
+   "status": "none",
+   "why": "each watch is his own request, checked in code against his records and forecast and said once (or daily when he said every time); the gate's pacing learns from what he opens or dismisses (topic condition_watch)"
+  },
+  "store:condition_watches": {
+   "status": "none",
+   "why": "what he asked her to watch, in his own words, read in code; he adds and stops each, and a wrong reading shows in her reply at once (\"I'll tell you when...\"), fixed by stopping it"
+  },
+  "action:condition_watch": {
+   "status": "none",
+   "why": "adding or stopping a watch he asked for, read from his words in code and said back as it's kept; undo takes it back"
+  },
   "check:market_eve": {
    "status": "none",
    "why": "his market days and goods, with how much to bring worked out in code from his own closed markets (core/goods.demand, already a figure that learns from each market); said once per market day, paced by the gate"

@@ -1,0 +1,104 @@
+"""
+tests.test_condition_watch
+============================
+
+"Tell me when..." (core/condition_watch.py, 2026-11-25): his words read in code into a watch on tonight's low,
+tomorrow's rain, a pantry item, the feed or his supplies; checked each day and said once through the gate (every day
+it's true when he said "whenever"); kept in his own folder, added and stopped by his words.
+"""
+
+from datetime import date, datetime
+from types import SimpleNamespace
+
+from core import condition_watch as cw
+
+TODAY = date(2026, 11, 25)
+
+
+def test_his_words_are_read_into_watches():
+    assert cw.parse("tell me if it freezes tonight", TODAY) == {"kind": "freeze", "value": 32.0, "standing": False,
+                                                                "until": "2026-11-25", "about": ""}
+    assert cw.parse("let me know if it frosts", TODAY, celsius=True)["value"] == 0.0
+    assert cw.parse("tell me when it gets below 20 degrees", TODAY)["value"] == 20.0
+    assert cw.parse("warn me if it's going to rain tomorrow", TODAY)["kind"] == "rain"
+    eggs = cw.parse("tell me when we're down to 2 dozen eggs", TODAY)
+    assert (eggs["kind"], eggs["about"], eggs["value"]) == ("item", "eggs", 24.0)
+    flour = cw.parse("tell me when the flour gets below 5", TODAY)
+    assert (flour["kind"], flour["about"], flour["value"]) == ("item", "flour", 5.0)
+    coffee = cw.parse("let me know when we're low on coffee", TODAY)
+    assert (coffee["about"], coffee["value"]) == ("coffee", 1.0)
+    assert cw.parse("tell me when the feed gets under 3 days", TODAY)["value"] == 3.0
+    water = cw.parse("tell me when we're down to 3 days of water", TODAY)
+    assert (water["kind"], water["about"], water["value"]) == ("supply", "water", 3.0)
+    assert cw.parse("tell me whenever it freezes", TODAY)["standing"] is True
+    assert cw.parse("tell me a joke", TODAY) is None
+
+
+def _pantry(*items):
+    return SimpleNamespace(all_pantry_items=lambda: [SimpleNamespace(name=n, quantity=q, unit=u) for n, q, u in items])
+
+
+def test_a_pantry_item_is_said_when_it_runs_low_then_done(tmp_path):
+    context = SimpleNamespace(kitchen=_pantry(("Eggs", 10, "eggs"), ("Coffee beans", 3, "lb")))
+    watches = cw.WatchList(context, data_dir=tmp_path)
+    context.condition_watches = watches
+    watches.add(cw.Watch("w1", "item", about="eggs", value=12.0, words="tell me when we're down to a dozen eggs"))
+    said = cw.offer(context, datetime(2026, 11, 25, 9))
+    assert len(said) == 1 and "Eggs is down to 10 eggs" in said[0].message and said[0].topic == "condition_watch"
+    assert cw.offer(context, datetime(2026, 11, 26, 9)) == [], "a once-watch says itself once"
+    assert cw.WatchList(context, data_dir=tmp_path).get("w1").told == "2026-11-25"
+
+
+def test_a_standing_freeze_watch_says_each_night_it_freezes(monkeypatch, tmp_path):
+    context = SimpleNamespace()
+    watches = cw.WatchList(context, data_dir=tmp_path)
+    context.condition_watches = watches
+    watches.add(cw.Watch("w2", "freeze", value=32.0, standing=True))
+    forecast = {"text": "Clear", "low": 40, "tomorrow": {"low": 28}, "unit": "°F"}
+    from core import weather
+
+    monkeypatch.setattr(weather, "card", lambda c, fetch=None: forecast)
+    first = cw.offer(context, datetime(2026, 11, 25, 17))
+    assert len(first) == 1 and "tonight's low is 28°F" in first[0].message and first[0].urgency == "timely"
+    assert cw.offer(context, datetime(2026, 11, 25, 18)) == [], "once a day"
+    assert len(cw.offer(context, datetime(2026, 11, 26, 17))) == 1
+
+
+def test_a_watch_for_tonight_ends_after_tonight(tmp_path):
+    watches = cw.WatchList(None, data_dir=tmp_path)
+    watches.add(cw.Watch("w3", "freeze", value=32.0, until="2026-11-25"))
+    assert [w.watch_id for w in watches.live(date(2026, 11, 25))] == ["w3"]
+    assert watches.live(date(2026, 11, 26)) == []
+
+
+def test_his_whole_sentence_reaches_the_watch(monkeypatch):
+    from core import assistant_turn, weather
+
+    monkeypatch.setattr(weather, "unit_for", lambda c: "fahrenheit")
+    ran = []
+    actions = SimpleNamespace(execute=lambda c, name, args: ran.append((name, args)) or "kept")
+    context = SimpleNamespace(assistant_actions=actions)
+    for words in ("Let me know when we're low on coffee", "Tell me when the feed gets under 4 days",
+                  "tell me if it freezes tonight"):
+        assert assistant_turn._own_tool_reply(context, words) == "kept", words
+        assert ran[-1] == ("watch_condition", {"question": words})
+    assert assistant_turn._own_tool_reply(context, "What are you watching for me?") == "kept"
+    assert ran[-1][0] == "list_watches"
+    assert assistant_turn._own_tool_reply(context, "tell me a joke") is None
+    assert assistant_turn._own_tool_reply(context, "let me know if you need anything") is None
+
+
+def test_the_tools_keep_list_and_stop_watches(monkeypatch, tmp_path):
+    from core import weather
+
+    monkeypatch.setattr(weather, "unit_for", lambda c: "fahrenheit")
+    context = SimpleNamespace(kitchen=_pantry(("Flour", 10, "lb")))
+    context.condition_watches = cw.WatchList(context, data_dir=tmp_path)
+    said = cw._watch_tool(context, {"question": "tell me when the flour gets below 5"})
+    assert said.startswith("I'll tell you when the pantry's flour gets down to 5")
+    assert "flour" in cw._list_tool(context, {})
+    refused = cw._watch_tool(context, {"question": "tell me when we're out of saffron"})
+    assert "I don't see saffron in your pantry" in refused
+    assert "couldn't tell what to watch for" in cw._watch_tool(context, {"question": "tell me a story"})
+    assert cw._stop_tool(context, {"question": "stop watching the flour"}).startswith("Stopped")
+    assert cw._list_tool(context, {}).startswith("I'm not watching anything for you yet")

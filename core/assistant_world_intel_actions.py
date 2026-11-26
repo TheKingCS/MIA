@@ -38,18 +38,26 @@ def _watch_for(context, arguments: dict) -> str:
 
 
 def _list_watches(context, arguments: dict) -> str:
-    """Tool list_watches: every watch with what it's found and when it last looked."""
+    """Tool list_watches: every watch with what it's found and when it last looked, then the conditions in his own
+    world she's watching (core/condition_watch: "tell me when...")."""
     from core.web_world_intel import world_page
 
+    try:
+        from core.condition_watch import lines
+
+        mine = lines(context)
+    except Exception:  # noqa: BLE001 - the world's watches are still said
+        mine = []
+    own = (" In your own world, I'll tell you " + "; ".join(mine) + ".") if mine else ""
     page = world_page(context)
     if not page.get("available"):
-        return "World Intelligence isn't on this MIA."
+        return ("I'll tell you " + "; ".join(mine) + ".") if mine else "World Intelligence isn't on this MIA."
     if not page["watches"]:
-        return "I'm not watching for anything yet."
+        return ("I'm not watching the news for anything yet." + own) if mine else "I'm not watching for anything yet."
     said = "; ".join(f"{w['name']} ({'paused' if w['paused'] else str(w['found']) + ' found'}, last looked "
                      f"{w['last_run']})" for w in page["watches"])
     off = "" if page["on"] else " World Intelligence is off, so none of them are running."
-    return f"Watching for: {said}.{off}"
+    return f"Watching for: {said}.{off}{own}"
 
 
 def _stop(context, arguments: dict) -> str:

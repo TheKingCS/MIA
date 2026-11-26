@@ -58,6 +58,8 @@ CORPUS = {
     "anticipating": [
         "How's the homestead?", "How long could we last?", "How's my money this week?",
         "What did you learn this week?", "How are my hobbies going?", "What does my week look like?",
+        "Tell me if it freezes tonight", "Let me know when we're low on coffee",
+        "Tell me when the feed gets under 4 days", "What are you watching for me?",
     ],
     "conversation": [
         ["I'm thinking about getting goats", "What breed would be good for milk?", "How much space do they need?",

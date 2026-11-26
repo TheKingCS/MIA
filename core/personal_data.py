@@ -100,6 +100,7 @@ from core.boss_battles import BossBook
 from core.work_dungeon import DungeonBook
 from core.smart_closet import ClosetBook
 from core.world_intel import WorldBook
+from core.condition_watch import WatchList
 from core.requirements import RequirementBook
 from core.price_book import PriceBook
 from core.taught_skills import SkillBook
@@ -184,6 +185,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("dungeon", DungeonBook),
     ("closet", ClosetBook),  # Smart Closet (DEC-0162): their clothes and outfits
     ("world_intel", WorldBook),  # World Intelligence (DEC-0170): what they watch for and what it found
+    ("condition_watches", WatchList),  # "tell me when..." in their own world (core/condition_watch.py)
     ("prices", PriceBook),  # prices they've seen, per product (DEC-0172)
     ("taught_skills", SkillBook),  # what they taught her, and how practised each is (DEC-0123)
     ("loop", LoopBook),
