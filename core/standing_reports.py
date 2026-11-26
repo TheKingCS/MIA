@@ -13,14 +13,15 @@ spent" (the month just gone), "tell me every Friday how my money looks". Only a 
 checked when it's kept, so a report never says "I don't know". A watch ("tell me every morning if it's going to
 freeze") is core/condition_watch's.
 
-**When** (`due`): from REPORT_HOUR on its day (a weekday, the 1st for a monthly one, every day for a daily one), once
-in its period (its fingerprint names the day, the week or the month).
+**When** (`_period`): from REPORT_HOUR on its day (a weekday's on that day, a daily one every day, an evening one from
+EVENING_HOUR), a weekly or monthly one on the first day the check runs in its week or month, once in its period;
+TIMELY through the gate (held for an opening, never dropped or paused), ending with its day.
 
 **The store** (`ReportList`, each person's own, standing_reports.json, sealed at rest and written through
 atomic_write_text so "undo that" restores it): kept and stopped by the actions `standing_report.add` /
 `standing_report.remove` (his own words: act_within_grant), by voice (keep_standing_report, list_standing_reports,
-stop_standing_report) and the daily check `standing_reports` (`offer`), AMBIENT, never paused for dismissals but
-paced like her other messages.
+stop_standing_report) and the daily check `standing_reports` (`offer`). The Fable review (2026-11-26) found the
+morning briefing's own sentence refused, a report dropped for its month, the only report stopped by any words.
 """
 
 from __future__ import annotations
@@ -43,8 +44,9 @@ log = get_logger(__name__)
 FILE_NAME = "standing_reports.json"
 REPORT_HOUR = 7
 DAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
-EVERY_WORDS = {"day": "daily", "morning": "daily", "night": "daily", "evening": "daily", "week": "weekly",
+EVERY_WORDS = {"day": "daily", "morning": "daily", "night": "evening", "evening": "evening", "week": "weekly",
                "month": "monthly", **{d: d for d in DAYS}}
+EVENING_HOUR = 18
 CAN_KEEP = ("I can send on a schedule what I can answer from your records, like \"every Sunday tell me what's due "
             "this week\", \"every month tell me how much I spent\" or \"every Friday tell me how my money looks\".")
 
@@ -136,19 +138,21 @@ def book(context) -> ReportList:
 
 # ------------------------------------------------------------------ his words
 
-_KEEP = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:(?:every|each) (?P<every1>" + "|".join(EVERY_WORDS) + r")s?,? "
-                   r"(?:tell|give|send|show) me (?P<what1>.+?)|(?:tell|give|send|show) me (?P<what2>.+?) (?:every|each) "
-                   r"(?P<every2>" + "|".join(EVERY_WORDS) + r")s?)\s*[.!?]*\s*$", re.I)
-_LAST = {"monthly": "last month", "weekly": "last week", "daily": "yesterday"}
+_EVERY = "|".join(EVERY_WORDS)
+_KEEP = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:(?:every|each) (?P<every1>" + _EVERY + r")s?,? "
+                   r"(?:tell|give|send|show) me (?P<what1>.+?)|(?:tell|give|send|show) me (?:every|each) (?P<every3>" + _EVERY
+                   + r")s?,? (?P<what3>.+?)|(?:tell|give|send|show) me (?P<what2>.+?) (?:every|each) "
+                   r"(?P<every2>" + _EVERY + r")s?)\s*[.!?]*\s*$", re.I)
+_LAST = {"monthly": "last month", "weekly": "last week", "daily": "yesterday", "evening": "today"}
 
 
 def _question(what: str, every: str) -> str:
-    """Pure logic. His words as the question asked then ("how much I spent" monthly: "how much did I spend last
-    month?")."""
+    """Pure logic. His words as the question asked then ("how much I spent": a month's report the month just gone,
+    a weekday's the week it ends, a daily one yesterday, an evening one today)."""
     what = what.strip().rstrip("?.! ")
     spent = re.fullmatch(r"how much (?:i|we) (?:spent|spend|have spent)", what, re.I)
-    if spent:
-        return f"How much did I spend {_LAST.get(every, 'last week')}?"
+    if spent:  # a weekday's report reads the week it ends ("this week"), a month's the month just gone
+        return f"How much did I spend {_LAST.get(every, 'this week')}?"
     looks = re.fullmatch(r"how (?:my|our) money (?:looks|is looking|is doing)", what, re.I)
     if looks:
         return "How's my money this week?"
@@ -156,14 +160,16 @@ def _question(what: str, every: str) -> str:
 
 
 def parse(words: str) -> Optional[dict]:
-    """Pure logic. {every, question} from his words, or None (a watch, "if ...", is the condition watch's)."""
+    """Pure logic. {every, question} from his words, the schedule before or after what to tell ("every Friday tell me
+    ...", "tell me every Friday ...", "tell me ... every Friday"), or None (a watch, "if ...", is the condition
+    watch's)."""
     found = _KEEP.match(" ".join((words or "").split()))
     if not found:
         return None
-    what = found.group("what1") or found.group("what2")
+    what = found.group("what1") or found.group("what2") or found.group("what3")
     if re.match(r"\s*(?:if|when|whenever)\b", what, re.I):
         return None  # "tell me every morning if it's going to freeze": a watch
-    every = EVERY_WORDS[(found.group("every1") or found.group("every2")).lower()]
+    every = EVERY_WORDS[(found.group("every1") or found.group("every2") or found.group("every3")).lower()]
     return {"every": every, "question": _question(what, every)}
 
 
@@ -185,8 +191,9 @@ def answer(context, question: str) -> Optional[str]:
 
 
 def describe(report: Report) -> str:
-    """Pure logic. A report in words: 'every Sunday: "What's due this week?"'."""
-    when = {"daily": "every morning", "weekly": "every Monday", "monthly": "on the 1st of every month"}.get(
+    """Pure logic. A report in words: 'every Sunday: "What's due this week?"', 'every evening: ...'."""
+    when = {"daily": "every morning", "evening": "every evening", "weekly": "every week",
+            "monthly": "every month"}.get(
         report.every, f"every {report.every.capitalize()}")
     return f"{when}: \"{report.question}\""
 
@@ -194,37 +201,47 @@ def describe(report: Report) -> str:
 # ------------------------------------------------------------------ sending
 
 def _period(report: Report, today: date) -> str:
-    """The period a report is sent once in, by its schedule ("" when today isn't its day)."""
-    if report.every == "daily":
+    """The period a report is sent once in, by its schedule: the day, the ISO week or the month (a weekly or monthly
+    one any day of it, so a PC off on its first day still gets it); "" when today isn't a weekday report's day."""
+    if report.every in ("daily", "evening"):
         return today.isoformat()
-    if report.every == "monthly":
-        return today.strftime("%Y-%m") if today.day == 1 else ""
+    if report.every == "monthly":  # the first day it runs in the month (a PC off on the 1st still gets it)
+        return today.strftime("%Y-%m")
     if report.every == "weekly":
         year, week, _ = today.isocalendar()
-        return f"{year}-W{week:02d}" if today.weekday() == 0 else ""
+        return f"{year}-W{week:02d}"
     if report.every in DAYS:
         return today.isoformat() if DAYS[today.weekday()] == report.every else ""
     return ""
 
 
 def offer(context, now: datetime) -> list:
-    """The daily check: each report whose day it is, from REPORT_HOUR, once in its period, answered in code and
-    offered through the gate (AMBIENT)."""
-    from core.communication_gate import AMBIENT, Candidate
+    """The daily check: each report whose day it is, from REPORT_HOUR (an evening one from EVENING_HOUR), once in its
+    period, answered in code and offered through the gate, TIMELY (held for an opening, never dropped), ending with
+    its day."""
+    from datetime import timedelta
+
+    from core.communication_gate import TIMELY, Candidate
 
     if now.hour < REPORT_HOUR:
         return []
     reports = book(context)
     out = []
     for report in list(reports.reports):
+        if report.every == "evening" and now.hour < EVENING_HOUR:
+            continue
         period = _period(report, now.date())
         if not period or report.sent == period:
             continue
         said = answer(context, report.question)
         if not said:
             continue
-        out.append(Candidate(topic="standing_report", title=report.question, message=said, urgency=AMBIENT,
-                             source="system", fingerprint=f"report-{report.report_id}-{period}"))
+        # TIMELY: he asked for it, so it waits for an opening rather than being dropped (never paused either:
+        # core/communication_gate.NEVER_PAUSED), and ends with its day
+        ends = datetime.combine(now.date() + timedelta(days=1), datetime.min.time())
+        out.append(Candidate(topic="standing_report", title=report.question, message=said, urgency=TIMELY,
+                             source="system", fingerprint=f"report-{report.report_id}-{period}",
+                             expires=ends.isoformat(timespec="seconds")))
         reports.mark_sent(report.report_id, period)
     return out
 
@@ -300,7 +317,8 @@ def _list_tool(context, arguments: dict) -> str:
 
 
 def _stop_tool(context, arguments: dict) -> str:
-    """Tool stop_standing_report: stops the one his words name (every word of it in its question), or the only one."""
+    """Tool stop_standing_report: stops the one his words name (every word in its question or schedule: "the Sunday
+    report"), or the only one when he names none; other words that fit none are asked about, never a stop."""
     from core.actions import run_as_tool
 
     reports = book(context).reports
@@ -309,7 +327,7 @@ def _stop_tool(context, arguments: dict) -> str:
     words = {w for w in re.findall(r"[a-z]+", str(arguments.get("question") or "").lower()) if len(w) > 2} - {
         "stop", "the", "report", "reports", "sending", "send", "me", "that", "every", "about"}
     named = [r for r in reports if words and words <= set(re.findall(r"[a-z]+", r.question.lower())) | {r.every}]
-    chosen = named[0] if len(named) == 1 else (reports[0] if len(reports) == 1 and not named else None)
+    chosen = named[0] if len(named) == 1 else (reports[0] if len(reports) == 1 and not words else None)
     if chosen is None:
         return "Which one? " + "; ".join(describe(r) for r in reports) + "."
     return run_as_tool(context, "standing_report.remove", {"report_id": chosen.report_id})

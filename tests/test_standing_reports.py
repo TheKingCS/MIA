@@ -18,6 +18,9 @@ def test_his_words_are_read_into_a_schedule_and_a_question():
     assert sr.parse("Every month tell me how much I spent") == {"every": "monthly",
                                                                 "question": "How much did I spend last month?"}
     assert sr.parse("tell me how my money looks every friday")["question"] == "How's my money this week?"
+    assert sr.parse("tell me every Friday how my money looks") == {"every": "friday",
+                                                                   "question": "How's my money this week?"}
+    assert sr.parse("every sunday tell me how much I spent")["question"] == "How much did I spend this week?"
     assert sr.parse("Tell me every morning if it's going to freeze") is None, "a watch, not a report"
     assert sr.parse("tell me a joke") is None
 
@@ -48,12 +51,30 @@ def test_it_is_sent_on_its_day_once(monkeypatch, tmp_path):
     sent = sr.offer(context, datetime(2026, 11, 29, 9))
     assert len(sent) == 1 and sent[0].topic == "standing_report" and sent[0].message == "Due: Electric."
     assert sr.offer(context, datetime(2026, 11, 29, 12)) == [], "once in its period"
+    assert sent[0].urgency == "timely"
+    reports.add(sr.Report("r2", "monthly", "How much did I spend last month?"))
+    assert len(sr.offer(context, datetime(2026, 12, 2, 9))) == 1, "a PC off on the 1st still gets the month's"
+
+
+def test_the_morning_briefing_and_a_story_fall_through():
+    actions = SimpleNamespace(execute=lambda c, name, args: "kept")
+    context = SimpleNamespace(assistant_actions=actions)
+    for words in ("Every morning tell me the weather and my day", "tell me a story every night"):
+        assert assistant_turn._own_tool_reply(context, words) != "kept", words
+
+
+def test_the_only_report_is_never_stopped_by_other_words(tmp_path):
+    context = SimpleNamespace()
+    context.standing_reports = sr.ReportList(context, data_dir=tmp_path)
+    context.standing_reports.add(sr.Report("r1", "monthly", "How much did I spend last month?"))
+    assert sr._stop_tool(context, {"question": "stop sending me the morning briefing"}).startswith("Which one?")
 
 
 def test_the_words_reach_it_and_a_freeze_goes_to_the_watch(monkeypatch):
     ran = []
     actions = SimpleNamespace(execute=lambda c, name, args: ran.append(name) or "kept")
     context = SimpleNamespace(assistant_actions=actions)
+    monkeypatch.setattr(sr, "answer", lambda c, q: "Due: Electric.")
     assert assistant_turn._own_tool_reply(context, "Every Sunday tell me what's due this week") == "kept"
     assert ran[-1] == "keep_standing_report"
     from core import condition_watch

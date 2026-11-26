@@ -1404,13 +1404,13 @@ _TRACK_SPENDING = re.compile(r"^\s*(?:hey mia,? )?(?:can|could|will) you (?:trac
                              r"(?:spending|expenses|money|purchases)(?: automatically| for me| on your own)?\s*[?.!]*\s*$",
                              re.I)
 _MORNING_ROUTINE = re.compile(r"^\s*(?:hey mia,? )?(?:can you )?(?:set up|make|build|create|start) (?:a |my )?(?:morning "
-                              r")?routine(?: for (?:my )?mornings?)?\s*[?.!]*\s*$", re.I)
+                              r"routine(?: for (?:my )?mornings?)?|routine for (?:my )?mornings?)\s*[?.!]*\s*$", re.I)
 _WHEN_PAID = re.compile(r"^\s*(?:hey mia,? )?(?:when|whenever|every time) (?:i|we) get paid,? remind me to (?P<what>.+?)"
                         r"\s*[.!]*\s*$", re.I)
-_MONTHLY_BILL = re.compile(r"^\s*(?:hey mia,? )?remind me (?:on the (?:first|1st|\d{1,2}(?:st|nd|rd|th)) of (?:every|each) "
-                           r"month |every month |monthly )?to (?P<what>pay (?:the |my )?(?:rent|mortgage|[\w ]+? bill))"
-                           r"(?: (?:every|each) month| monthly| on the (?:first|1st|\d{1,2}(?:st|nd|rd|th)))*\s*[.!]*\s*$",
-                           re.I)
+_MONTHLY_BILL = re.compile(r"^\s*(?:hey mia,? )?remind me (?:on the (?P<day1>first|1st|\d{1,2}(?:st|nd|rd|th)) of (?:every|"
+                           r"each) month |every month |monthly )?to (?P<what>pay (?:the |my )?(?:rent|mortgage|[\w ]+? bill))"
+                           r"(?: (?:every|each) month| monthly| on the (?P<day2>first|1st|\d{1,2}(?:st|nd|rd|th)))*"
+                           r"\s*[.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1452,7 +1452,8 @@ def _own_tool_reply(context, prompt: str):
     yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
     (core/assistant_today_actions.due_through), and the automation asks she can't or mustn't claim (core/reminders_view:
     "stop reminding me to ..." only stops one that's there, spending tracked automatically, a morning routine,
-    "when I get paid remind me", rent reminded as a bill), "I'm thinking about building a chicken coop" what she can work
+    "when I get paid remind me", rent reminded as a bill only when said monthly), a report on a schedule kept only
+    when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "what's a good side hustle for me?" from what he already sells,
     keeps and owns (core/side_hustle), "what do I need for the chili?" a saved recipe's missing
     ingredients (core/assistant_domain_actions.needs_for; anything not a recipe of his is the model's), "tell me when..." a watch from his whole sentence
@@ -1485,7 +1486,10 @@ def _own_tool_reply(context, prompt: str):
             return None
     from core import standing_reports
 
-    if standing_reports.parse(said) is not None:  # "every Sunday tell me what's due this week": kept, from his words
+    report = standing_reports.parse(said)
+    if report is not None and standing_reports.answer(context, report["question"]) is not None:
+        # "every Sunday tell me what's due this week": kept from his words, only when her code answers it (never "every
+        # morning tell me the weather and my day", the morning briefing's, nor "tell me a story every night")
         kept = _run_own(context, "keep_standing_report", {"question": said})
         if kept:
             return kept
@@ -1623,7 +1627,9 @@ def _own_tool_reply(context, prompt: str):
                 return reminders_view.MORNING_ROUTINE
             if name == "paid":
                 return reminders_view.when_paid(context, found.group("what"))
-            return reminders_view.bill_reminder(found.group("what"))
+            if not re.search(r"\b(?:every|each) month\b|\bmonthly\b", said, re.I):
+                continue  # a one-off ("remind me to pay the vet bill") is the reminder's own route
+            return reminders_view.bill_reminder(found.group("what"), found.group("day1") or found.group("day2") or "")
         except Exception:
             log.exception("Couldn't answer %s", name)
             return None

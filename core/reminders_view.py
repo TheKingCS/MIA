@@ -165,41 +165,60 @@ def yesterday(context, today: Optional[date] = None) -> str:
 
 
 TRACK_SPENDING = ("Not from your bank yet: bank linking stays off until MIA's further along, so nothing comes in on its "
-                  "own. What I do keep: what you tell me (\"I spent $30 on groceries\"), receipts you drop in your "
-                  "Inbox (I read the amount and file it), and your bills as they come due. Ask \"how much did I spend "
+                  "own. What I do keep: what you tell me (\"I spent $30 on groceries\"), receipts in your Inbox (an "
+                  "emailed one I file, one you drop in I read and put to you to file), and your bills as they come due. Ask \"how much did I spend "
                   "last month?\" any time, or say \"every month tell me how much I spent\" and I'll send it on the 1st.")
 MORNING_ROUTINE = ("Two ways. Say \"every morning tell me the weather and my day\" and I'll send that each morning. And "
-                   "for a routine you do, tell me its steps, like \"my morning routine is coffee, feed the hens, check "
-                   "the water\", and I'll keep it and count the mornings you do it.")
+                   "for something you do each morning, say \"add a routine: morning chores, once a day\" and I'll keep "
+                   "it and count the mornings you do it.")
+
+
+def _bill_named(context, words: str):
+    """A bill of his whose name holds every word he said, or None."""
+    want = _words(words)
+    budget = getattr(context, "budget", None)
+    try:
+        bills = budget.all_bills() if budget is not None and want else []
+    except Exception:  # noqa: BLE001
+        bills = []
+    hits = [b for b in bills if want <= _words(b.name) | {"bill", "pay"}]
+    return hits[0] if len(hits) == 1 else None
 
 
 def stop_reminding(context, words: str, today: Optional[date] = None) -> str:
-    """For "stop reminding me to take out the trash": the reminder his words name cancelled (`cancel`), or that
-    there's none about it, never a claim that one stopped (the automation sweep, 2026-11-26: "I'll stop reminding
-    you" with nothing set)."""
+    """For "stop reminding me to take out the trash": the reminder his words name cancelled (`cancel`); a bill of his
+    named, that its reminders come with the bill; or that there's none about it, never a claim that one stopped
+    (the automation sweep, 2026-11-26: "I'll stop reminding you" with nothing set)."""
     found = cancel(context, words, today)
     if found:
         return found
+    bill = _bill_named(context, words)
+    if bill is not None:  # a bill's reminders come with the bill
+        return (f"That's your {bill.name} bill: its reminders come with it. Mark it paid when you pay, or say "
+                f"\"delete the {bill.name} bill\" if you don't have it any more.")
     want = re.sub(r"^(?:the|my|a)\s+", "", (words or "").strip(" .?!"), flags=re.I) if _words(words) else ""
     listed = listing(context, today)
     return (f"I don't have a reminder about {want or 'that'}, so there's nothing to stop. " + listed) if want else listed
 
 
-def bill_reminder(what: str) -> str:
-    """For "remind me on the 1st of every month to pay rent": a bill reminds him itself, so he's told how to add it
-    (the automation sweep, 2026-11-26: it had become an alarm at midnight)."""
+def bill_reminder(what: str, day: str = "") -> str:
+    """For "remind me on the 1st of every month to pay rent": a bill reminds him itself, so he's told how to add it,
+    due on the day he said (the automation sweep, 2026-11-26: it had become an alarm at midnight)."""
     thing = re.sub(r"^\s*pay (?:the |my )?", "", what or "", flags=re.I).strip(" .") or "it"
+    due = {"first": "1st"}.get((day or "").lower(), day or "1st")
     return (f"Add {thing} as a bill and I'll remind you before it's due each month, and count it when you pay: say "
-            f"\"add a bill: {thing}, $amount, due the 1st, monthly\" with its amount.")
+            f"\"add a bill: {thing}, $amount, due the {due}, monthly\" with its amount.")
 
 
 def when_paid(context, what: str) -> str:
     """For "when I get paid, remind me to put 10% in savings": she can't see pay arrive (no bank link), so his next
-    payday from his income sources, and how to remind himself on it."""
+    payday from his own pay (Salary income, never rent or egg sales), and the words to put it on his calendar that
+    day."""
     budget = getattr(context, "budget", None)
     sources = []
     try:
-        sources = [s for s in budget.all_income_sources() if not getattr(s, "entity_id", "")] if budget else []
+        sources = [s for s in budget.all_income_sources() if not getattr(s, "entity_id", "")
+                   and str(getattr(s, "category", "Salary") or "Salary") == "Salary"] if budget else []  # his pay only
     except Exception:  # noqa: BLE001
         sources = []
     from core import money_ahead
@@ -210,8 +229,8 @@ def when_paid(context, what: str) -> str:
     task = what.strip(" .") or "that"
     if not dated:
         return (f"I can't see your pay arrive (no bank is linked), and you don't have a payday in Money yet. Add your "
-                f"pay as income with how often it comes, and I'll put \"{task}\" on your calendar for each payday.")
+                f"pay as income with how often it comes, and I'll tell you its next day.")
     day, source = dated[0]
     how = getattr(source, "recurrence", "") or "once"
     return (f"I can't see your pay arrive (no bank is linked), but your {source.name} pay is next due {day:%A, %B} "
-            f"{day.day} ({how}). Say \"remind me on {day:%A} to {task}\" and I'll put it on your calendar.")
+            f"{day.day} ({how}). Say \"add {task} to my calendar on {day:%B} {day.day}\" and I'll put it there.")
