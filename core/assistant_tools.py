@@ -4347,6 +4347,8 @@ class AssistantTools:
         """Assistant tool `get_property_summary`: a property's net operating income and cap rate over the last 12
         months, with how many months of rent are logged, and the pace over a full year said as an estimate when there
         are fewer (the rentals conversation check: one month's rent had been said as a 0.64% cap rate "doing well").
+        The pace runs over the months since its first record (rent or a cost), only rent counted as rent; a sold one is
+        said as sold, a loss with no rent as a loss, no value set without an equity.
         Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         property_name = str(arguments.get("property_name", "")).strip()
         if not property_name:
@@ -4356,22 +4358,40 @@ class AssistantTools:
             return error
         from datetime import date as _date, timedelta as _td
 
+        from core.real_estate_manager import is_sold
+
         today = _date.today()
-        start = (today - _td(days=365)).isoformat()
+        start = (today - _td(days=364)).isoformat()  # twelve months, never a thirteenth rent
+        end = today.isoformat()
         estate = context.real_estate
-        noi = estate.net_operating_income(prop.property_id, start, today.isoformat())
-        months = len({str(i.date)[:7] for i in estate.income_for_property(prop.property_id, start, today.isoformat())})
-        head = f"'{prop.name}': equity {money(property_equity(prop), ',.2f')}"
+        if is_sold(prop):
+            return f"'{prop.name}' is sold" + (f" ({prop.sale_date})" if getattr(prop, "sale_date", "") else "") + \
+                ": it no longer counts in your equity, income or cap rate."
+        noi = estate.net_operating_income(prop.property_id, start, end)
+        rents = [i for i in estate.income_for_property(prop.property_id, start, end)
+                 if getattr(i, "category", "Rental Income") == "Rental Income"]
+        months = len({str(i.date)[:7] for i in rents})
+        spent = estate.expenses_for_property(prop.property_id, start, end) if hasattr(estate, "expenses_for_property") \
+            else []
         if prop.current_value <= 0:
-            return head + f", net operating income {money(noi, ',.2f')} over the last 12 months; no current value set, so no cap rate."
+            return (f"'{prop.name}': net operating income {money(noi, ',.2f')} over the last 12 months; no current value "
+                    "set, so no equity or cap rate.")
+        head = f"'{prop.name}': equity {money(property_equity(prop), ',.2f')}"
         if months == 0:
+            if noi:
+                return head + (f". No rent logged in the last 12 months, and {money(-noi, ',.2f')} in costs: a net "
+                               f"operating loss so far.")
             return head + ". No rent logged in the last 12 months, so there's no income or cap rate to say yet."
         rate = noi / prop.current_value * 100
         said = (head + f", net operating income {money(noi, ',.2f')} over the last 12 months from {months} month"
                 f"{'' if months == 1 else 's'} of rent logged, a cap rate of {rate:.2f}% so far")
-        if months < 12:  # a year's cap rate needs a year's rent: the pace said as an estimate, never as the rate
-            said += (f"; at that pace a full year would be about {noi / months * 12 / prop.current_value * 100:.1f}% "
-                     f"(an estimate until a full year of rent is logged)")
+        dates = [str(x.date)[:10] for x in list(rents) + list(spent) if str(getattr(x, "date", "") or "")]
+        first = min(dates) if dates else end
+        active = (today.year - int(first[:4])) * 12 + today.month - int(first[5:7]) + 1  # months since the first record
+        active = max(months, min(12, active))
+        if active < 12:  # a year's cap rate needs a year's records: the pace said as an estimate, never as the rate
+            said += (f"; at that pace a full year would be about {noi / active * 12 / prop.current_value * 100:.1f}% "
+                     f"(an estimate until a full year is logged)")
         return said + "."
 
     @staticmethod

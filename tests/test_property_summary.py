@@ -18,7 +18,11 @@ def test_one_month_is_said_as_one_month():
                            sale_date="", status="Active")
     entries = [SimpleNamespace(date=date.today().isoformat(), amount=1800.0)]
     estate = SimpleNamespace(all_properties=lambda: [prop], net_operating_income=lambda pid, a=None, b=None: 1800.0,
-                             income_for_property=lambda pid, a=None, b=None: entries)
+                             income_for_property=lambda pid, a=None, b=None: entries,
+                             expenses_for_property=lambda pid, a=None, b=None: [])
     said = AssistantTools._action_get_property_summary(SimpleNamespace(real_estate=estate), {"property_name": "123 Main St"})
     assert "from 1 month of rent logged, a cap rate of 0.64% so far" in said
-    assert "about 7.7% (an estimate until a full year of rent is logged)" in said
+    assert "about 7.7% (an estimate until a full year is logged)" in said
+    prop.sale_date = "2026-10-01"
+    sold = AssistantTools._action_get_property_summary(SimpleNamespace(real_estate=estate), {"property_name": "123 Main St"})
+    assert "is sold" in sold
