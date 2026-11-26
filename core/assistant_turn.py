@@ -1657,6 +1657,9 @@ _STORM_READY = re.compile(r"^\s*(?:hey mia,? )?(?:how (?:prepared|ready) am i|am
                           r"(?:prepared|ready) are we) for (?:a |an |the )?(?:big |bad )?(?P<kind>(?:winter |ice |snow )?storm|snowstorm|"
                           r"thunderstorm|blizzard|ice storm|hurricane|tornado|power outage|outage)(?: this weekend| this week|"
                           r" tomorrow| tonight)?\s*[?.!]*\s*$", re.I)
+_CUT_BACK = re.compile(r"^\s*(?:hey mia,? )?(?:so\s+|ok(?:ay)?,?\s+)?(?:where|what) (?:can|could|should) (?:i|we) (?:cut back|cut|"
+                       r"spend less|save money|trim)(?: on| back on)?(?: spending| money)?(?: this month)?\s*[?.!]*\s*$|"
+                       r"^\s*(?:hey mia,? )?(?:help me )?(?:cut back|spend less)(?: on spending)?\s*[?.!]*\s*$", re.I)
 _DUE_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is)|whats|what do i have) due (?:today|for today)\s*[?.!]*\s*$|"
                         r"^\s*(?:hey mia,? )?what(?:'s| is) (?:on )?(?:my )?(?:list|plate) (?:for )?today\s*[?.!]*\s*$", re.I)
 _REPORTS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|which) (?:reports|updates) (?:do|will) you (?:send|give) me|what (?:are )?"
@@ -1779,7 +1782,8 @@ def _own_tool_reply(context, prompt: str):
     projects' open needs (never a guess from his expenses), "I caught a 3 pound bass at the pond" one catch, as said (core/catch_actions.parse), "how much is left this month?" the month's records after what's due (core/money_periods.afford), "I paid the
     electric bill" that bill of his marked paid (mark_bill_paid; never twice for one time round, and "pay the electric
     bill" is what's due and how to mark it, since she pays nothing),
-    "how prepared am I for a winter storm?" the checklist
+    "where can I cut back?" his chosen spending against
+    his usual and his recurring bills (core/money_periods.cut_back), "how prepared am I for a winter storm?" the checklist
     from his records (core/storm_ready.ready_for), "I practiced for 30 minutes today" a session on his
     course (log_practice: the course named whole, never "guitar hero"; unnamed only as "practiced", never a day or a
     game), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
@@ -2095,6 +2099,14 @@ def _own_tool_reply(context, prompt: str):
         actions = getattr(context, "assistant_actions", None)
         if actions is not None:
             return actions.execute(context, "log_catch", caught)
+    if _CUT_BACK.match(said):  # "where can I cut back?": what he chooses, against his usual (core/money_periods.cut_back)
+        from core import money_periods
+
+        try:
+            return money_periods.cut_back(context)
+        except Exception:
+            log.exception("Couldn't say where to cut back")
+            return None
     storm = _STORM_READY.match(said)
     if storm:  # "how prepared am I for a winter storm?": the checklist from his records (core/storm_ready.ready_for)
         from core import storm_ready

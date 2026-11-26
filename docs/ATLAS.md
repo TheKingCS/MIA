@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1921 files, 401,741 lines; 1921 files describe themselves; 21,747 of 21,894 classes and functions are documented.
+1922 files, 401,834 lines; 1922 files describe themselves; 21,750 of 21,897 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,683 lines; 10,386 of 10,465 classes and functions documented
+741 files, 210,746 lines; 10,387 of 10,466 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-770 files, 108,896 lines; 8,987 of 9,055 classes and functions documented
+771 files, 108,926 lines; 8,989 of 9,057 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1172,6 +1172,7 @@
 - `tests/test_cross_routes.py`: The cross-route review of 2026-11-26: sentences two routes reached for, sent where they belong. A reminder's task never ends on a dangling word, a store's sale or the truck's gas is never a homestead watch, a bill paid is never a stray expense, a dozen cutting boards is never the eggs' price, a comm
 - `tests/test_cross_routes2.py`: The cross-route review's "falls to the model" sentences, answered in code: spending on a thing in any period, when he last paid rent or the truck, reports asked indirectly, and "remind me every month to ...".
 - `tests/test_curriculum.py`: MIA's curriculum (core/curriculum.py, DEC-0107): the tracks are whole and point at real files, mastery is counted from the nights' lessons, the next objective takes the tracks in turn, security lessons carry their rules, a night of school sets one lesson for it, and it all runs on the same learning-
+- `tests/test_cut_back.py`: "Where can I cut back?" from his own records (core/money_periods.cut_back, the money-stress conversation check 2026-11-26): what he chooses this month against his usual, then his recurring bills, never a fixed cost.
 - `tests/test_daily_occasions.py`: Unit tests for core.daily_occasions' pure decision logic — no Qt, no real clock, no manager instances needed.
 - `tests/test_daily_reminder.py`: A reminder every day goes on the calendar (core/assistant_turn._daily_reminder_reply; the eleventh review: "remind me every morning to give the dog his meds" had nowhere to go): a daily event from today, at the time said ("every night at 9" is 21:00), undoable through add_calendar_event; the calenda
 - `tests/test_dashboard_module.py`: Unit tests for modules.dashboard.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).

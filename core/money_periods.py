@@ -16,6 +16,9 @@ sheet's words). From his own records:
 - `best_sellers`: his products by units sold in the period (this year when none is said), from the ledger's sales
   tied to a product, with the money each brought in (the live sweep, 2026-11-26: "what's my best-selling product?"
   had been judged by what's in stock).
+- `cut_back`: "where can I cut back?" (the money-stress conversation check, 2026-11-26: the model had read out the
+  bills due): the categories he chooses (never rent, insurance, taxes or a debt) this month against his usual, the
+  biggest first, and the recurring bills he could look at again; from his records, no advice made up.
 - `afford`: a purchase once against this month's logged income, spending and what's still due (never a bank
   balance: none is linked).
 
@@ -217,6 +220,54 @@ def best_sellers(context, words: str = "", today: Optional[date] = None) -> str:
     ranked = sorted(units, key=lambda pid: (-units[pid], -money_in[pid]))
     said = [f"{name(pid)}: {units[pid]:g} sold, {_money(money_in[pid])}" for pid in ranked[:3]]
     return f"Your best seller {said_when} is " + said[0] + (". Then " + "; ".join(said[1:]) if len(said) > 1 else "") + "."
+
+
+FIXED = {"Mortgage/Rent", "Insurance", "Taxes", "Bank Fees", "Medical"}
+
+
+def cut_back(context, today: Optional[date] = None) -> str:
+    """Where his money goes that he chooses: this month's spending by category (never a fixed cost, `FIXED`), each
+    against its usual month (the average of the last three full months, when there are any), the three biggest; then
+    his recurring household bills outside the fixed costs (subscriptions, the phone), biggest first."""
+    today = today or date.today()
+    budget = getattr(context, "budget", None)
+    if budget is None:
+        return "Your budget isn't on this MIA."
+    first = today.replace(day=1)
+    now = {c: v for c, v in budget.total_expenses_by_category(first.isoformat(), today.isoformat(), entity_id="").items()
+           if c not in FIXED and v > 0}
+    usual: dict = {}
+    end = first - timedelta(days=1)
+    months = 0
+    for _ in range(3):
+        start = end.replace(day=1)
+        got = budget.total_expenses_by_category(start.isoformat(), end.isoformat(), entity_id="")
+        if got:
+            months += 1
+            for c, v in got.items():
+                usual[c] = usual.get(c, 0) + v
+        end = start - timedelta(days=1)
+    parts = []
+    if now:
+        top = sorted(now.items(), key=lambda kv: -kv[1])[:3]
+        said = []
+        for c, v in top:
+            line = f"{c} {_money(v)}"
+            if months and usual.get(c):
+                avg = usual[c] / months
+                line += f" (usually {_money(avg)} a month)"
+            said.append(line)
+        parts.append("Where your money goes that you choose, this month: " + "; ".join(said) + ".")
+    bills = [b for b in _household(budget.all_bills() if hasattr(budget, "all_bills") else [])
+             if b.recurrence and b.category not in FIXED and float(b.amount or 0) > 0]
+    if bills:
+        bills.sort(key=lambda b: -float(b.amount))
+        parts.append("Recurring bills to look at again: " + "; ".join(
+            f"{b.name} {_money(float(b.amount))} {str(b.recurrence).lower()}" for b in bills[:5]) + ".")
+    if not parts:
+        return ("Nothing logged yet that I could point to: tell me as you spend (\"I spent $30 on groceries\") and "
+                "I'll show you where it goes.")
+    return " ".join(parts) + " Rent, insurance, taxes and your debts' minimums are left out: those aren't cuts."
 
 
 def afford(context, amount: Optional[float], today: Optional[date] = None) -> str:
