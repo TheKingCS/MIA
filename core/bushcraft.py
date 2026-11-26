@@ -88,12 +88,13 @@ STAGES: tuple[Stage, ...] = (
             "A map and compass need no battery or signal; it's the skill that gets you out when the phone can't.",
             ("Ignoring declination: a few degrees off becomes far off over a mile.",)),
         Lesson("knots", "Knots for camp and load", (
-            "A bowline makes a fixed loop that won't slip or jam: around a tree, a tarp's corner, a person in a rescue "
-            "(\"the rabbit comes out of the hole, round the tree and back down the hole\").",
+            "A bowline makes a fixed loop that holds under load and unties after: around a tree or a tarp's corner "
+            "(\"the rabbit comes out of the hole, round the tree and back down the hole\"). Unloaded it can shake "
+            "loose: back it up with a stopper knot when it matters.",
             "A taut-line hitch makes a loop you can slide to tighten: guy lines and a tent's lines.",
             "A trucker's hitch tensions a line hard, for a ridgeline or a load: tie a loop in the standing part, run "
-            "the end round the anchor (a tie-down point or tree) and back through the loop, pull down for about three "
-            "to one, and finish with two half hitches.",
+            "the end round the anchor (a tie-down point or tree) and back through the loop, pull down (up to three "
+            "to one in theory, about two to one with the rope's friction), and finish with two half hitches.",
             "A clove hitch holds a line to a post or pole quickly; back it up with a half hitch when it matters."),
             "The right knot holds under load and still unties after; the wrong one slips, or jams so it has to be cut.",
             ("A load on a truck or trailer: rated ratchet straps at each corner beat any rope; rope and a trucker's "

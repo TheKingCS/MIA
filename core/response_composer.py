@@ -134,8 +134,8 @@ _LIST_MARK = re.compile(r"^\s*(?:[-*\u2022]|\d+[.)])\s")
 
 
 def _sheet_rewrites(text: str) -> str:
-    """Pure logic. "The fact sheet says/doesn't mention/...", "the sheet itself shows" said as his records, outside
-    quoted words; a sheet of plywood stays."""
+    """Pure logic. "The fact sheet says/doesn't mention/...", "the sheet itself shows" said as his records ("your
+    records show", its capital kept), outside quoted words; a sheet of plywood or a cookie sheet stays."""
     def fix(part: str) -> str:
         """One stretch outside quotes."""
         part = re.sub(r"\b(?:the |my )?fact sheet (?:says|shows|lists|suggests) (?:to |that )?(\w)",
@@ -144,10 +144,16 @@ def _sheet_rewrites(text: str) -> str:
                       "I don't have", part, flags=re.I)
         part = re.sub(r"\b(?:on|in|from) the fact sheet\b", "in your records", part, flags=re.I)
         part = re.sub(r"\bthe fact sheet\b", "your records", part, flags=re.I)
-        # "the sheet itself shows", "the sheet says" (the skills sweep, 2026-11-26); "on the sheet" only at a sentence's
-        # end, so a sheet of plywood and a sheet pan stay
-        part = re.sub(r"\b(?:what )?the sheet(?: itself)? (says|shows|lists|suggests)\b", r"your records \1", part, flags=re.I)
-        return re.sub(r"\b(?:on|in|from) the sheet(?: itself)?(?=\s*[,.;:!?]|\s*$)", "in your records", part, flags=re.I)
+        # "the sheet itself shows", "the sheet says" (the skills sweep, 2026-11-26), said with "your records" and its
+        # verb made plural, the sentence's capital kept; a sheet of plywood, a cookie sheet or "on the sheet" stays
+        plural = {"says": "say", "shows": "show", "lists": "list", "suggests": "suggest"}
+
+        def records(m):
+            """"The sheet itself shows" as "Your records show", its first letter's case kept."""
+            lead = m.group(1)[:-3]  # "What " kept, or nothing
+            said = lead + "your records " + plural[m.group(2).lower()]
+            return said[:1].upper() + said[1:] if m.group(1)[:1].isupper() else said
+        return re.sub(r"\b((?:what )?the) sheet(?: itself)? (says|shows|lists|suggests)\b", records, part, flags=re.I)
 
     pieces = re.split(r'("[^"\n]*"|\u201c[^\u201d\n]*\u201d)', text)
     return "".join(piece if i % 2 else fix(piece) for i, piece in enumerate(pieces))

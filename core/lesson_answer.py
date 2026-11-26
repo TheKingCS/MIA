@@ -59,7 +59,8 @@ ASKS: dict[tuple, re.Pattern] = {
                                        r"\btaut-?line\b|\bbowline\b|\bclove hitch\b|\bknots?\b.{0,30}\b(?:load|tarp|"
                                        r"ridgeline|tie (?:it )?down|tie-?down|truck|trailer|camp|camping)\b"),
     # sharpening it, or running it safely: never "choke a chainsaw" or "start a chainsaw" (its manual's, not taught)
-    ("carpentry", "chainsaw"): re.compile(r"\b(?:sharpen|file)\w*\s+(?:a\s+|my\s+|the\s+)?(?:chain ?saw|saw\s+chain|chain)\b|"
+    ("carpentry", "chainsaw"): re.compile(r"\b(?:sharpen|file)\w*\s+(?:a\s+|my\s+|the\s+)?(?:chain ?saw|saw\s+chain)\b|"
+                                          r"\b(?:sharpen|file)\w*\s+(?:a\s+|my\s+|the\s+)?chain\b(?=.*\bsaw\b)|"
                                           r"\bchain ?saw\b.{0,25}\b(?:safe\w*|kickback|tension\w*|sharp\w*|chain|chaps)\b|"
                                           r"\b(?:use|run|running|cut with)\s+(?:a\s+|my\s+|the\s+)?chain ?saw\b"),
     ("gardening", "dry_store"): re.compile(r"\bstor\w*\s+(?:\w+\s+){0,2}(?:potatoes|onions|squash|carrots|beets|roots|root "
@@ -141,6 +142,15 @@ _NOT_BENCH_SOLDER = (r"\b(?:pipes?|copper|plumbing|sweat\w*|fittings?|stained gl
 # What a lesson's words also mean but it doesn't teach (the sixth review): a fire pit or fire insurance, the tank's or
 # the aquaponics' water, a seed company
 NOT_ASKS = {
+    # the Fable review of the skills sweep (2026-11-26): sweet potatoes chill-injure at the potato's temperatures, and
+    # cooked food, recipes and pests aren't the lesson's
+    ("gardening", "dry_store"): re.compile(r"\bsweet\s*potato\w*|\bseed potato\w*|\b(?:cooked|roasted|mashed|baked|fried|"
+                                           r"boiled)\b|\b(?:soup|salad|recipe|fridge|refrigerator|freezer|leftovers?|dinner|"
+                                           r"casserole)\b|\bbugs?\b|\bborers?\b"),
+    ("bushcraft", "knots"): re.compile(r"\b(?:hooks?|lures?|swivels?|fishing|braid|fluoro\w*|mono\w*|balancer|necktie|"
+                                       r"tie for)\b|\bchicken run\b"),
+    ("carpentry", "chainsaw"): re.compile(r"\bof title\b|\bbikes?\b|\bbicycles?\b|\bfell\w*\b|\bmill\w*\b|\bbuy\w*\b|"
+                                          r"\bchoos\w*\b|\breplac\w*\b|\bwhich chain ?saw\b|\bbest chain ?saw\b"),
     ("bushcraft", "fire"): re.compile(r"\bfire\s*(?:pit|place|insurance|extinguisher|alarm|department|ant)s?\b|"
                                       r"\bfireplace\b|\bfire\s+(?:the|an?)\s+\w+"),
     ("bushcraft", "water"): re.compile(r"\b(?:tank|cistern|aquaponics|pool|hot tub|aquarium|fish|pond|well|softener|"

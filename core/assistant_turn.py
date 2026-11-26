@@ -992,7 +992,7 @@ def _garden_kit_reply(context, prompt: str):
         if found:
             from core import planting_now
 
-            if re.search(r"\bgarlic\b", found.group("rest"), re.I):  # fall-planted: from his first frost
+            if re.search(r"\bgarlic\b(?!\s+(?:chives|mustard))", found.group("rest"), re.I):  # fall-planted: his first frost
                 return planting_now.say_garlic(context)
             return planting_now.say_crop(context, found.group("rest")) if planting_now.crop_named(found.group("rest")) \
                 else None
