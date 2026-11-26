@@ -25,6 +25,17 @@ def test_when_it_was_last_done_from_the_record():
     assert said == "Oil change (Truck): last done November 5, 2026, 21 days ago."
     assert "never logged as done" in reminders_view.last_done(context, "renew the tags on the truck", date(2026, 11, 26))
     assert reminders_view.last_done(context, "go fishing", date(2026, 11, 26)) is None
+    assert reminders_view.last_done(context, "changed the oil", date(2026, 11, 26)).startswith("Oil change (Truck)")
+    assert reminders_view.last_done(context, "get the oil changed", date(2026, 11, 26)).startswith("Oil change")
+    assert '("I did the renew tags")' in reminders_view.last_done(context, "renew the tags", date(2026, 11, 26))
+    assert reminders_view.last_done(context, "run", date(2026, 11, 26)) is None
+
+
+def test_spoken_amounts_are_read():
+    assert reminders_view.minutes_in("an hour and a half") == 90
+    assert reminders_view.minutes_in("2 hours and 30 minutes") == 150
+    assert reminders_view.minutes_in("a half hour") == 30
+    assert reminders_view.minutes_in("six hours") == 360
 
 
 def test_in_two_hours_is_worked_out_in_code():
@@ -45,3 +56,4 @@ def test_the_words_reach_them(monkeypatch):
     assert ask("When did I last change the oil?") == "last"
     assert ask("Remind me in 2 hours to check the oven") == "later"
     assert ask("remind me in half an hour to flip the brisket") == "later"
+    assert ask("can you remind me in an hour and a half to call mom?") == "later"

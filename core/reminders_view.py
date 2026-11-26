@@ -238,22 +238,37 @@ def when_paid(context, what: str) -> str:
             f"{day.day} ({how}). Say \"add {task} to my calendar on {day:%B} {day.day}\" and I'll put it there.")
 
 
+_BARE_VERBS = frozenset({"run", "work", "go", "eat", "call", "see", "do", "make", "check", "clean", "fix", "use"})
+
+
+def _stem(word: str) -> str:
+    """Pure logic. A word's stem, the same for each tense ("changed", "changing", "change" are all "chang")."""
+    for end in ("ing", "ed", "es", "s", "e"):
+        if word.endswith(end) and len(word) - len(end) >= 3:
+            return word[:-len(end)]
+    return word
+
+
 def _stems(text: str) -> set:
-    """Pure logic. A phrase's words, small and asking ones out, a plural's s off ("changes" is "change")."""
+    """Pure logic. A phrase's word stems, small and asking ones out ("changed the oil" and "Oil change" agree)."""
     words = set(re.findall(r"[a-z]+", (text or "").lower())) - {
-        "the", "my", "a", "an", "in", "on", "of", "for", "did", "i", "we", "last", "time", "our", "do"}
-    return {w[:-1] if w.endswith("s") and len(w) > 3 else w for w in words}
+        "the", "my", "a", "an", "in", "on", "of", "for", "did", "i", "we", "last", "time", "our", "do", "get", "got",
+        "have", "had", "it", "was", "were"}
+    return {_stem(w) for w in words}
 
 
 def last_done(context, words: str, today: Optional[date] = None) -> Optional[str]:
     """For "when did I last change the oil?" (the full sweep, 2026-11-26: "about 3 months ago", made up): his
-    maintenance tasks whose title (with its asset's name) holds every word he said, and when each was last done, from
-    the record; None when none fits (the model has it)."""
+    maintenance tasks whose title (with its asset's name) holds every word he said, any tense ("changed the oil" is
+    "Oil change"), and when each was last done, from the record; None when none fits or he said one bare verb ("when
+    did I last run?"), so the model has it."""
     today = today or date.today()
     maintenance = getattr(context, "maintenance", None)
     want = _stems(words)
     if maintenance is None or not want:
         return None
+    if len(want) == 1 and next(iter(want)) in {_stem(v) for v in _BARE_VERBS}:
+        return None  # "when did I last run?" is never "Run generator"
     hits = []
     for task in maintenance.all_tasks():
         asset = maintenance.get_asset(task.asset_id) if hasattr(maintenance, "get_asset") else None
@@ -266,12 +281,12 @@ def last_done(context, words: str, today: Optional[date] = None) -> Optional[str
     for task, asset in hits[:3]:
         name = task.title + (f" ({asset.name})" if asset is not None else "")
         if not task.last_completed:
-            parts.append(f"{name}: never logged as done. Tell me when you do it (\"I changed the oil\").")
+            parts.append(f"{name}: never logged as done. Tell me when you do it (\"I did the {task.title.lower()}\").")
             continue
         when = date.fromisoformat(str(task.last_completed)[:10])
         ago = (today - when).days
-        since = "today" if ago == 0 else "yesterday" if ago == 1 else f"{ago} days ago"
-        parts.append(f"{name}: last done {when:%B} {when.day}, {when.year}, {since}.")
+        since = "" if ago < 0 else ", today" if ago == 0 else ", yesterday" if ago == 1 else f", {ago} days ago"
+        parts.append(f"{name}: last done {when:%B} {when.day}, {when.year}{since}.")
     return " ".join(parts)
 
 
@@ -279,24 +294,40 @@ _SPOKEN = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5
            "twenty": 20, "thirty": 30, "forty": 40, "forty-five": 45, "ninety": 90}
 
 
+def minutes_in(spec: str) -> Optional[float]:
+    """Pure logic. The minutes in "2 hours", "an hour and a half", "a half hour", "2 hours and 30 minutes", "ninety
+    minutes", "half an hour" (core/clock.WORD_NUMBERS for the words); None when it can't be read."""
+    from core.clock import WORD_NUMBERS
+
+    said = " ".join((spec or "").lower().split())
+    said = re.sub(r"\b(?:half an hour|a half hour|half hour)\b", "30 minutes", said)
+    total, found = 0.0, False
+    for amount, unit, half in re.findall(r"(\d+(?:\.\d+)?|[a-z-]+) (hours?|hrs?|minutes?|mins?)( and a half)?", said):
+        n = float(amount) if amount[0].isdigit() else WORD_NUMBERS.get(amount)
+        if n is None:
+            return None
+        n += 0.5 if half else 0
+        total += n * (60 if unit.startswith("h") else 1)
+        found = True
+    return total if found else None
+
+
 def in_a_while(context, amount: str, unit: str, what: str, now: Optional[datetime] = None) -> Optional[str]:
     """For "remind me in 2 hours to check the oven" (the full sweep, 2026-11-26: the model worked the clock out
-    itself): an alarm at now plus that, through add_alarm (undoable); "half an hour" read; None past 23 hours (a
-    calendar day's, the model's) or without the alarm tool."""
+    itself): an alarm at now plus that (`minutes_in`: "an hour and a half", "2 hours and 30 minutes"), through
+    add_alarm (undoable, one-shot); None past 23 hours (a calendar day's, the model's) or without the alarm tool."""
     from datetime import timedelta
 
     now = now or datetime.now()
-    amount = (amount or "").lower().strip()
-    n = float(amount) if re.fullmatch(r"\d+(?:\.\d+)?", amount) else _SPOKEN.get(amount)
-    if n is None:
+    minutes = minutes_in(f"{amount} {unit}")
+    if minutes is None:
         return None
-    minutes = n * (60 if unit.lower().startswith(("h", "hr")) else 1)
     if not 0 < minutes <= 23 * 60:
         return None
     at = now + timedelta(minutes=minutes)
     actions = getattr(context, "assistant_actions", None)
     if actions is None:
         return None
-    label = what.strip(" .!")[:60]
+    label = what.strip(" .!?")[:60]
     said = actions.execute(context, "add_alarm", {"label": label[:1].upper() + label[1:], "time": f"{at:%H:%M}"})
     return said + (" That's tomorrow." if at.date() != now.date() else "")  # the alarm's own reply says its time
