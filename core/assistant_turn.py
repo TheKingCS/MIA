@@ -1394,6 +1394,9 @@ _SAID_AS = {"stairs": "set of stairs", "steps": "set of steps", "shelving": "she
 _AFFORD_ONCE = re.compile(r"^\s*(?:hey mia,? )?can (?:i|we) afford (?:a |an |to (?:spend|buy|pay) )?\$\s?(?P<amount>\d[\d,]*"
                           r"(?:\.\d{1,2})?)(?:\s+(?:purchase|thing|item|buy))?(?:\s+(?:this month|right now|now|today))?"
                           r"\s*[?.!]*\s*$", re.I)
+_SIDE_HUSTLE = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| would be) a good side (?:hustle|business|gig|income)(?: for "
+                          r"me)?|how (?:can|could) i (?:make|earn) (?:some )?(?:extra|more|side) (?:money|income|cash)|"
+                          r"what (?:side hustle|side business) (?:should|could) i (?:do|start|try))\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1434,7 +1437,8 @@ def _own_tool_reply(context, prompt: str):
     cancelled by its words (never all on one sentence), "good morning" back in kind with the day, and "what did I do
     yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
     (core/assistant_today_actions.due_through), "I'm thinking about building a chicken coop" what she can work
-    out for it (core/build_calcs's structures, only one named on its own and with no size said), "what do I need for the chili?" a saved recipe's missing
+    out for it (core/build_calcs's structures, only one named on its own and with no size said), "what's a good side hustle for me?" from what he already sells,
+    keeps and owns (core/side_hustle), "what do I need for the chili?" a saved recipe's missing
     ingredients (core/assistant_domain_actions.needs_for; anything not a recipe of his is the model's), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
@@ -1562,6 +1566,14 @@ def _own_tool_reply(context, prompt: str):
             return (f"Good project. I can work out the materials and cuts for a {kind} at your size, what they'd cost from "
                     f"your prices, and what's already on hand. Say \"materials for {example}\" and I'll do it, or give "
                     f"me your size.")
+    if _SIDE_HUSTLE.match(said):  # "what's a good side hustle for me?": from what he already has (core/side_hustle)
+        from core import side_hustle
+
+        try:
+            return side_hustle.say(context)
+        except Exception:
+            log.exception("Couldn't say a side hustle")
+            return None
     need = _NEED_FOR.match(said)
     if need:  # "what do I need for the chili?": a saved recipe's missing ingredients, never a cure or a build
         from core.assistant_domain_actions import needs_for

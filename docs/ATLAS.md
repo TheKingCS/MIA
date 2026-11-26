@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1883 files, 397,623 lines; 1883 files describe themselves; 21,579 of 21,722 classes and functions are documented.
+1885 files, 397,753 lines; 1885 files describe themselves; 21,584 of 21,727 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-735 files, 208,087 lines; 10,311 of 10,390 classes and functions documented
+736 files, 208,180 lines; 10,313 of 10,392 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -572,6 +572,7 @@
 - `core/shelf_actions.py`: The shelf's changes (UI-4, core/shelf.py) on the action contract in core/actions.py:
 - `core/show_off.py`: Show-off mode (DEC-0031): "MIA, show off for my friends" starts a short narrated tour of what MIA can do, on the person's **real** profile, in front of other people. So the tour is built here, in code, from a filtered copy of the person's data, and the screens it shows are its own cards, never the r
 - `core/show_source.py`: "Show me where it says that" (Jarvis brainstorm 3.2; Zac, 2026-11-22: "really good at reading through these references and talking naturally but factually about what knowledge they contain"): after she answers from her offline library, the page she read opens on the Knowledge page, at that article, 
+- `core/side_hustle.py`: "What's a good side hustle for me?" (the live sweep, 2026-11-26: the model guessed, from a fishing mission and an overdue bill), answered from what he already has and does, each idea with the one next step:
 - `core/sight.py`: Sight (build plan step 15): a photo the person takes, with the glasses' camera, the phone or the PC, and a question about it, answered by a local vision model on this PC (Ollama, `sight.model`, Qwen2.5-VL 7B by default). Nothing leaves the PC.
 - `core/sign_in_guard.py`: Sign-in protection for MIA's server (2026-11-08, Zac: "fortify our security measures to industry standards and beyond"; docs/SECURITY.md). Two rules, both from OWASP's authentication and session guidance:
 - `core/skill_leveling.py`: Pure XP/Level math for a single Skill in "My Hero's Path" — same "derive it, don't persist a second copy that can drift" philosophy as core/leveling.py's profile-wide Level, but scaled down: a single skill's XP pool fills from a handful of small per-activity grants (core.gamification.grant_xp()'s sk
@@ -1034,7 +1035,7 @@
 
 ## tests/: the test suite: what each part must do
 
-738 files, 107,374 lines; 8,894 of 8,958 classes and functions documented
+739 files, 107,411 lines; 8,897 of 8,961 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1590,6 +1591,7 @@
 - `tests/test_shelf.py`: The shelf (UI-4, core/shelf.py; the review's acceptance row): the same thing captured from the phone, the palette and a drop lands on the shelf the same way; a planted instruction in something shelved changes nothing; an entry is gone after its time; nothing shelved becomes a memory by itself. Also:
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people.
 - `tests/test_show_source.py`: "Show me where it says that" (core/show_source.py, brainstorm 3.2): the sources her library lookups named are kept for the person for a while, and asking to see one opens it on the Knowledge page (refs with spaces kept whole, PDF pages as numbered); with nothing read lately, or words that name a top
+- `tests/test_side_hustle.py`: "What's a good side hustle for me?" (core/side_hustle.py, the live sweep 2026-11-26): ideas from what he already sells, keeps, learns and owns, each with its next step; nothing guessed.
 - `tests/test_sight.py`: Sight (build plan step 15, core/sight.py): a photo and a question, answered on the PC: reading tries Tesseract first (its words are exactly what's printed), the vision model's judgment is said as one, a person is never identified, and only the kind and timing of each look are kept. And a part in a p
 - `tests/test_sign_in_guard.py`: Sign-in protection (core/sign_in_guard.py, docs/SECURITY.md): the wait after wrong passwords doubles and is capped, old failures are forgotten, a success clears the account; sessions end when idle or old; and account passwords are hashed at OWASP's count, older hashes upgraded on the next right pass
 - `tests/test_skill_leveling.py`: Skill levels (core/skill_leveling.py): the XP each skill level needs, progress within it, what a level means you can do (its capability status), and the next honest step to take.
