@@ -12,8 +12,9 @@ the Sunday money pulse, what she learned this week and his hobbies' progress. At
 "how's my money this week?", "what did you learn this week?", "how are my hobbies going?", "what does my week look
 like?" (the week now ends with a look-ahead: holidays, weather against his plans, feed, the garden, low supplies).
 "Tell me when..." is built too (core/condition_watch.py): at the PC say "tell me if it freezes tonight", "tell me
-when we're down to a dozen eggs", "what are you watching for me?". Next from round 16 (no decision needed): "before
-you go". The live sweep's "anticipating" area checks them.
+when we're down to a dozen eggs", "what are you watching for me?"; and "before you go" (core/trip_eve.py: "what do I
+need for my trip?", and the afternoon before a planned trip). Round 16 is all built; round 17 (joining them up) is
+next, most needing no decision. The live sweep's "anticipating" area checks them.
 
 **2026-11-25: interactive labs** (`docs/future/INTERACTIVE_LABS_PLAN.md`; CURRENT_STATE has the whole of it). At the
 PC: open Classroom > Hands-on labs; build the blink lab in the simulator; say "walk me through building the pot lab",

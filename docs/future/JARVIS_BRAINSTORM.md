@@ -344,7 +344,26 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
-## Round 16 (2026-11-25, late night): from answering to anticipating
+## Round 17 (2026-11-25, after round 16 was built): from noticing to joining up
+
+Every round 16 idea is built (the homestead's health line, the money pulse, what she learned, hobbies' progress,
+the week's look-ahead, "tell me when...", "before you go"), each Fable-reviewed and swept on the PC's model. What
+they showed: each answer is good alone, and the next step is her joining them, so one fact changes another without
+him asking twice. Each idea says what it needs:
+
+- **A watch that acts on itself** (no decision; within his grants): "tell me when we're down to a dozen eggs" also
+  offers to put eggs on the grocery list when it fires, as one tap (a proposal, never added on its own).
+- **The trip's checklist from what he packed last time** (no decision): a fishing trip's packing list seeded from
+  his last fishing trip's, offered when he plans one.
+- **A money pulse that points at the cause** (no decision): when groceries drift, the two biggest expenses behind
+  it, from his own records.
+- **The look-ahead on the phone's lock screen** (his say: what shows when the phone is locked): tomorrow's first
+  thing and the one warning that matters.
+- **Learned this week, then asked** (no decision): when he corrected the same kind of her change twice, she asks
+  whether to do it his way from now on (a proposal he approves; never a grant she gives herself).
+- **Hobby streaks in the evening wrap** (no decision): "three days of guitar in a row" said once, beside the day.
+- **A homestead dashboard tile** (Muse's look): the health line as a tile with each part's days, lowest first.
+
 
 Round 15 made her answer his everyday questions from his own records. The next step toward Jarvis is her noticing
 before he asks, and doing the dull part herself, always through the gate and with an exact undo. Each idea says

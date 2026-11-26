@@ -32,7 +32,8 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   and his hobbies' progress (core/hobby_progress.py: this month's practice, catches, workouts; projects said apart),
   and the weekly look-ahead (core/week_ahead.py, the end of get_week), and "tell me when..." (core/condition_watch.py:
   tonight's low, rain, a pantry item, the feed, his supplies; read from his words in code, sealed in his own folder,
-  said through the gate once or every time). 8672 passing.
+  said through the gate once or every time), and "before you go" (core/trip_eve.py). Round 17 of the brainstorm
+  (joining them up) is written. 8678 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
