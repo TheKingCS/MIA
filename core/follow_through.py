@@ -35,7 +35,8 @@ _THING_ASKS = (
     # "how much did I spend on gas last month?" then "and groceries?": the thing swapped, its period kept (a thread;
     # the debt question is [1], the days-until question last)
     re.compile(r"^(?P<ask>\s*how much (?:did|have) (?:i|we) (?:spent|spend) on )(?P<thing>[\w' -]+?)(?P<end>(?:\s+(?:this|"
-               r"last|in|so far|yesterday|today)\b[\w ]*?)?\s*\??\s*)$", re.I),
+               r"last|so far|yesterday|today|in (?:january|february|march|april|may|june|july|august|september|"
+               r"october|november|december))\b[\w ]*?)?\s*\??\s*)$", re.I),
     re.compile(r"^(?P<ask>\s*how much (?:is|do (?:i|we) (?:still )?owe on|is left on) (?:my|the|our) )(?P<thing>[\w' -]+?)"
                r"(?P<end>\s*\??\s*)$", re.I),
     re.compile(r"^(?P<ask>\s*did (?:i|we) (?:already )?pay (?:the |my |our )?)(?P<thing>[\w' -]+?)(?P<end>(?: bill)?"
@@ -49,6 +50,12 @@ _THING_ASKS = (
     re.compile(r"^(?P<ask>\s*how (?:many|much) (?:days|weeks|time)(?: is it| are there| left| do i have)? (?:until|till|"
                r"til|to|before) )(?P<thing>[\w' -]+?)(?P<end>\s*\??\s*)$", re.I),
 )
+# A follow-up's words that are a sentence of his, never a thing to swap in ("and the truck needs gas", "and add milk
+# to the list", "and remind me to get gas": the Fable review, 2026-11-26)
+_NOT_A_THING = re.compile(r"\b(?:i|i'm|im|we|you|he|she|it|they|me|needs?|is|are|was|were|hate|love|want|wants|make|"
+                          r"making|get|getting|got|add|remind|log|put|then|record|please|thanks?)\b", re.I)
+_MONTH_NAMES = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
+                "november", "december")
 _SIZE = re.compile(r"\b\d+(?:\.\d+)?\s*(?:by|x)\s*\d+(?:\.\d+)?\b", re.I)
 
 
@@ -78,7 +85,7 @@ def follow_on(text: str) -> Optional[str]:
 def merged(prev: str, x: str) -> Optional[str]:
     """Pure logic. His last question with the follow-up's words in place: a period for its period, or a thing for
     its thing (a debt follow-up kept a debt question; a spending one keeps its period; never a "before ..." or
-    "that"), or a size for the thing's
+    "that"; a sentence of his, `_NOT_A_THING`, never), a bare month as a period, or a size for the thing's
     own (the last) size; None when they can't be joined or his last words weren't a
     question."""
     from core.money_periods import _PERIOD_WORDS, only_period
@@ -89,6 +96,8 @@ def merged(prev: str, x: str) -> Optional[str]:
     if not re.match(r"^\s*(?:hey mia,?\s+)?(?:what|how|did|do|does|is|are|was|were|when|where|who|which|have|has)\b",
                     prev, re.I):
         return None  # only a question is asked again: never a command re-run ("cancel the dentist reminder today?")
+    if x.lower() in _MONTH_NAMES:
+        x = f"in {x}"  # "and November?" after "...in October?" is a month, never a thing
     if only_period(" " + x) and _PERIOD_WORDS.search(x):
         if _PERIOD_WORDS.search(prev):
             return _PERIOD_WORDS.sub(x, prev, count=1)
@@ -106,8 +115,16 @@ def merged(prev: str, x: str) -> Optional[str]:
                 return None  # "and before interest?", "and before that?": not a thing to swap in
             words = r"(?:the|my|our|until|till|til|to|before)" if days else r"(?:the|my|our)"
             thing = re.sub(rf"^{words}\s+", "", x, flags=re.I)  # "until" only for the days-until question
+            end = found.group("end")
+            if shape is _THING_ASKS[0]:  # "and groceries in October?": its own period in place of the question's
+                period = list(_PERIOD_WORDS.finditer(thing))
+                if period and period[-1].end() == len(thing.rstrip()) and thing[:period[-1].start()].strip():
+                    end = f" {period[-1].group(0)}?"
+                    thing = thing[:period[-1].start()].strip()
+            if len(thing.split()) > 3 or _NOT_A_THING.search(thing):
+                return None  # a sentence of his after the question, never a thing in it (the model has it)
             if shape is _THING_ASKS[1] and re.search(r"\b(?:loan|card|debt|balance|owe|left on)\b", prev, re.I) and \
                     not re.search(r"\b(?:loan|card|debt|balance)\b", thing, re.I):
                 return f"How much do I owe on my {thing}?"  # "and the mortgage?" after a loan: still a debt question
-            return f"{found.group('ask')}{thing}{found.group('end')}"
+            return f"{found.group('ask')}{thing}{end}"
     return None
