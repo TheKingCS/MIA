@@ -149,7 +149,8 @@ _LAST = {"monthly": "last month", "weekly": "last week", "daily": "yesterday", "
 def _question(what: str, every: str) -> str:
     """Pure logic. His words as the question asked then ("how much I spent": a month's report the month just gone,
     a weekday's the week it ends, a daily one yesterday, an evening one today); one said indirectly asked directly
-    ("what my week looks like": "What does my week look like?")."""
+    ("what my week looks like": "What does my week look like?"); a daily one of what's due is today's ("What's due
+    today?")."""
     what = what.strip().rstrip("?.! ")
     spent = re.fullmatch(r"how much (?:i|we) (?:spent|spend|have spent)", what, re.I)
     if spent:  # a weekday's report reads the week it ends ("this week"), a month's the month just gone
@@ -167,8 +168,11 @@ def _question(what: str, every: str) -> str:
     have = re.fullmatch(r"what (reminders|alarms) (?:i|we) have", what, re.I)
     if have:
         return f"What {have.group(1)} do I have?"
-    due = re.fullmatch(r"what(?:'s| is) due|what i owe", what, re.I)
-    if due:
+    due = re.fullmatch(r"what(?:'s| is) due(?P<when> today| this week| this month)?|what i owe", what, re.I)
+    if due:  # a daily one is today's (the automation conversation check: "every morning tell me what's due today")
+        when = (due.groupdict().get("when") or "").strip().lower()
+        if every in ("daily", "evening") and when in ("", "today"):
+            return "What's due today?"
         return "What's due this week?" if every != "monthly" else "What's due this month?"
     return what[:1].upper() + what[1:] + "?"
 
@@ -176,8 +180,9 @@ def _question(what: str, every: str) -> str:
 def parse(words: str) -> Optional[dict]:
     """Pure logic. {every, question} from his words, the schedule before or after what to tell ("every Friday tell me
     ...", "tell me every Friday ...", "tell me ... every Friday"), or None (a watch, "if ...", is the condition
-    watch's)."""
-    found = _KEEP.match(" ".join((words or "").split()))
+    watch's); a leading "and" or "also" left off ("and every Sunday tell me ...")."""
+    said = re.sub(r"^\s*(?:and|also|then|oh,? and)\s+", "", " ".join((words or "").split()), flags=re.I)
+    found = _KEEP.match(said)  # "and every Sunday tell me ...": the second report of a conversation, too
     if not found:
         return None
     what = found.group("what1") or found.group("what2") or found.group("what3")
@@ -332,14 +337,16 @@ def _list_tool(context, arguments: dict) -> str:
 
 def _stop_tool(context, arguments: dict) -> str:
     """Tool stop_standing_report: stops the one his words name (every word in its question or schedule: "the Sunday
-    report"), or the only one when he names none; other words that fit none are asked about, never a stop."""
+    report", "the Sunday one"), or the only one when he names none; other words that fit none are asked about, never a
+    stop."""
     from core.actions import run_as_tool
 
     reports = book(context).reports
     if not reports:
         return "I'm not sending you anything on a schedule."
     words = {w for w in re.findall(r"[a-z]+", str(arguments.get("question") or "").lower()) if len(w) > 2} - {
-        "stop", "the", "report", "reports", "sending", "send", "me", "that", "every", "about"}
+        "stop", "the", "report", "reports", "sending", "send", "me", "that", "every", "about", "one", "cancel", "drop",
+        "turn", "off", "update", "you", "my"}  # "stop the Sunday one" names the Sunday report (the conversation check)
     named = [r for r in reports if words and words <= set(re.findall(r"[a-z]+", r.question.lower())) | {r.every}]
     chosen = named[0] if len(named) == 1 else (reports[0] if len(reports) == 1 and not words else None)
     if chosen is None:

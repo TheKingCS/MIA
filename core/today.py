@@ -31,7 +31,8 @@ Maintenance on something that belongs to someone else in the household
 
 Facts only, assembled in code; the Assistant only phrases them. Every
 source is optional, so a store this MIA doesn't have is just left out.
-`overdue_said` is "what's overdue?": everything overdue on the list, and an overdue filing from Compliance.
+`overdue_said` is "what's overdue?": everything overdue on the list, and an overdue filing from Compliance;
+`due_today_said` is "what's due today?": today's things, then what's overdue.
 """
 
 from __future__ import annotations
@@ -351,6 +352,21 @@ def week_days(context, today: Optional[date] = None, days: int = 7) -> list[dict
                 items.append(i.as_dict())
         out.append({"date": day.isoformat(), "items": items})
     return [d for d in out if d["items"] or d["date"] == today.isoformat()]
+
+
+def due_today_said(context, today: Optional[date] = None) -> str:
+    """For "what's due today?" (the automation conversation check, 2026-11-26: a daily report of it couldn't be kept,
+    no code answered it): today's things (timed ones first, as the list orders them), then what's overdue; else that
+    nothing is."""
+    items = today_items(context, today)
+    due = [i for i in items if i.when == TODAY and not is_alarm(i)]
+    late = [i for i in items if i.when == OVERDUE]
+    parts = []
+    if due:
+        parts.append("Due today: " + "; ".join(f"{i.title} at {i.time}" if i.time else i.title for i in due[:8]) + ".")
+    if late:
+        parts.append("Overdue: " + "; ".join(f"{i.title} ({i.detail})" if i.detail else i.title for i in late[:6]) + ".")
+    return " ".join(parts) if parts else "Nothing's due today, and nothing's overdue."
 
 
 def overdue_said(context, today: Optional[date] = None) -> str:

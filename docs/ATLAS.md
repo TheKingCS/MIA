@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1916 files, 401,274 lines; 1916 files describe themselves; 21,729 of 21,875 classes and functions are documented.
+1917 files, 401,355 lines; 1917 files describe themselves; 21,733 of 21,879 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,447 lines; 10,383 of 10,462 classes and functions documented
+741 files, 210,491 lines; 10,384 of 10,463 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-765 files, 108,665 lines; 8,972 of 9,039 classes and functions documented
+766 files, 108,702 lines; 8,975 of 9,042 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1558,6 +1558,7 @@
 - `tests/test_rent_collected.py`: "How much rent did I collect this month?" (core/rent_collected.py): this month, last month, this year or a named month read from his words, rent summed by property from his records with the total, and a property that paid before but not yet this month named; no properties says how to add one. "May" 
 - `tests/test_repertoire.py`: His songbook (core/repertoire.py): a song learned is dated in his own history, never twice on the same instrument, counted toward the Songbook achievements at once and by a mission objective, and taken back by "undo that".
 - `tests/test_replayed_week.py`: Tests for LS-09, a replayed week (core/replay.py): on a frozen clock, each day's due things are said on their day, nothing twice, and a stop-everything holds her unprompted messages until it lifts.
+- `tests/test_reports_thread.py`: The automation conversation check's fixes (2026-11-26): "every morning tell me what's due today" kept (its question answered in code), "and every Sunday ..." read, "what reports do you send me?" her own list, "stop the Sunday one" that report, never the model's made-up Bank Sync report or a stop it 
 - `tests/test_requirements.py`: What each project needs (Procurement P1, DEC-0172; core/requirements.py, core/requirement_actions.py): a plan's materials become a new project's needs with the plan's quantities; what's on hand in the workshop and the inventory is marked off (enough is owned, some is partial); the person adds, chang
 - `tests/test_requirements_spec.py`: MIA OS's requirements specification (Prompt 04; `docs/mia_os/MIA_OS_SYSTEM_REQUIREMENTS.md`, `tools/requirements_matrix.py`): every requirement row is well formed, defined once, with a known priority, tier and status and an owner prompt; the scenarios name only requirements that exist; the generated
 - `tests/test_reshaped.py`: A sentence put in the shape her routes read (core/assistant_turn.reshaped, the cross-route review 2026-11-26): a greeting before a question set aside, a weekday first or a part of the day read as "remind me every X to ... at". *(1 undocumented)*

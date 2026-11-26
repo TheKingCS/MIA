@@ -1632,6 +1632,14 @@ _HARDWARE_NEEDS = re.compile(r"^\s*(?:hey mia,? )?(?:what do (?:i|we) (?:need|ha
 _OVERDUE = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| am i)|whats|is (?:there )?anything|anything|do i have anything) "
                       r"(?:overdue|past due|late|behind on)(?: (?:today|right now|now))?\s*[?.!]*\s*$|^\s*(?:show me |list )?"
                       r"(?:what'?s |everything )?overdue\s*[?.!]*\s*$", re.I)
+_DUE_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is)|whats|what do i have) due (?:today|for today)\s*[?.!]*\s*$|"
+                        r"^\s*(?:hey mia,? )?what(?:'s| is) (?:on )?(?:my )?(?:list|plate) (?:for )?today\s*[?.!]*\s*$", re.I)
+_REPORTS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:what|which) (?:reports|updates) (?:do|will) you (?:send|give) me|what (?:are )?"
+                           r"my (?:standing |scheduled )?reports|what do you (?:send|tell) me on a schedule|list my "
+                           r"(?:standing |scheduled )?reports\s*[?.!]*\s*$", re.I)
+_REPORTS_STOP = re.compile(r"^\s*(?:hey mia,? )?(?:ok(?:ay)?,?\s+)?(?:please\s+)?(?:stop|cancel|drop|turn off) (?:the |my |that )?"
+                           r"(?:(?:daily|morning|evening|weekly|monthly|monday|tuesday|wednesday|thursday|friday|saturday|"
+                           r"sunday|money|due|spending|week)\s+)*(?:one|report|update)s?(?: you send me)?\s*[.!]*\s*$", re.I)
 _PROJECT_COST = re.compile(r"^\s*(?:hey mia,? )?(?:what|how much) (?:has|have|did) (?:the |my |our )?(?P<p>[\w' -]{2,40}?) "
                            r"(?:project |build )?cost (?:me|us)(?: so far| in all| in total| altogether)?\s*[?.!]*\s*$|"
                            r"^\s*(?:hey mia,? )?(?:what(?:'s| is) the )?(?:whole|total|full|true) cost of (?:the |my |our )?"
@@ -1746,7 +1754,8 @@ def _own_tool_reply(context, prompt: str):
     projects' open needs (never a guess from his expenses), "I caught a 3 pound bass at the pond" one catch, as said (core/catch_actions.parse), "how much is left this month?" the month's records after what's due (core/money_periods.afford), "I paid the
     electric bill" that bill of his marked paid (mark_bill_paid; never twice for one time round, and "pay the electric
     bill" is what's due and how to mark it, since she pays nothing),
-    "what's overdue?" everything
+    "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
+    me?" and "stop the Sunday one" her standing reports (core/standing_reports), "what's overdue?" everything
     overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
     (core/project_status.whole_cost), "how's the shed coming along?" that project's picture
@@ -2058,6 +2067,18 @@ def _own_tool_reply(context, prompt: str):
         actions = getattr(context, "assistant_actions", None)
         if actions is not None:
             return actions.execute(context, "log_catch", caught)
+    if _DUE_TODAY.match(said):  # "what's due today?": today's things, then what's overdue (core/today.due_today_said)
+        from core import today as _today
+
+        try:
+            return _today.due_today_said(context)
+        except Exception:
+            log.exception("Couldn't say what's due today")
+            return None
+    if _REPORTS_LIST.match(said):  # "what reports do you send me?": her own list (core/standing_reports)
+        return _run_own(context, "list_standing_reports", {})
+    if _REPORTS_STOP.match(said):  # "stop the Sunday one": that report, or which one asked (core/standing_reports)
+        return _run_own(context, "stop_standing_report", {"question": said})
     if _OVERDUE.match(said):  # "what's overdue?": his whole list's overdue (core/today.overdue_said)
         from core import today as _today
 
