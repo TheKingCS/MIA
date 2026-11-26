@@ -33,6 +33,12 @@ Answer under the question; Claude moves closed ones to the bottom.*
      a date it can read, a project you have) before anything is written.
 - Claude's recommendation: 3 for spending, quotes and the briefing, 1 for reminders and project hours, which read
   cleanly once narrowed. Nothing changes until you say.
+- Update (claude, 2026-11-26): a day of sweeps added many read-only shortcuts (they answer from your records and
+  have held up) and a few that write (reminders, watches, reports, grocery adds). A review that traced about 200
+  everyday sentences through them found four that wrote a wrong record ("remind me to order feed before Friday"
+  made an event called "Order feed before"; "I paid $85 for propane" became a stray expense) and several that
+  answered a command as a question. All fixed, but it is the same pattern: the writing shortcuts keep needing
+  narrowing. The recommendation stands.
 
 ### Q-0017: Which Project ALICE ideas should MIA take? (claude → zac)
 - Asked: 2026-10-17 · Status: ANSWERED
