@@ -124,39 +124,64 @@ def say(context, today: Optional[date] = None) -> str:
 
 
 # The season's usual work, by month, said as general advice beside his own records (brainstorm round 18): (months,
-# what, whether it's the flock's)
+# what, whose: "" for everyone, "flock" only with hens, "wood" only when he burns firewood). Northern-hemisphere
+# months: MIA is for one household (DEC-0119), and a Southern one would shift them by six.
 SEASON = (
     ((12, 1, 2), "keep the hens' water from freezing (a heated base, or swap it morning and evening) and the coop "
-                 "vented but draft-free", True),
-    ((12, 1, 2), "order seeds and plan the garden before spring's rush; check what you saved and what sold out", False),
-    ((11, 12, 1, 2), "keep the firewood dry and stacked ahead, and check the chimney and stovepipe", False),
-    ((3, 4), "start the seeds that go out after the last frost, and clean the coop out deep for spring", False),
-    ((5, 6), "hill the potatoes, mulch the beds, and watch the hens' shade and water as it warms", False),
-    ((7, 8), "water deeply and early, keep the canning gear ready for the harvest, and split next winter's wood",
-     False),
-    ((9, 10), "put up the harvest, plant garlic, and get the coop and the water ready for cold", False),
-    ((11,), "drain and store the hoses and mulch the beds for winter", False),
-    ((11,), "check the flock's lights and water for the short, cold days", True),
+                 "vented but draft-free", "flock"),
+    ((12, 1, 2), "order seeds and plan the garden before spring's rush; check what you saved and what sold out", ""),
+    ((11, 12, 1, 2), "keep the firewood dry and stacked ahead, and check the chimney and stovepipe", "wood"),
+    ((3, 4), "start the seeds that go out after the last frost", ""),
+    ((3, 4), "clean the coop out deep for spring", "flock"),
+    ((5, 6), "hill the potatoes and mulch the beds", ""),
+    ((5, 6), "watch the hens' shade and water as it warms", "flock"),
+    ((7, 8), "water deeply and early, and keep the canning gear ready for the harvest", ""),
+    ((7, 8), "split next winter's wood", "wood"),
+    ((9, 10), "put up the harvest, plant garlic, and get the water lines ready for cold", ""),
+    ((9, 10), "get the coop ready for cold", "flock"),
+    ((11,), "drain and store the hoses and mulch the beds for winter", ""),
+    ((11,), "check the flock's lights and water for the short, cold days", "flock"),
 )
+MONTHS = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
+          "november", "december")
 
 
-def this_month(context, today: Optional[date] = None) -> str:
-    """For "what should I be doing on the homestead this month?" (brainstorm round 18): this month's own items from his
-    records (the garden's dates and his upkeep, as `year` has them), then the season's usual work (`SEASON`, said as
-    general advice), the flock's only when he has hens."""
+def _burns_wood(context) -> bool:
+    """Whether he burns firewood: his winter's figure set (`prepared.firewood_cords`) or cords in his inventory."""
+    try:
+        from core import firewood
+
+        inventory = getattr(context, "inventory", None)
+        have, _unread = firewood.cords_on_hand(inventory.all_items() if inventory is not None else [])
+        return bool(have or firewood._setting(context, "prepared.firewood_cords"))
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def this_month(context, today: Optional[date] = None, month: str = "") -> str:
+    """For "what should I be doing on the homestead this month?" (brainstorm round 18), or in a named month ("in
+    march", its next one): that month's own items from his records (the garden's dates and his upkeep, as `year` has
+    them), then the season's usual work (`SEASON`, said as general advice), the flock's only when he has hens and the
+    firewood's only when he burns it (the Fable review, 2026-11-26)."""
     today = today or date.today()
-    key = _key(today)
+    asked = today
+    if month and month.lower() in MONTHS:
+        number = MONTHS.index(month.lower()) + 1
+        asked = date(today.year + (1 if number < today.month else 0), number, 1) if number != today.month else today
+    key = _key(asked)
     mine = next((m for m in year(context, today) if m["month"] == key), None)
     parts = []
     if mine:
         items = mine["items"]
-        parts.append(f"From your records this {today:%B}: " + "; ".join(what for _d, what in items[:6])
+        parts.append(f"From your records {'this' if asked == today else 'in'} {asked:%B}: " + "; ".join(what for _d, what in items[:6])
                      + (f"; and {len(items) - 6} more" if len(items) > 6 else "") + ".")
     else:
-        parts.append(f"Nothing from your garden plans or upkeep falls in {today:%B}.")
+        parts.append(f"Nothing from your garden plans or upkeep falls in {asked:%B}.")
     flock = getattr(context, "flock", None)
     hens = any(max(0, getattr(f, "hens", 0) or 0) for f in getattr(flock, "flocks", []) or []) if flock else False
-    usual = [what for months, what, flock_only in SEASON if today.month in months and (hens or not flock_only)]
+    wood = _burns_wood(context)
+    usual = [what for months, what, whose in SEASON if asked.month in months
+             and (not whose or (whose == "flock" and hens) or (whose == "wood" and wood))]
     if usual:
         parts.append("The season's usual work: " + "; ".join(usual) + ".")
     return " ".join(parts)

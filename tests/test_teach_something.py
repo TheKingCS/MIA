@@ -14,7 +14,7 @@ from core import assistant_turn, teach_something
 
 def test_with_no_course_started_a_first_lesson_and_how_to_start():
     said = teach_something.say(SimpleNamespace(), date(2026, 11, 26))
-    assert said.startswith("From ") and "Say \"start " in said and "Why:" in said
+    assert said.startswith("From ") and "Say \"I want to learn " in said and "Why:" in said
 
 
 def test_the_words_reach_it(monkeypatch):

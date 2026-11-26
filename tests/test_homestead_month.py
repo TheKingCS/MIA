@@ -20,11 +20,16 @@ def test_his_month_then_the_seasons_work(monkeypatch):
     assert said.startswith("From your records this December: Sharpen blades (Riding Mower).")
     assert "keep the hens' water from freezing" in said and "order seeds" in said
     without = homestead_year.this_month(SimpleNamespace(), date(2026, 12, 2))
-    assert "hens' water" not in without
+    assert "hens' water" not in without and "firewood" not in without
+    march = homestead_year.this_month(SimpleNamespace(), date(2026, 12, 2), month="March")
+    assert "Nothing from your garden plans or upkeep falls in March." in march and "coop" not in march
+    assert "start the seeds" in march
 
 
 def test_the_words_reach_it(monkeypatch):
-    monkeypatch.setattr(homestead_year, "this_month", lambda c, t=None: "the month")
+    monkeypatch.setattr(homestead_year, "this_month", lambda c, t=None, month="": f"the month{month}")
     for words in ("What should I be doing on the homestead this month?", "homestead chores this month",
                   "what needs doing around the place?"):
         assert assistant_turn._own_tool_reply(SimpleNamespace(), words) == "the month", words
+    assert assistant_turn._own_tool_reply(SimpleNamespace(), "what should I do on the farm in march?") == \
+        "the monthmarch"
