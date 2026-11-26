@@ -1419,6 +1419,9 @@ _IN_A_WHILE = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:can you |could you 
 _MOTIVATION = re.compile(r"^\s*(?:hey mia,? )?(?:i (?:really )?need (?:some )?motivation|motivate me|give me (?:some )?"
                          r"motivation|i'?m (?:feeling )?(?:so |really )?unmotivated|i can'?t get motivated|i have no "
                          r"motivation)(?: today| right now)?\s*[.!?]*\s*$", re.I)
+_VEHICLE_KIT = re.compile(r"\b(?:truck|car|vehicle|jeep|suv|van)(?:'s)? (?:emergency |winter |road(?:side)? |survival )?kit\b|"
+                          r"\b(?:emergency|winter|road(?:side)?|survival) kit for (?:my |the |a )?(?:truck|car|vehicle|"
+                          r"jeep|suv|van)\b|\bkeep in (?:my |the )?(?:truck|car|vehicle)\b", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1463,7 +1466,8 @@ def _own_tool_reply(context, prompt: str):
     record (or his history: "when did I last work out?"), "remind me in 2 hours to ..." (or "an hour and a half") with the clock worked out, spending tracked automatically, a morning routine,
     "when I get paid remind me", rent reminded as a bill only when said monthly), a report on a schedule kept only
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
-    out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation" his own reasons and one small step (core/motivation), "what's a good side
+    out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation" his own reasons and one small step (core/motivation), "what should be in my truck's
+    emergency kit?" Ready.gov's car kit against his records (core/ready_kit.say_vehicle), "what's a good side
     hustle for me?" from what he already sells,
     keeps and owns (core/side_hustle), "what do I need for the chili?" a saved recipe's missing
     ingredients (core/assistant_domain_actions.needs_for; anything not a recipe of his is the model's), "tell me when..." a watch from his whole sentence
@@ -1666,6 +1670,14 @@ def _own_tool_reply(context, prompt: str):
             found = None
         if found:
             return found
+    if _VEHICLE_KIT.search(said) and re.search(r"\b(?:what|should|need|check|kit|keep)\b", said, re.I):
+        from core import ready_kit  # the vehicle's own kit, never the house's 72-hour bag
+
+        try:
+            return ready_kit.say_vehicle(context)
+        except Exception:
+            log.exception("Couldn't check the vehicle kit")
+            return None
     if _MOTIVATION.match(said):  # "I need motivation": his own reasons and one small step (core/motivation)
         from core import motivation
 

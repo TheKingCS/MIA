@@ -11,7 +11,8 @@ How: `KIT` is the list, each thing with the whole words that name it ("flashligh
 light). `check(names, water_days, food_days)` is pure: it matches the names of his inventory and pantry items, and
 takes water and food as days (worked out by core/preparedness.py, a gallon a person a day and staples by weight)
 against the kit's three days. Missing from his records is said as that, never as "you don't have it": he may own it
-and not have logged it. Read-only: nothing is added or bought.
+and not have logged it. Read-only: nothing is added or bought. A vehicle's kit is its own list (`VEHICLE`,
+`say_vehicle`: Ready.gov's car kit), never the house's bag.
 """
 
 from __future__ import annotations
@@ -116,4 +117,42 @@ def say(context, people: Optional[int] = None) -> str:
                      + "; ".join(s for _k, s in got["extra_missing"]) + ".")
     parts.append(f"Only you can check {ONLY_HE_CAN}. Anything you have and haven't logged, add it in Inventory and "
                  f"I'll count it.")
+    return " ".join(parts)
+
+
+# Ready.gov's emergency supply kit for a car (ready.gov/car), and its winter additions: (key, how it's said, the
+# whole words that name it in his records)
+VEHICLE = (
+    ("jumper", "jumper cables (or a jump starter)", r"jumper cables?|booster cables?|jump (?:starter|box|pack)s?"),
+    ("light", "a flashlight and extra batteries", r"flashlights?|headlamps?|lanterns?"),
+    ("first_aid", "a first aid kit", r"first[- ]?aid|trauma kits?|ifak|med(?:ical)? kits?"),
+    ("water_food", "water and non-perishable snacks", r"water bottles?|bottled water|granola bars?|protein bars?|"
+                                                      r"energy bars?|mres?"),
+    ("charger", "a phone charger for the car", r"car chargers?|phone chargers?|power banks?|battery banks?"),
+    ("blanket", "a blanket", r"blankets?|sleeping bags?|mylar|space blankets?"),
+    ("map", "a paper map", r"maps?(?![- ]?pro)(?! app)|road atlas|gazetteer"),
+    ("signal", "flares or reflective triangles", r"flares?|reflective triangles?|road triangles?|warning triangles?"),
+    ("tire", "a tire gauge, and a spare with a jack you've checked", r"tire (?:gauge|inflator|plug kit)s?|tyre "
+                                                                     r"gauges?|air compressors?|spare tires?|jacks?"),
+    ("winter", "for winter: an ice scraper, a small shovel, and sand or cat litter for traction",
+     r"ice scrapers?|snow brush(?:es)?|shovels?|cat litter|kitty litter|traction (?:mats?|sand)"),
+)
+_VEHICLE_WORDS = {key: re.compile(rf"\b(?:{words})\b", re.I) for key, _said, words in VEHICLE}
+
+
+def say_vehicle(context) -> str:
+    """For "what should be in my truck's emergency kit?" (the full sweep, 2026-11-26: it had been given the house's
+    72-hour bag): Ready.gov's car kit against his inventory, what his records hold and what they don't (said as not in
+    his records, never as not owned). Read only."""
+    names = _names(context)
+    have, missing = [], []
+    for key, said, _words in VEHICLE:
+        found = next((n for n in names if _VEHICLE_WORDS[key].search(str(n or ""))), None)
+        (have.append((said, found)) if found else missing.append(said))
+    parts = [f"Ready.gov's kit for a vehicle has {len(VEHICLE)} things; your records hold {len(have)}."]
+    if have:
+        parts.append("In your records: " + "; ".join(f"{said} ({found})" for said, found in have) + ".")
+    if missing:
+        parts.append("Not in your records: " + "; ".join(missing) + ".")
+    parts.append("Keep the tank at least half full in winter, and tell someone your route on a long drive.")
     return " ".join(parts)

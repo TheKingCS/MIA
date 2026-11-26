@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1890 files, 398,793 lines; 1890 files describe themselves; 21,641 of 21,785 classes and functions are documented.
+1891 files, 398,874 lines; 1891 files describe themselves; 21,644 of 21,788 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-738 files, 208,986 lines; 10,354 of 10,433 classes and functions documented
+738 files, 209,037 lines; 10,355 of 10,434 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1037,7 +1037,7 @@
 
 ## tests/: the test suite: what each part must do
 
-742 files, 107,645 lines; 8,913 of 8,978 classes and functions documented
+743 files, 107,675 lines; 8,915 of 8,980 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1692,6 +1692,7 @@
 - `tests/test_user_sync.py`: User Sync, Meals (core/user_sync.py): what the code decides, with a stand-in model. tools/user_sync_check.py runs the same steps on the real one.
 - `tests/test_utility_bills.py`: "Why was power so high this month?" (core/utility_bills.py): energy bills found by their words (never the truck's gas), totalled by month, said against the same month last year and the recent average, and the kWh meter when there is one.
 - `tests/test_vault_captions.py`: Finding a photo again (core/vault_captions.py): the photos this PC keeps for the phone, each described in one sentence by the local vision model (never who anyone is), kept beside the photo, and searched by what's in them.
+- `tests/test_vehicle_kit.py`: "What should be in my truck's emergency kit?" (core/ready_kit.say_vehicle, the full sweep 2026-11-26): Ready.gov's car kit against his inventory, never the house's 72-hour bag.
 - `tests/test_voice_corrections.py`: Fixing and planning by voice (DEC-0125, core/assistant_correction_actions.py): each tool finds the record from the words said and runs the screen's own action kind (undoable); unclear names are asked about and change nothing.
 - `tests/test_voice_effects.py`: Unit tests for core.voice_effects' pure-numpy DSP functions. These test shape/dtype/range invariants (no clipping, no silent volume change, correct dtype) — not perceived audio quality, which no automated test can judge; see that module's docstring.
 - `tests/test_voice_manager.py`: Unit tests for core.voice_manager's VoiceManager delegation and graceful-degradation logic. Uses fake STT/TTS backends (same shape as test_llm_manager.py's mocked urlopen) rather than loading the real Vosk/Piper models, so this suite stays fast and independent of voice_models/ being present. The rea
