@@ -1540,6 +1540,11 @@ _VEHICLE_KIT = re.compile(r"\b(?:truck|car|vehicle|jeep|suv|van)(?:'s)? (?:emerg
 _TEACH_SOMETHING = re.compile(r"^\s*(?:hey mia,? )?(?:teach me something(?: new| today| useful)?|(?:tell|show) me something "
                               r"(?:new|useful) to learn|what can i learn today|give me a lesson|teach me a skill)\s*[.!?]*\s*$",
                               re.I)
+_PROJECT_COMING = re.compile(r"^\s*(?:hey mia,? )?(?:how(?:'s| is| are) (?:the |my |our )?(?P<a>[\w' -]{2,40}?) "
+                             r"(?:coming(?: along)?|going|doing|looking|progressing)|how far along (?:is|am i (?:on|with)) "
+                             r"(?:the |my |our )?(?P<b>[\w' -]{2,40}?)|where (?:am i|are we|do i stand) (?:on|with) (?:the |my "
+                             r"|our )?(?P<c>[\w' -]{2,40}?)|(?:what's the |give me the )?status (?:of|on) (?:the |my |our )?"
+                             r"(?P<d>[\w' -]{2,40}?))(?: project)?\s*[?.!]*\s*$", re.I)
 _HOMESTEAD_MONTH = re.compile(r"^\s*(?:hey mia,? )?(?:what should (?:i|we) (?:be )?(?:doing|do|work on)|what(?:'s| is) there to "
                               r"do|what needs doing|what are the chores) (?:on|around) (?:the |my |our )?(?:homestead|farm|"
                               r"place|land|property)(?: this month| in (?P<month>january|february|march|april|may|june|july|"
@@ -1639,7 +1644,8 @@ def _own_tool_reply(context, prompt: str):
     "when I get paid remind me", rent reminded as a bill only when said monthly), a report on a schedule kept only
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation (to finish the shed)" his own reasons and one small step (core/motivation), "teach me
-    something" a lesson from her own courses (core/teach_something), "what should I be doing on the homestead this
+    something" a lesson from her own courses (core/teach_something), "how's the shed coming along?" that project's picture
+    (core/project_status, only for a project of his), "what should I be doing on the homestead this
     month?" (or "in march") that month's items and the season's usual work (core/homestead_year.this_month), "what should be in my truck's
     emergency kit?" Ready.gov's car kit against his records (core/ready_kit.say_vehicle), "what's a good side
     hustle for me?" from what he already sells,
@@ -1866,6 +1872,17 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't check the vehicle kit")
             return None
+    coming = _PROJECT_COMING.match(said)
+    if coming:  # "how's the shed coming along?": the project's picture from his records (core/project_status)
+        from core import project_status, project_time
+
+        try:
+            named = next(g for g in coming.groups() if g)
+            project = project_time.project_named(context, named)
+            if project is not None:
+                return project_status.say(context, project)
+        except Exception:
+            log.exception("Couldn't say how the project is coming")
     month_asked = _HOMESTEAD_MONTH.match(said)
     if month_asked:  # "what should I be doing on the homestead this month?" (core/homestead_year)
         from core import homestead_year

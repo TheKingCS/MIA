@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1900 files, 399,664 lines; 1900 files describe themselves; 21,679 of 21,825 classes and functions are documented.
+1902 files, 399,786 lines; 1902 files describe themselves; 21,683 of 21,829 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-739 files, 209,473 lines; 10,365 of 10,444 classes and functions documented
+740 files, 209,558 lines; 10,367 of 10,446 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -496,6 +496,7 @@
 - `core/project_manager.py`: Project Manager — the v1.0+-bucket "Project Manager" tool listed in docs/ROADMAP.md's Toolbox section, buildable with zero real hardware (same rationale as Activity Log/Navigation/Field Kit/Expedition Mode before it). Top-level container for a Project; each Project can hold multiple core.task_manage
 - `core/project_plans.py`: Plans made together, then missions (T-0060; Zac, 2026-11-22: "making MIA super capable for teaching homestead and construction thoroughly step by step offline ... I want to be able to have auto generated missions for plans we confirm together for different builds or gardens, projects, etc"; his answ
 - `core/project_ripple.py`: What a project touches (Zac, 2026-11-24: "You tell MIA you're planning to build a greenhouse. MIA understands that this involves your available budget, your existing building materials, your garden and growing plans, your water and electrical systems, your available time, your long-term agricultural
+- `core/project_status.py`: "How's the shed coming along?" (brainstorm round 19, 2026-11-26: the live check had "I'm not aware of any information about a garage rewire" with the Garage Rewire in his projects): one project's picture from his own records, in code. Its status and due date (days left, or how far past), its tasks (
 - `core/project_time.py`: The hours he puts into his projects (the live sweep, 2026-11-25: "log 2 hours on the shed build" had been taken as a maintenance reading on an asset). "Log 2 hours on the shed" adds them to that project's time log (core/project_manager.ProjectManager.log_time), undoable like any change of hers; "how
 - `core/protected_list.py`: What MIA can never change about herself, in words (DEC-0225; Zac, 2026-11-17, Q-78: "show me the list, and add grants, the stop, browser safety and her inspection to it"). The list itself is `core.dev_lab.PROTECTED`: a lab change that touches any of it is refused before it's tested, whoever wrote it
 - `core/push_subscription_manager.py`: Persists the Web Push subscriptions a profile's browser/PWA has registered — the endpoint URL + keys `PushManager.subscribe()` returns, per the standard Web Push API. One profile can have more than one subscription (a phone and a laptop, say), so this is a list keyed by profile_id, not a single fiel
@@ -1038,7 +1039,7 @@
 
 ## tests/: the test suite: what each part must do
 
-751 files, 108,029 lines; 8,940 of 9,007 classes and functions documented
+752 files, 108,066 lines; 8,942 of 9,009 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1508,6 +1509,7 @@
 - `tests/test_project_manager.py`: Unit tests for core.project_manager. Isolates _DATA_DIR/_PROJECTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_expedition_manager.py's isolated_paths).
 - `tests/test_project_plans.py`: Plans made together, then missions (core/project_plans.py, core/garden_plans.py, T-0060; Zac, 2026-11-22: builds and gardens both together): a garden's dates worked out from his frosts, plants and soil worked out in code, a build from the Library's shelf walked by Trade Master, a draft changed, then
 - `tests/test_project_ripple.py`: What a project touches (core/project_ripple.py, Zac 2026-11-24): "I'm planning to build a greenhouse" reaches the project picture, whose sheet carries the build's materials and cost against the workshop's stock, his money and freedom date, and each area a greenhouse touches (growing, water, power, t
+- `tests/test_project_status.py`: "How's the shed coming along?" (core/project_status.py, brainstorm round 19): one project's picture from his records, said in code, only for a project of his.
 - `tests/test_project_time.py`: The hours he puts into his projects (core/project_time.py, 2026-11-25): "log 2 hours on the shed build" adds them to that project's time log, undoable, only for a project of his; the hours are read back by project or by day; the time log survives a save and a reload; hours on a project he doesn't ha
 - `tests/test_project_tool.py`: Unit tests for modules.toolbox.tools.project_tool's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 - `tests/test_property_module.py`: Unit tests for modules.property.module's pure functions — same style and, deliberately, near-identical cases to tests/test_garage_module.py, since the two modules share the same logic shape and differ only in which Maintenance categories they filter to.

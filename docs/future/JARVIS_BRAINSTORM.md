@@ -344,6 +344,23 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 19 (2026-11-26, after round 18 was built): from his records to his whole picture
+
+A live check of everyday asks found three gaps: "how's the garage rewire coming along?" got "I'm not aware of any
+information about a garage rewire" with it in his projects, "did I spend more this month than last month?" got "I
+don't have last month's spending", and a bare "why?" said "you mentioned a fact sheet". Each idea says what it needs:
+
+- **How a project is coming** (built, core/project_status): its status and due date, its tasks done and next, his
+  hours on it, what it still needs.
+- **This month against last** (no decision): "did I spend more this month than last?", "groceries this month vs last
+  month", at the same point in the month, the categories that moved most, in code (core/money_periods).
+- **"Why?" after a code answer** (no decision): the numbers behind it (the bills and pay "can I afford it" counted,
+  the frost date behind a planting day), never a fact sheet's words.
+- **A job's whole cost** (no decision): "what has the shed cost me?" joining his expenses, its build's materials and
+  his hours at his own rate.
+- **When she doesn't know** (no decision): an answer that needs one number of his ("how much firewood a winter?")
+  asks for it once and keeps it, through the setting the code reads.
+
 ## Round 18 (2026-11-26, after a day of sweeps): from answering to keeping up a conversation
 
 A day of live sweeps (everyday asks, follow-ups, money, automation, a cross-route review of some 200 sentences)
