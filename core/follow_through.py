@@ -90,7 +90,7 @@ def merged(prev: str, x: str) -> Optional[str]:
     """Pure logic. His last question with the follow-up's words in place: a period for its period, or a thing for
     its thing (a debt follow-up kept a debt question; a spending one keeps its period, a planting one swaps
     its crop; never a "before ..." or
-    "that"; a sentence of his, `_NOT_A_THING`, never), a bare month as a period, or a size for the thing's
+    "that"; a sentence of his, `_NOT_A_THING`, never), a bare month as a period, a voltage for its one voltage ("and on 12 volts?"), or a size for the thing's
     own (the last) size; None when they can't be joined or his last words weren't a
     question."""
     from core.money_periods import _PERIOD_WORDS, only_period
@@ -107,6 +107,11 @@ def merged(prev: str, x: str) -> Optional[str]:
         if _PERIOD_WORDS.search(prev):
             return _PERIOD_WORDS.sub(x, prev, count=1)
         return prev.rstrip(" ?.!") + f" {x}?"
+    volts = re.fullmatch(r"(?:on |at |with |for )?(?:a |an )?(\d+(?:\.\d+)?)\s*(?:v|volts?)(?: supply| battery)?", x, re.I)
+    said_volts = list(re.finditer(r"\b\d+(?:\.\d+)?\s*(?:v|volts?)\b", prev, re.I))
+    if volts and len(said_volts) == 1:  # "and on 12 volts?" after the LED's resistor on 5 (the electronics check)
+        found = said_volts[0]
+        return prev[:found.start()] + f"{volts.group(1)} volts" + prev[found.end():]
     size = re.fullmatch(r"(?:an? |the )?(\d+(?:\.\d+)?\s*(?:by|x)\s*\d+(?:\.\d+)?)(?: one)?", x, re.I)
     if size and _SIZE.search(prev):  # "and a 10 by 12?" after "the square footage of a 12 by 16 shed?"
         last = list(_SIZE.finditer(prev))[-1]  # the thing's size, never a lumber size before it ("2 by 4 studs")

@@ -2321,7 +2321,7 @@ def _follow_through_reply(context, conversation, prompt: str):
     "what about this month?" after last month's spending, "and the card?" after the truck loan): his last question
     with the new words in place (the last one that wasn't itself a follow-up, each follow-up since folded in:
     core/follow_through.thread, so "and groceries?" after "what about this month?" is groceries this month), answered by the same code answers (`_records_reply`,
-    `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_garden_kit_reply`: a crop's dates,
+    `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_garden_kit_reply`: a crop's dates, `_led_reply`: an LED's resistor,
     `_everyday_reply`). His bare answer to her own
     last question ("about 4" after her firewood ask, "5 gallons" after "How much fuel?", his town, a build's size) is
     kept first (core/her_asks, given her last three replies so "add it to my projects" still finds the build). None when it isn't one, can't be joined, or no code answer takes the joined question (the
@@ -2353,7 +2353,8 @@ def _follow_through_reply(context, conversation, prompt: str):
     if not whole:
         return None
     return (_records_reply(context, whole) or _own_tool_reply(context, whole) or _spent_on_reply(context, whole)
-            or _water_on_hand_reply(context, whole) or _garden_kit_reply(context, whole) or _everyday_reply(context, whole))
+            or _water_on_hand_reply(context, whole) or _garden_kit_reply(context, whole) or _led_reply(context, whole)
+            or _everyday_reply(context, whole))
 
 
 def _records_reply(context, prompt: str):
