@@ -88,7 +88,11 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   (core/money_periods.best_sellers, never stock). Each Fable-reviewed.
 - Her own questions finished by a bare answer, in code (core/her_asks): "5 gallons" after "How much fuel?", "half a
   gallon an hour" after her burn-rate ask (then the runtime), his town after "I don't know your town yet" (only when
-  the weather service finds it, never a command of his), the firewood a winter. 8796 passing.
+  the weather service finds it, never a command of his), the firewood a winter.
+- The skills live sweep's fixes: new lessons for tying down a load (bushcraft knots), the chainsaw (carpentry: running
+  it, filing the chain) and storing roots (each crop's curing and keeping temperatures; never sweet potatoes); garlic
+  from his first fall frost (core/planting_now.say_garlic); a week-long outage asked ahead is the outage plan; "the
+  sheet shows" said as his records. Fable-reviewed. 8799 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
