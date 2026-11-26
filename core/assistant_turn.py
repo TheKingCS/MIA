@@ -581,7 +581,7 @@ def _reminder_reply(context, prompt: str):
     day is the one after the task, never one inside it ("remind me to send the invoice by Friday on Monday": the
     Fable review). A task ending on "before", "by", "and" or "or" is a deadline, the model's ("order feed before
     Friday": the cross-route review, 2026-11-26). A part of the day with no hour ("Saturday morning", "tonight") is
-    that part's usual time: 8am, 2pm, 6pm, 8pm."""
+    that part's usual time: 8am, 2pm, 6pm, 8pm, never one already gone today ("tonight" said at 9pm sets no time)."""
     first = _REMIND_FIRST.match(prompt.replace("’", "'"))
     day_words = None
     if first:
@@ -615,6 +615,11 @@ def _reminder_reply(context, prompt: str):
     else:  # "Saturday morning" with no hour: that part of the day's usual time (the fishing conversation check)
         part = re.search(r"\b(morning|afternoon|evening|night)\b", day_words, re.I)
         named = part.group(1).lower() if part else ("night" if re.search(r"\btonight\b", day_words, re.I) else "")
+        from datetime import datetime as _now
+
+        usual = {"morning": 8, "afternoon": 14, "evening": 18, "night": 20}.get(named)
+        if usual is not None and str(args.get("date")) == _now.now().date().isoformat() and _now.now().hour >= usual:
+            named = ""  # "tonight" at 9pm: never a time already gone (the Fable review)
         if named:
             args["time"] = {"morning": "08:00", "afternoon": "14:00", "evening": "18:00", "night": "20:00"}[named]
     try:
@@ -1386,8 +1391,9 @@ _OWN_TOOLS = (
                             r".*\bdo (?:i|we) have enough (?:chicken |layer )?feed\b)", re.I), True),
     # do the eggs pay for the feed: the flock's own numbers (get_eggs has the feed cost a dozen), never the spending
     # pace's "I need two months of your spending" (the egg conversation check, 2026-11-26)
-    ("get_eggs", re.compile(r"^\s*(?:hey mia,? )?(?:are|do|does|is) (?:the |my |our )?(?:eggs|hens|chickens|flock|girls) "
-                            r"(?:paying|pay|covering|cover|earning|earn)(?: for)? (?:the |their |its |our |my )?(?:feed|"
+    ("get_eggs", re.compile(r"^(?!.*\b(?:if|last week|this month|last month|yesterday)\b)\s*(?:hey mia,? )?(?:are|do|does|is) "
+                            r"(?:the |my |our )?(?:eggs|hens|chickens|flock|girls) "
+                            r"(?:paying|pay|covering|cover|earning|earn)(?: for)? (?:the |their |its )?(?:feed|"
                             r"themselves|keep)\b.{0,20}[?.!]*\s*$|^\s*(?:hey mia,? )?(?:what do|how much do) (?:the |my )?"
                             r"(?:eggs|hens|chickens) cost (?:me|us)(?: a dozen| per dozen)?\s*[?.!]*\s*$", re.I), True),
     # what she may do herself is her grants' (list_grants); the model had made up a browser and the Classroom

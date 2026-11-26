@@ -14,6 +14,8 @@ Eggs over last week, this month or last month are counted from the flock's log (
 
 from __future__ import annotations
 
+import re
+
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
 
 
@@ -32,7 +34,8 @@ def _get_eggs(context, arguments: dict) -> str:
     """Tool get_eggs: for each flock, eggs today and this week, the lay rate from its hens, loose eggs, cartons on
     hand and feed cost a dozen, read from the Chickens page, and when they're laying far below their own normal, that
     with what to check (core/unusual.py), and how long the feed will last (core/feed_runway.py). Asked about last
-    week or this month (his words, a follow-up's own first): those eggs from the log (`eggs_between`).
+    week or this month (his words, a follow-up's own first): those eggs from the log (`eggs_between`). Asked whether
+    they pay for the feed with no feed cost logged, that's said.
     """
     from core.web_flock import flock_page
 
@@ -54,6 +57,8 @@ def _get_eggs(context, arguments: dict) -> str:
             line += f", {f['good']['on_hand_text']} of {f['good']['name']} in cartons"
         if x["feed_per_dozen_text"]:
             line += f"; feed costs {x['feed_per_dozen_text']} a dozen"
+        elif re.search(r"\b(?:pay|paying|cover|covering|earn|earning|cost)\b", own):
+            line += "; no feed cost logged yet, so I can't say what a dozen costs (log a bag with its price)"
         parts.append(line + "." + (" " + f["unusual"] if f.get("unusual") else "")
                      + (" " + f["feed_runway"] if f.get("feed_runway") else ""))
     return " ".join(parts)

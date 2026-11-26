@@ -15,3 +15,7 @@ def test_the_words_reach_the_flocks_numbers():
                   "what do the eggs cost me a dozen?"):
         assert any(p.match(words) for p in patterns), words
     assert not any(p.match("are the eggs in the fridge?") for p in patterns)
+    pay = patterns[-1]
+    for words in ("are the eggs paying for the feed this month?", "do the eggs cover the feed if I sell more?",
+                  "do the eggs pay for my keep?"):
+        assert not pay.match(words), words
