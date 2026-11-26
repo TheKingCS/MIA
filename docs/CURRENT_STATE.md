@@ -96,7 +96,11 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
 - "Should I form an LLC?" is a business lesson (sole proprietor or LLC, insurance first). A build she offers is kept
   up across turns (core/her_asks: "a 10 by 12" is its materials, "add it to my projects" adds it once), her offer's
   own "materials for ..." words now reach the calculators, and a claim of a change to any of his records (a project,
-  an expense) is caught when nothing was done. Fable-reviewed. 8804 passing.
+  an expense) is caught when nothing was done. Fable-reviewed.
+- The fishing conversation check: "I caught a 3 pound bass at the pond" is one bass, read in code
+  (core/catch_actions.parse; the model had logged three), "when's the best time to go back?" after a catch is the
+  fishing times, and spending on a thing no category names ("fishing gear") is the expenses that name it.
+  Fable-reviewed. 8807 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through

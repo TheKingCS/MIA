@@ -17,7 +17,8 @@ last month?", "do I have enough firewood?" then "about 5 cords". Then: "what has
 need from the hardware store?", "what's my best-selling product?". Her asks answered in code (core/her_asks: fuel, burn rate, town,
 firewood). Skills sweep: knots, chainsaw, root storage lessons; garlic dates.
 Then the LLC lesson, a build kept up across turns ("a 10 by 12", "add it to my projects"), and false claims
-about projects or expenses caught.
+about projects or expenses caught. Fishing: a catch said whole read in code, "go back" after it, spending on
+"fishing gear" from what names it.
 Next (no decision): more of her asks there as sweeps find them, and more sweeps (the corpus's areas); "why?" after a code answer needs a better idea than repeating its reasons. Waiting on
 Zac: Q-0018 (the writing shortcuts), Q-0019 (a fire how-to through the emergency floor).
 
