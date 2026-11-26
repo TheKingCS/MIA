@@ -110,7 +110,11 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
 - The automation conversation check: "every morning tell me what's due today" and "and every Sunday tell me how my
   money is doing" are kept as standing reports ("what's due today?" now answered in code: core/today.due_today_said),
   "what reports do you send me?" is her own list and "stop the Sunday one" stops that one (the model had made up a
-  Bank Sync report and a stop). Fable-reviewed. 8814 passing.
+  Bank Sync report and a stop). Fable-reviewed.
+- The garden conversation check: "my last frost is April 20" (her own suggested words) is kept as his frost date, with
+  what's due from it, undoable (core/planting_now.keep_frost; it had kept nothing), and a bare date after her frost
+  ask too; "and peppers?" after a planting question is the planting dates in code (the model's had the wrong date).
+  Fable-reviewed. 8817 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
