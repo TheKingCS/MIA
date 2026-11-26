@@ -133,13 +133,18 @@ FIRST_PIECES = ("a cutting board (glue-up, flattening and a food-safe oil)", "a 
 
 def next_project(context) -> str:
     """For "what woodworking project should I do next?" (the live sweep, 2026-11-26: a generic answer): on the
-    course, where he is in it and the piece for that stage; off it, the course's first pieces (small, with real
+    course, where he is in it and the piece for that stage (finished, something bigger); off it, the course's first
+    pieces (small, with real
     joints, finished start to end) and the workbench, bookshelf or picnic table worked out at his size (core/build_calcs, the
     material_list tool)."""
     from core import paths
 
     book = getattr(context, "paths", None)
     started = book is not None and book.path(PROGRAM.id) is not None
+    if started and not paths.open_checks(book, PROGRAM):
+        return ("You've finished Woodworking at the bench. Next, something bigger with what you learned: a workbench, "
+                "a bookshelf or a picnic table; say \"materials for a 6 foot workbench\" and I'll work out the cut "
+                "list at your size.")
     if started:
         stage = paths.stage_of(book, PROGRAM)
         piece = ("Your piece for it: " + FIRST_PIECES[0] + ", then " + FIRST_PIECES[1] + "." if stage.number < 3 else

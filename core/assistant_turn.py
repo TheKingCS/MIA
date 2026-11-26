@@ -1368,7 +1368,7 @@ def _own_tool_reply(context, prompt: str):
     his pantry or on his list, never "out of the woods", "out of hope" or "out of diesel": `_groceries`), "do you remember what I told
     you yesterday?" her record of it (list_past_conversations), "what's a good workout for today?" his own next
     workout (core/workout_today), "what woodworking project should I do next?" his next piece
-    (core/woodworking.next_project; "for the shop", the business's, stays make_next's), "tell me when..." a watch from his whole sentence
+    (core/woodworking.next_project; "build next ... shop", the business's, stays make_next's), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
     said = prompt.replace("’", "'")
@@ -1426,7 +1426,8 @@ def _own_tool_reply(context, prompt: str):
         return _run_own(context, "add_grocery_item", {"items": out.group(1).strip(), "question": said})
     if _REMEMBER_TALK.match(said):  # "do you remember what I told you yesterday?": her own record of it
         return _run_own(context, "list_past_conversations", {"question": said})
-    if _WOOD_NEXT.match(said) and ("wood" in said.lower() or "shop" in said.lower()):  # his next piece
+    low = said.lower()
+    if _WOOD_NEXT.match(said) and ("wood" in low or ("shop" in low and "next" not in low)):  # his next piece
         from core import woodworking
 
         try:
