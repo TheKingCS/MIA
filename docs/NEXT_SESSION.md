@@ -16,7 +16,8 @@ when we're down to a dozen eggs", "what are you watching for me?"; and "before y
 need for my trip?", and the afternoon before a planned trip). Round 16 is all built. Round 17 so far: the money
 pulse names the two biggest expenses behind a drift, the evening wrap names a hobby streak, a pantry watch offers the
 grocery list ("say add coffee to my grocery list"), and a new trip offers its last like trip's packing list ("copy the
-packing list to <trip>"). Left from 17: asking after two corrections of the same kind; the lock-screen look-ahead
+packing list to <trip>"). Also built: after his second correction in a week of something she does on his standing yes, she offers to ask
+first again ("ask me first for grocery add"). Left from 17: the lock-screen look-ahead
 (Zac's say); a homestead tile (Muse). Loose end the Fable review found: MIA's own approval cards (actions.pending)
 show on no screen, only by asking "what's waiting for me?" (web/mia.js has pending() unused): a Home/Today card
 strip is for Muse's look. copy_packing_list has no screen button yet (DEC-0125). The live sweep's "anticipating" area checks them.
