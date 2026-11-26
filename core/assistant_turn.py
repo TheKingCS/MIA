@@ -1276,9 +1276,10 @@ _HOMESTEAD_HEALTH = re.compile(r"^\s*(?:how(?:'s| is) (?:the |my |our )?homestea
                                r"\s*[?.!]*\s*$", re.I)
 _LEARNED_WEEK = re.compile(r"^\s*what(?: did you| have you|'ve you|'d you) learn(?:ed|t)? (?:(?:from|about) me )?"
                            r"(?:this|the) (?:past |last )?week(?: (?:from|about) me)?(?:,? mia)?\s*[?.!]*\s*$", re.I)
-_HOBBIES = re.compile(r"^\s*(?:how(?:'s| is| are) (?:my |the )?hobbies(?: going| coming along| doing)?(?: this month)?|"
-                      r"(?:my |the )?hobbies(?:'|') progress|(?:my )?hobby progress|(?:my )?hobbies this month|"
-                      r"what have i done for (?:fun|myself|my hobbies) this month)\s*[?.!]*\s*$", re.I)
+_HOBBIES = re.compile(r"^\s*(?:(?:how(?:'s| is| are)|hows) (?:my |the )?hobbies(?: and projects)?(?: going| coming along| "
+                      r"doing)?(?: this month| lately| so far)?|how did my hobbies go this month|"
+                      r"(?:my |the )?hobbies' progress|(?:my )?hobby progress|(?:my )?hobbies this month|"
+                      r"what have i done for (?:fun|myself|my hobbies) this month)(?:,? mia)?\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
