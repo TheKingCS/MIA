@@ -10,7 +10,8 @@ forecast kept (core/weather.py, never fetched for this). Through the communicati
 once a day.
 
 `wrap(context, now)` is the words ("" when there's nothing at all to say); `offer(context, now)` the daily check's
-message.
+message. A course practised today on a streak of three days or more is named after the day ("Guitar: 4 days in a
+row.", `streaks`, brainstorm round 17).
 """
 
 from __future__ import annotations
@@ -75,8 +76,32 @@ def weather_tomorrow(context) -> str:
     return f"{words + ', ' if words else ''}{t['high']}{card.get('unit', '')} and {t['low']}"
 
 
+STREAK_FROM = 3  # days in a row worth a word
+
+
+def streaks(context, today: date) -> str:
+    """His courses practised today on a streak of STREAK_FROM days or more (core/paths.stats), said in a few words
+    ("Guitar: 4 days in a row."), or "" (brainstorm round 17: hobby streaks in the evening wrap)."""
+    from core import paths
+
+    book = getattr(context, "paths", None)
+    if book is None:
+        return ""
+    said = []
+    for path_id in book.started():
+        program = paths.program_of(context, path_id)
+        record = book.path(path_id) or {}
+        if program is None or not any(s.get("date") == today.isoformat() for s in record.get("sessions", [])):
+            continue
+        streak = paths.stats(book, program, today)["streak"]
+        if streak >= STREAK_FROM:
+            said.append(f"{program.name}: {streak} days in a row")
+    return ("; ".join(said) + ".") if said else ""
+
+
 def wrap(context, now: datetime) -> str:
-    """The two sentences; "" when there's nothing done, nothing tomorrow and no weather."""
+    """The two sentences, with any course on a streak practised today between them; "" when there's nothing done,
+    nothing tomorrow and no weather."""
     today = now.date()
     parts = []
     for read, name in ((lambda: done_today(context, today), "done"),
@@ -91,6 +116,13 @@ def wrap(context, now: datetime) -> str:
     if not (done or first or sky):
         return ""
     head = f"Today: {done}." if done else "A quiet day today."
+    try:
+        streak = streaks(context, today)
+    except Exception:  # noqa: BLE001 - the wrap goes without it
+        log.exception("Evening wrap: the streaks couldn't be read")
+        streak = ""
+    if streak:
+        head += f" {streak}"
     tail = []
     if first:
         tail.append(f"first up, {first}")

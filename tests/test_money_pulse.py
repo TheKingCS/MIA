@@ -35,6 +35,13 @@ class _Budget:
     def all_debts(self):
         return []
 
+    def all_expenses(self):
+        """This month's groceries, a business's lumber and last month's run, to pick the biggest from."""
+        return [SimpleNamespace(category="Groceries", amount=a, description=d, payee="", date=day, entity_id=e)
+                for a, d, day, e in ((180.0, "Costco run", "2026-11-03", ""), (40.0, "Milk", "2026-11-10", ""),
+                                     (300.0, "Shop lumber", "2026-11-05", "llc"), (90.0, "Feed store", "2026-11-12", ""),
+                                     (500.0, "Last month", "2026-10-30", ""))]
+
 
 def test_the_pulse_names_the_drift_and_whats_due(monkeypatch):
     from core import budget_manager
@@ -43,6 +50,7 @@ def test_the_pulse_names_the_drift_and_whats_due(monkeypatch):
     monkeypatch.setattr(budget_manager, "next_bill_due_date", lambda b: today + timedelta(days=3))
     said = money_pulse.line(SimpleNamespace(budget=_Budget(today)), today)
     assert said.startswith("Groceries is running"), said
+    assert "The biggest: Costco run ($180.00) and Feed store ($90.00)." in said, said
     assert "Utilities" not in said
     assert "Due this week:" in said and "Electric" in said
     assert "Tightest week ahead" not in said, "no income logged: no week is called tight"

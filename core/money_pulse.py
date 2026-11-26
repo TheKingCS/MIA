@@ -6,6 +6,8 @@ A money pulse (brainstorm round 16, 2026-11-25): once a week, his money in a lin
 spending category drifting furthest over its usual pace this month (core/spending_pace), what's due in the next seven
 days from his bills and debts, and the tightest week of the next four, where more goes out than comes in
 (core/money_ahead). Everything is worked out in code from his own budget; the model never sees a number to phrase.
+The drifting category names its two biggest expenses this month (`behind`, brainstorm round 17), so the pulse
+points at the cause.
 
 How: `line(context, today)` gives the words (or "" with nothing in his budget to say from); `offer(context, now)` is
 the daily check `money_pulse`, said on Sundays only, once a week (its fingerprint names the ISO week), through the
@@ -54,6 +56,20 @@ def drift(context, today: date) -> Optional[dict]:
     return best
 
 
+def behind(context, category: str, today: date, count: int = 2) -> list:
+    """The biggest household expenses in a category this month so far, biggest first (brainstorm round 17: the
+    pulse points at the cause): [{description, amount, date}]."""
+    budget = getattr(context, "budget", None)
+    if budget is None:
+        return []
+    start = today.replace(day=1).isoformat()
+    rows = [e for e in budget.all_expenses() if e.category == category and not e.entity_id
+            and start <= str(e.date or "")[:10] <= today.isoformat()]
+    rows.sort(key=lambda e: -float(e.amount or 0))
+    return [{"description": (e.description or e.payee or "an expense").strip(), "amount": float(e.amount or 0),
+             "date": str(e.date)[:10]} for e in rows[:count]]
+
+
 def _household(records: list) -> list:
     """Only the household's own records (entity_id ""); a business's bills and debts are its own."""
     return [r for r in records if not getattr(r, "entity_id", "")]
@@ -79,8 +95,8 @@ def ahead(context, today: date) -> tuple[list, list, Optional[dict]]:
 
 
 def line(context, today: Optional[date] = None) -> str:
-    """The pulse's words: the drifting category, what's due this week, the tightest week ahead; "" when none of the
-    three has anything to say from."""
+    """The pulse's words: the drifting category with its two biggest expenses, what's due this week, the tightest
+    week ahead; "" when none of the three has anything to say from."""
     from core.region import money
 
     today = today or date.today()
@@ -88,8 +104,11 @@ def line(context, today: Optional[date] = None) -> str:
     try:
         found = drift(context, today)
         if found:
+            biggest = behind(context, found["category"], today)
+            why = (" The biggest: " + " and ".join(f"{b['description']} ({money(b['amount'])})" for b in biggest) + "."
+                   if biggest else "")
             parts.append(f"{found['category']} is running about {money(found['going'] - found['usual'])} over "
-                         f"your usual this month.")
+                         f"your usual this month.{why}")
     except Exception:  # noqa: BLE001 - one part that can't be read never takes the rest
         log.exception("Money pulse: the spending couldn't be read")
     try:
