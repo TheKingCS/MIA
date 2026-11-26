@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1912 files, 400,878 lines; 1912 files describe themselves; 21,717 of 21,863 classes and functions are documented.
+1913 files, 401,012 lines; 1913 files describe themselves; 21,722 of 21,868 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,203 lines; 10,378 of 10,457 classes and functions documented
+741 files, 210,292 lines; 10,380 of 10,459 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -152,7 +152,7 @@
 - `core/capability_registry.py`: The capability truth registry (WP-08, DEC-0220, REQ-SLF-003/004/005; docs/mia_os/MIA_OS_CAPABILITY_TRUTH_REGISTRY.md and MIA_OS_CAPABILITY_STATE_MODEL.md). One record per capability (each app), joining what's said about it elsewhere:
 - `core/capability_reminders.py`: Now and then, MIA reminds the person of what they're already capable of doing right now — "did you know you could go do X?" (Zac, 2026-11-08). It isn't a new task and it isn't a value to live up to: it's a subtle redirect that meets him where he is — the gentle reminder that the ability is already i
 - `core/carpentry.py`: Carpentry, the first of Trade Master's apprentice programs (DEC-0149; Zac, 2026-11-08: "She should become a Trade master and be able to teach an entry level Apprentice"). A learning path on core/paths.py's method, the same as guitar (core/guitar.py): stages of lessons, each with steps, why and what 
-- `core/catch_actions.py`: His catch log from the screen and by voice (core/catch_log.py; DEC-0125, both ways): the action `catch.log` (Expeditions, Log A Catch) and the tools `log_catch` ("caught an 18 inch bass on a jig at the pond") and `whats_biting` ("what's been biting?"). Taking one back is "undo that".
+- `core/catch_actions.py`: His catch log from the screen and by voice (core/catch_log.py; DEC-0125, both ways): the action `catch.log` (Expeditions, Log A Catch) and the tools `log_catch` ("caught an 18 inch bass on a jig at the pond") and `whats_biting` ("what's been biting?"). Taking one back is "undo that". `parse(text)` r
 - `core/catch_log.py`: His fishing (Jarvis brainstorm, round 11: knowledgeable about his hobbies; fishing is one of his own, docs/VISION.md): each fish he catches kept, and what his own catches say about what's biting.
 - `core/change_history.py`: The lasting history of what MIA changed, with undo by time and subject (prompt 23's review, UI-3; DEC-0188; REQ-TRU-001, REQ-TRU-002; `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` sections 3 and 14). "Undo that" (core/undo_log.py) keeps the last 20 changes in memory, so it's for "oops, just 
 - `core/character_stats.py`: Real character stats (DEC-0028, the game layer's fourth piece): six RPG attributes, each 1 to 20, made from what the person has really done. Every point says where it came from.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-761 files, 108,513 lines; 8,965 of 9,032 classes and functions documented
+762 files, 108,558 lines; 8,968 of 9,035 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1252,6 +1252,7 @@
 - `tests/test_first_aid_floor_never_misses.py`: Every real emergency phrasing the reviews found (2026-11-25, the sixth to ninth) reaches the emergency floor (core/first_aid_floor.detect). Narrowing its words to quiet a false alarm had twice silenced real ones ("grandma fell off the horse and isn't breathing", "dad has collapsed", "she choked at s
 - `tests/test_first_boot.py`: Meeting MIA (core/first_boot.py): each person's own progress, resumable, skippable, in their own name.
 - `tests/test_fishing_path.py`: Fishing basics (core/fishing_path.py, 2026-11-25): the course is registered with its stages and checks; its counted checks read his own catch log (a catch, a species); "what size hook for bass?" and "how do I tie a palomar knot?" are answered from its lessons, never a wall hook or the fish tank. Sol
+- `tests/test_fishing_thread.py`: The fishing conversation check's fixes (2026-11-26): a catch said whole read in code (one 3 pound bass, never three bass), "when's the best time to go back?" after her catch reply, and spending on fishing gear from the expenses that name it.
 - `tests/test_fishing_times.py`: "When's the best time to fish?" (core/fishing_times.py): dawn and dusk around the real sunrise and sunset, the moon overhead and underfoot about twelve and a half hours apart, moonrise and moonset as the minors, the phase said near a new or full moon, the week's best days, his own log's best time, a
 - `tests/test_fitness.py`: A person's fitness plan and logs (core/fitness_manager.py, DEC-0020, H-0026) and recipe nutrition facts (core/nutrition.py). Placeholder numbers only (DEC-0002).
 - `tests/test_fitness_missions.py`: The fitness plan as missions (core/fitness_missions.py, DEC-0020, H-0026): made once per day and week from the plan, kept in step with the logs (the logs are the truth), ticked through the logs, completing themselves, and letting a missed day go quietly (DEC-0014). Placeholder plan values.

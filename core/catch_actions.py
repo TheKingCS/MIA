@@ -5,6 +5,8 @@ core.catch_actions
 His catch log from the screen and by voice (core/catch_log.py; DEC-0125, both ways): the action `catch.log`
 (Expeditions, Log A Catch) and the tools `log_catch` ("caught an 18 inch bass on a jig at the pond") and
 `whats_biting` ("what's been biting?"). Taking one back is "undo that".
+`parse(text)` reads a catch said whole in code ("I caught a 3 pound bass at the pond this morning": the conversation
+check, 2026-11-26, where the model logged three bass), the count, size, place and bait only as said.
 """
 
 from __future__ import annotations
@@ -13,6 +15,42 @@ from core.actions import ACTION_TYPES, ActionError, ActionType
 from core.assistant_actions import AssistantAction
 
 FIELDS = ("species", "length", "weight", "where", "bait", "kept")
+
+
+import re  # noqa: E402
+
+_COUNTS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
+           "nine": 9, "ten": 10}
+_SPECIES = (r"(?:(?:largemouth|smallmouth|spotted|striped|white|rock|rainbow|brown|brook|lake|channel|flathead|blue|"
+            r"yellow|black|white)\s+)?(?:bass|trout|catfish|bluegill|crappie|pike|perch|walleye|salmon|carp|muskie|musky|"
+            r"sunfish|bream|panfish|cat|gill)")
+_CATCH = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:caught|landed|reeled in|got)\s+(?P<count>an?|one|two|three|four|five|six|seven|"
+                    r"eight|nine|ten|\d{1,2})\s+(?:(?P<size>\d+(?:\.\d+)?)\s*(?:-\s*)?(?P<unit>pounds?|lbs?|pound|inch(?:es)?|"
+                    r"in|\")\s+)?(?P<species>" + _SPECIES + r")(?:es|s)?(?:\s+(?:at|in|on|from|off)\s+(?:the\s+|my\s+)"
+                    r"(?P<where>[\w' -]{2,30}?))?(?:\s+(?:on|with)\s+an?\s+(?P<bait>[\w' -]{2,30}?))?(?:\s+(?:this "
+                    r"(?:morning|afternoon|evening)|tonight|today|just now|earlier))?\s*[.!]*\s*$", re.I)
+
+
+def parse(text: str):
+    """Pure logic. A catch said whole as the log_catch tool's arguments ({species, count, length or weight, where,
+    bait}), or None: never a day gone ("yesterday" isn't kept as one), a question, or a size that isn't the fish's."""
+    found = _CATCH.match(str(text or "").replace("\u2019", "'"))
+    if not found or "?" in text:
+        return None
+    count = found.group("count").lower()
+    args = {"species": " ".join(found.group("species").lower().split()),
+            "count": _COUNTS.get(count) or int(count)}
+    if found.group("size"):
+        size = float(found.group("size"))
+        if args["count"] != 1:
+            return None  # "two 3 pound bass": whose size? the model's to ask
+        unit = found.group("unit").lower()
+        args["weight" if unit.startswith(("p", "l")) else "length"] = size
+    if found.group("where"):
+        args["where"] = found.group("where").strip()
+    if found.group("bait"):
+        args["bait"] = found.group("bait").strip()
+    return args
 
 
 def _describe(context, params) -> str:

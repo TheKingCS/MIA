@@ -19,6 +19,9 @@ yet" a made-up forecast). Each ask is known by its own words in her last message
   cost?" asks the size, and "add it to my projects" adds it (the conversation check, 2026-11-26: the size had gone to
   a running-costs plan's guess, and "add it" nowhere).
 
+- after a catch she logged ("... fish logged in all"), "when's the best time to go back?" is the fishing times
+  (best_time_to_fish).
+
 Anything else is None, and the turn goes on as if she hadn't asked. `reply(context, last_reply, prompt)` is the one
 call (core/assistant_turn._follow_through_reply).
 """
@@ -46,6 +49,10 @@ _BUILD_COST = re.compile(r"^\s*(?:and\s+|so\s+)?(?:how much\s+(?:would|will|does
 _BUILD_ADD = re.compile(r"^\s*(?:ok(?:ay)?,?\s+|great,?\s+|yes,?\s+)?(?:please\s+)?(?:(?:add|put)\s+(?:it|that|this)\s+"
                         r"(?:to|in|on)\s+(?:my|the)\s+(?:projects?|project list)|make\s+(?:it|that|this)\s+(?:a|into a)\s+"
                         r"project)(?:\s+please)?\s*[.!]*\s*$", re.I)
+_AFTER_CATCH = re.compile(r"\b\d+ fish logged in all\b|\bLogged an? [\w' -]+? (?:at|in) |\bLogged \d+ [\w' -]+?\.", re.I)
+_GO_BACK = re.compile(r"^\s*(?:so\s+|and\s+)?(?:when(?:'s| is) (?:the )?best (?:time|day) to go (?:back|again|fishing)|when "
+                      r"should (?:i|we) go (?:back|again|fishing)|when (?:can|could) (?:i|we) go back)(?: out)?(?: there)?\s*"
+                      r"[?.!]*\s*$", re.I)
 _LUMBER = {(2, 2), (2, 3), (2, 4), (2, 6), (2, 8), (2, 10), (2, 12), (4, 4), (4, 6), (6, 6), (1, 2), (1, 4), (1, 6),
            (1, 8)}  # nominal lumber, never a build's size ("what about a 2 by 4?")
 _FEET = re.compile(r"^\s*(?:(?:ok(?:ay)?|so|and|maybe|about|say|make it|what about|how about),?\s+)*(?P<n>\d+(?:\.\d+)?)\s*"
@@ -73,7 +80,8 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
     that answer. `recent` is her last few replies, newest last: the build she offered is found there too, so "add it
     to my projects" after its materials list still means the shed, but only when every reply since was the build's
     own thread; a board's size ("a 2 by 4") is never the build's, a fence takes its feet, and a project of that name
-    already kept is said so, never added twice (the Fable review)."""
+    already kept is said so, never added twice (the Fable review). After a catch she logged, "when's the best time to
+    go back?" is the fishing times."""
     asked, said = str(last_reply or ""), str(prompt or "").strip()
     if not asked or not said or len(said) > 60:
         return None
@@ -103,6 +111,9 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
 
             kept = f"{kept} {generator_runtime(context, fuel.group(1))}"
         return kept
+    if _AFTER_CATCH.search(asked) and _GO_BACK.match(said):
+        actions = getattr(context, "assistant_actions", None)
+        return actions.execute(context, "best_time_to_fish", {"when": "this week"}) if actions is not None else None
     build = _BUILD.search(asked)
     if build is None and _BUILD_ADD.match(said):  # "add it" after its list: an older offer, only along its own thread
         for i in range(len(recent) - 1, max(-1, len(recent) - 4), -1):

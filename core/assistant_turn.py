@@ -1685,7 +1685,8 @@ def _own_tool_reply(context, prompt: str):
     something" a lesson from her own courses (core/teach_something), "did I spend more this month than last month?" the
     months side by side (core/money_periods.compare), "what's my best-selling product?" by units sold
     (core/money_periods.best_sellers), "what do I need from the hardware store?" his
-    projects' open needs (never a guess from his expenses), "what's overdue?" everything overdue on his list
+    projects' open needs (never a guess from his expenses), "I caught a 3 pound bass at the pond" one catch, as said (core/catch_actions.parse), "what's overdue?" everything
+    overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
     (core/project_status.whole_cost), "how's the shed coming along?" that project's picture
     (core/project_status, only for a project his words name whole), "what should I be doing on the homestead this
@@ -1955,6 +1956,17 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't read his projects' needs")
             return None
+    try:  # "I caught a 3 pound bass at the pond": the catch as said, in code (core/catch_actions.parse)
+        from core import catch_actions
+
+        caught = catch_actions.parse(said)
+    except Exception:
+        log.exception("Couldn't read the catch")
+        caught = None
+    if caught is not None:
+        actions = getattr(context, "assistant_actions", None)
+        if actions is not None:
+            return actions.execute(context, "log_catch", caught)
     if _OVERDUE.match(said):  # "what's overdue?": his whole list's overdue (core/today.overdue_said)
         from core import today as _today
 
@@ -2258,7 +2270,8 @@ def _spent_on_reply(context, prompt: str):
     week, yesterday, last month, in October...). None when the
     words name no category, or there's no budget.
     "Am I over budget anywhere?" is his budgets, each spent against its target (budget_left, `_OVER_BUDGET`).
-    A period it can't read ("last week") or two things are the model's; "so far" is all of it."""
+    A period it can't read ("last week") or two things are the model's; "so far" is all of it. A thing no category
+    names ("fishing gear") is the expenses whose description names it (`_spent_by_words`), this year unless said."""
     if _OVER_BUDGET.match(prompt):  # "am I over budget anywhere?": his budgets, from budget_left (the live sweep)
         try:
             return context.assistant_actions.execute(context, "budget_left", {})
@@ -2280,9 +2293,9 @@ def _spent_on_reply(context, prompt: str):
         return None  # a period it doesn't read ("last week"), or two things: the model's (the eighteenth review)
     category = next((c for c in EXPENSE_CATEGORIES if c.lower() == what.lower()), None)
     category = category or next((c for c, words in _SPENT_ON if re.search(words, what, re.I)), None)
-    if category is None:
-        return None
     today = _date.today()
+    if category is None:  # "fishing gear": the expenses whose own description names it (the conversation check)
+        return _spent_by_words(book, what, found.group("when") or "this year", today)
     when = (found.group("when") or "this month").lower()
     if when == "so far":
         start, end, said = None, today, "so far"
@@ -2298,6 +2311,33 @@ def _spent_on_reply(context, prompt: str):
     if not spent:
         return f"Nothing logged under {category} {said}."
     return f"{money(spent)} on {category} {said}, from what you've logged."
+
+
+_GENERIC = {"gear", "stuff", "things", "supplies", "equipment", "items", "the", "my", "our", "a", "some", "new"}
+
+
+def _spent_by_words(book, what: str, when: str, today):
+    """His household's expenses in the period whose description names the thing ("fishing" for "fishing gear": the
+    generic words left out), said with how many; None when the thing has no word to look for."""
+    from core.money_periods import period
+    from core.region import money
+
+    words = [w for w in re.findall(r"[a-z]{3,}", what.lower()) if w not in _GENERIC]
+    if not words or not hasattr(book, "all_expenses"):
+        return None
+    if when.lower() == "so far":
+        start, end, said = None, today, "so far"
+    else:
+        start, end, said = period(when, today) or (today.replace(month=1, day=1), today, "this year")
+    stems = [w[:-1] if w.endswith("s") and len(w) > 4 else w for w in words]
+    hits = [e for e in book.all_expenses() if not getattr(e, "entity_id", "")
+            and (start is None or start.isoformat() <= str(e.date)[:10]) and str(e.date)[:10] <= end.isoformat()
+            and all(s in str(e.description or "").lower() for s in stems)]
+    if not hits:
+        return (f"Nothing logged {said} with \"{' '.join(words)}\" in what it was for, and no budget category is "
+                f"{what}. Tell me as you buy (\"I spent $30 on a fishing reel\") and I'll keep count.")
+    total = sum(e.amount for e in hits)
+    return f"{money(total)} {said} on {what}, from {len(hits)} expense{'s' if len(hits) != 1 else ''} that name it."
 
 
 def _materials_reply(context, prompt: str):
