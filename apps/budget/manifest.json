@@ -190,7 +190,8 @@
     },
     "background": [
       "budget_nudge",
-      "finance_snapshots"
+      "finance_snapshots",
+      "money_pulse"
     ]
   }
 }

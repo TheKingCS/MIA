@@ -62,6 +62,8 @@ REASONS: dict[str, tuple[str, str]] = {
                 "move far from their normal, like the hens laying much less, I say so with what to check, once a week"),
     "garden_week": ("this week in the garden", "your confirmed garden plans have dates (from your frost dates): "
                     "once a week I say what falls in the coming seven days, so a seed-starting day doesn't slip by"),
+    "money_pulse": ("your money this week", "on Sundays I say in a line what's drifting over your usual spending, "
+                    "what's due in the next seven days and the tightest week ahead, all from your own budget"),
     "market_eve": ("the day before a market", "you set a market day: the day before, I say what to bring from what "
                    "usually sells at yours, and what's short"),
     "evening_wrap": ("the evening wrap", "you said yes to it (DEC-0292): once an evening, what got done today and "

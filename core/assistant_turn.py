@@ -1274,6 +1274,9 @@ _HOMESTEAD_HEALTH = re.compile(r"^\s*(?:how(?:'s| is) (?:the |my |our )?homestea
                                r"on what we have))?|how long (?:could|can|would|will) i (?:last|hold out|make it) "
                                r"(?:here|at home|on what (?:we|i) have)|how many days (?:could|can|will) we last)"
                                r"\s*[?.!]*\s*$", re.I)
+_MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?money pulse|how(?:'s| is) (?:my )?money "
+                          r"(?:this week|looking|doing)|how(?:'s| is) my money this week looking|how am i doing (?:on|with) "
+                          r"money this week)\s*[?.!]*\s*$", re.I)
 
 
 def _own_tool_reply(context, prompt: str):
@@ -1281,8 +1284,8 @@ def _own_tool_reply(context, prompt: str):
     aren't my hens laying?" was asked about stress, "how much feed do I have left?" asked what feed, "should I water
     the garden?" said there was no garden, and "how do I can tomatoes?" got back "How to can tomatoes."):
     why_hens_not_laying, should_i_water, get_eggs (its feed runway) and canning_time; and what she may do on her own,
-    her grants (list_grants). "How's the homestead?" is its days in one line (core/homestead_health). None
-    otherwise."""
+    her grants (list_grants). "How's the homestead?" is its days in one line (core/homestead_health), "how's my
+    money this week?" its pulse (core/money_pulse). None otherwise."""
     said = prompt.replace("’", "'")
     if _HOMESTEAD_HEALTH.match(said):  # "how's the homestead?": its days in one line (core/homestead_health)
         from core import homestead_health
@@ -1291,6 +1294,14 @@ def _own_tool_reply(context, prompt: str):
             return homestead_health.line(context)
         except Exception:
             log.exception("Couldn't say the homestead's health")
+            return None
+    if _MONEY_PULSE.match(said):  # "how's my money this week?": its pulse in a line (core/money_pulse)
+        from core import money_pulse
+
+        try:
+            return money_pulse.say(context)
+        except Exception:
+            log.exception("Couldn't say the money pulse")
             return None
     actions = getattr(context, "assistant_actions", None)
     if actions is None:

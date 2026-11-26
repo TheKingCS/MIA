@@ -141,6 +141,7 @@ DAILY_CHECKS: tuple[tuple[str, str], ...] = (
     ("weather_watch", "_check_weather_watch"),
     ("unusual", "_check_unusual"),
     ("garden_week", "_check_garden_week"),
+    ("money_pulse", "_check_money_pulse"),
     ("market_eve", "_check_market_eve"),
     ("evening_wrap", "_check_evening_wrap"),
     ("morning_briefing", "_check_morning_briefing"),
@@ -410,6 +411,12 @@ class BackgroundJobs:
         from core import unusual
 
         self._offers.extend(unusual.offer(self.context, now))
+
+    def _check_money_pulse(self, now: datetime, today_iso: str) -> None:
+        """His money this week in a line (core/money_pulse.py): on Sundays, once a week, through the gate."""
+        from core import money_pulse
+
+        self._offers.extend(money_pulse.offer(self.context, now))
 
     def _check_garden_week(self, now: datetime, today_iso: str) -> None:
         """This week in the garden (core/garden_week.py): his garden plans' steps in the next seven days, once a week,
