@@ -90,6 +90,16 @@ CORPUS = {
         ["What's my next guitar lesson?", "Ok, start it"],
         ["How many eggs did the hens lay this week?", "Is that normal?"],
     ],
+    "followups2": [
+        ["How much feed do I have left?", "How about water?"],
+        ["What's my net worth?", "How do I raise it?"],
+        ["I sold 3 cutting boards for $120", "How many do I have left?"],
+        ["How do I tune my guitar?", "What's next after that?"],
+        ["What's the square footage of a 12 by 16 shed?", "And a 10 by 12?"],
+        ["How many days until Christmas?", "And until New Year's?"],
+        ["What can you do on your own?", "Why not?"],
+        ["I'm thinking about building a chicken coop", "What would it cost?", "How long would it take?"],
+    ],
     "conversation": [
         ["I'm thinking about getting goats", "What breed would be good for milk?", "How much space do they need?",
          "Thanks, that's helpful"],

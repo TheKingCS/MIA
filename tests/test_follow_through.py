@@ -21,6 +21,18 @@ def test_the_follow_up_is_joined_to_his_last_question():
     assert follow_through.merged("What's the weather tomorrow?", "the garden") is None
     assert follow_through.merged("cancel the dentist reminder", "today") is None, "never a command re-run"
     assert follow_through.merged("How much is my truck loan?", "the mortgage") == "How much do I owe on my mortgage?"
+    assert follow_through.merged("How much feed do I have left?", "water") == "How much water do I have left?"
+    assert follow_through.merged("How many days until Christmas?", "until New Year's") == \
+        "How many days until New Year's?"
+    assert follow_through.merged("What's the square footage of a 12 by 16 shed?", "a 10 by 12") == \
+        "What's the square footage of a 10 by 12 shed?"
+
+
+def test_thinking_of_building_offers_what_she_can_work_out():
+    said = assistant_turn._own_tool_reply(SimpleNamespace(), "I'm thinking about building a chicken coop")
+    assert said.startswith("Good project. I can work out a chicken coop's materials")
+    assert 'Say "materials for a 4 by 8 chicken coop" and I\'ll do it' in said
+    assert assistant_turn._own_tool_reply(SimpleNamespace(), "I'm thinking about building a business") is None
 
 
 def test_and_the_card_after_the_truck_loan_reads_his_card():

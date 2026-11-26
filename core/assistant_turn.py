@@ -1379,6 +1379,9 @@ _DUE_MONTH = re.compile(r"^\s*(?:hey mia,? )?what(?:'s| is| bills are| bills do 
                         r"month)\s*[?.!]*\s*$", re.I)
 _NEED_FOR = re.compile(r"^\s*(?:hey mia,? )?what (?:do|would) (?:i|we) (?:still )?need (?:for|to make|to cook) (?:the |my |a "
                        r"|that )?(?P<dish>[\w' -]{2,40}?)\s*[?.!]*\s*$", re.I)
+_THINKING_OF_BUILDING = re.compile(r"^\s*(?:hey mia,? )?(?:i'?m|i am|we'?re|we are) (?:thinking (?:about|of)|planning(?: on| to)?|"
+                                   r"wanting to|going to|gonna) (?:build(?:ing)?|put(?:ting)? up|mak(?:e|ing)) (?:a |an |"
+                                   r"some )?(?P<what>[\w' -]{3,40}?)\s*[.!?]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1416,7 +1419,8 @@ def _own_tool_reply(context, prompt: str):
     off the card or the truck first?" his own debts compared (get_debt_payoff_plan), his reminders listed and one
     cancelled by its words (never all on one sentence), "good morning" back in kind with the day, and "what did I do
     yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
-    (core/assistant_today_actions.due_through), "what do I need for the chili?" a saved recipe's missing
+    (core/assistant_today_actions.due_through), "I'm thinking about building a chicken coop" what she can work
+    out for it (core/build_calcs's structures), "what do I need for the chili?" a saved recipe's missing
     ingredients (core/assistant_domain_actions.needs_for; anything not a recipe of his is the model's), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
@@ -1517,6 +1521,19 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't answer about reminders")
             return None
+    building = _THINKING_OF_BUILDING.match(said)
+    if building:  # "I'm thinking about building a chicken coop": what she can work out for it (core/build_calcs)
+        from core.assistant_plan_actions import STRUCTURES
+
+        what = building.group("what").lower()
+        kind = next((names[0] for names, _calc in STRUCTURES if any(re.search(rf"\b{re.escape(n)}\b", what)
+                                                                      for n in names)), None)
+        if kind:
+            example = {"chicken coop": "a 4 by 8 chicken coop", "raised bed": "a 4 by 8 raised bed",
+                       "deck": "a 12 by 16 deck", "fence": "100 feet of privacy fence"}.get(kind, f"a {kind}")
+            return (f"Good project. I can work out a {kind}'s materials and cuts at your size, what they'd cost from "
+                    f"your prices, and what's already on hand. Say \"materials for {example}\" and I'll do it, or give "
+                    f"me your size.")
     need = _NEED_FOR.match(said)
     if need:  # "what do I need for the chili?": a saved recipe's missing ingredients, never a cure or a build
         from core.assistant_domain_actions import needs_for
@@ -1622,7 +1639,7 @@ def _follow_through_reply(context, conversation, prompt: str):
     "what about this month?" after last month's spending, "and the card?" after the truck loan): his last question
     with the new words in place (the last one that wasn't itself a follow-up, so "and last week?" after "what about
     this month?" still leans on the spending question), answered by the same code answers (`_records_reply`,
-    `_own_tool_reply`). None when it isn't one, can't be joined, or no code answer takes the joined question (the
+    `_own_tool_reply`, `_water_on_hand_reply`, `_everyday_reply`). None when it isn't one, can't be joined, or no code answer takes the joined question (the
     model has it)."""
     from core import follow_through
 
@@ -1638,7 +1655,8 @@ def _follow_through_reply(context, conversation, prompt: str):
     whole = follow_through.merged(asked[-1], x)
     if not whole:
         return None
-    return _records_reply(context, whole) or _own_tool_reply(context, whole)
+    return (_records_reply(context, whole) or _own_tool_reply(context, whole) or _water_on_hand_reply(context, whole)
+            or _everyday_reply(context, whole))
 
 
 def _records_reply(context, prompt: str):

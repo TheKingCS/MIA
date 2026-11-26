@@ -8,8 +8,10 @@ loan's balance got a made-up balance). His last question and the new words are j
 joined question goes to the same code answers that took the first one:
 
 - a period for a period: "what about this month?" after a spending question asks it for this month;
-- a thing for a thing: "and the card?" after "how much is my truck loan?" asks "how much is my card?"; "and the
-  kitchen?" after "how many cutting boards do I have?" never (only the question's own shapes are swapped).
+- a thing for a thing: "and the card?" after "how much is my truck loan?" asks "how much is my card?", "how about
+  water?" after "how much feed do I have left?", "and until New Year's?" after the days until Christmas;
+- a size for a size: "and a 10 by 12?" after "the square footage of a 12 by 16 shed?" (only the question's own
+  shapes are swapped).
 
 `follow_on(text)` is the new words of a follow-up ("what about X", "how about X", "and X"), or None; `merged(prev,
 x)` the whole question, or None when it can't be joined (then the model has it, as before). Only a question is
@@ -31,7 +33,14 @@ _THING_ASKS = (
                r"(?: yet| already| this month)?\s*\??\s*)$", re.I),
     re.compile(r"^(?P<ask>\s*how many )(?P<thing>[\w' -]+?)(?P<end> (?:do|have) (?:i|we) (?:have|got|got left|left)"
                r"(?: in stock| on hand| left)?\s*\??\s*)$", re.I),
+    # "how much feed do I have left?" then "how about water?" (the live sweep, 2026-11-26)
+    re.compile(r"^(?P<ask>\s*how much )(?P<thing>[\w' -]+?)(?P<end> (?:do|have) (?:i|we) (?:have|got)(?: left)?\s*\??\s*)$",
+               re.I),
+    # "how many days until Christmas?" then "and until New Year's?"
+    re.compile(r"^(?P<ask>\s*how (?:many|much) (?:days|weeks|time)(?: is it| are there| left| do i have)? (?:until|till|"
+               r"before) )(?P<thing>[\w' -]+?)(?P<end>\s*\??\s*)$", re.I),
 )
+_SIZE = re.compile(r"\b\d+(?:\.\d+)?\s*(?:by|x)\s*\d+(?:\.\d+)?\b", re.I)
 
 
 def follow_on(text: str) -> Optional[str]:
@@ -42,7 +51,7 @@ def follow_on(text: str) -> Optional[str]:
 
 def merged(prev: str, x: str) -> Optional[str]:
     """Pure logic. His last question with the follow-up's words in place: a period for its period, or a thing for
-    its thing (a debt follow-up kept a debt question); None when they can't be joined or his last words weren't a
+    its thing (a debt follow-up kept a debt question), or a size for its size; None when they can't be joined or his last words weren't a
     question."""
     from core.money_periods import _PERIOD_WORDS, only_period
 
@@ -56,7 +65,10 @@ def merged(prev: str, x: str) -> Optional[str]:
         if _PERIOD_WORDS.search(prev):
             return _PERIOD_WORDS.sub(x, prev, count=1)
         return prev.rstrip(" ?.!") + f" {x}?"
-    thing = re.sub(r"^(?:the|my|our)\s+", "", x, flags=re.I)
+    size = re.fullmatch(r"(?:an? |the )?(\d+(?:\.\d+)?\s*(?:by|x)\s*\d+(?:\.\d+)?)(?: one)?", x, re.I)
+    if size and _SIZE.search(prev):  # "and a 10 by 12?" after "the square footage of a 12 by 16 shed?"
+        return _SIZE.sub(size.group(1), prev, count=1)
+    thing = re.sub(r"^(?:the|my|our|until|till|before)\s+", "", x, flags=re.I)
     for shape in _THING_ASKS:
         found = shape.match(prev)
         if found:
