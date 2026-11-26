@@ -133,4 +133,14 @@ CORPUS = {
         "Give me a summary of my week", "Did I work out this week?", "What's my net worth?",
         "How much do I owe in total?",
     ],
+    "skills": [
+        "How do I purify water from a creek?", "What should I do if the power is out for a week?",
+        "How do I start a fire without matches?", "What's the best way to store potatoes over winter?",
+        "How many chickens do I need for a dozen eggs a day?", "When should I plant garlic?",
+        "How do I sharpen my chainsaw?", "What knot should I use to tie down a load?",
+        "How do I price a custom picnic table?", "Should I form an LLC for my woodworking?",
+        "How much should I set aside for taxes on my shop income?", "What's a good first guitar song?",
+        "How do I keep my pipes from freezing?", "What do I need for a basic first aid kit?",
+        "How long does canned food last?", "What can I automate on the homestead?",
+    ],
 }
