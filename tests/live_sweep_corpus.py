@@ -108,6 +108,14 @@ CORPUS = {
         "Draft an invoice for Sarah for 2 cutting boards", "What sold best this month?",
         "How much did the shop spend on materials?", "Should I raise my prices?", "What's my hourly rate on builds?",
     ],
+    "automate": [
+        "Every Monday remind me to take out the trash", "Remind me on the first of every month to pay rent",
+        "Remind me every other week to mow the lawn", "Every Sunday tell me what's due this week",
+        "When I get paid, remind me to put 10% in savings", "Remind me to check the coop at 7pm every night",
+        "Every month tell me how much I spent", "Tell me every morning if it's going to freeze",
+        "What do you do automatically?", "Stop reminding me to take out the trash",
+        "Can you track my spending automatically?", "Set up a routine for my mornings",
+    ],
     "conversation": [
         ["I'm thinking about getting goats", "What breed would be good for milk?", "How much space do they need?",
          "Thanks, that's helpful"],

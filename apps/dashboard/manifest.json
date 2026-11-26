@@ -39,7 +39,8 @@
       "intents",
       "projects",
       "tasks",
-      "teamwork"
+      "teamwork",
+      "standing_reports"
     ],
     "agents": [],
     "workflows": [],
@@ -103,7 +104,10 @@
       "storm_ready",
       "work_outside_wind_chill_heat_index",
       "log_project_time",
-      "project_hours"
+      "project_hours",
+      "keep_standing_report",
+      "list_standing_reports",
+      "stop_standing_report"
     ],
     "actions": [
       "direction.add",
@@ -127,7 +131,9 @@
       "teamwork.withdraw",
       "team.propose",
       "team.start",
-      "team.stop"
+      "team.stop",
+      "standing_report.add",
+      "standing_report.remove"
     ],
     "tiers": {
       "add_alarm": "act_within_grant",
@@ -208,7 +214,12 @@
       "storm_ready": "observe",
       "work_outside_wind_chill_heat_index": "observe",
       "log_project_time": "act_within_grant",
-      "project_hours": "observe"
+      "project_hours": "observe",
+      "keep_standing_report": "act_within_grant",
+      "list_standing_reports": "observe",
+      "stop_standing_report": "act_within_grant",
+      "standing_report.add": "act_within_grant",
+      "standing_report.remove": "act_within_grant"
     },
     "outside": [
       "whats_in_the_workspace"
@@ -221,7 +232,8 @@
     "stores.write:intents",
     "stores.write:projects",
     "stores.write:tasks",
-    "stores.write:teamwork"
+    "stores.write:teamwork",
+    "stores.write:standing_reports"
   ],
   "dependencies": [],
   "runtime": {
@@ -236,7 +248,8 @@
       "chronicle_issue",
       "weather_watch",
       "evening_wrap",
-      "morning_briefing"
+      "morning_briefing",
+      "standing_reports"
     ]
   }
 }

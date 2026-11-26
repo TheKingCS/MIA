@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1885 files, 397,790 lines; 1885 files describe themselves; 21,586 of 21,729 classes and functions are documented.
+1887 files, 398,344 lines; 1887 files describe themselves; 21,623 of 21,766 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-736 files, 208,207 lines; 10,314 of 10,393 classes and functions documented
+737 files, 208,679 lines; 10,346 of 10,425 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -591,6 +591,7 @@
 - `core/speech_split.py`: Her first words sooner (Jarvis brainstorm 1.1(c); Zac, 2026-11-23: "smooth conversation"). Her answer can't be spoken while the model is still writing it: every answer is checked whole first (invented figures, the canning floor, the emergency floor, the response composer), and those checks stay. Wha
 - `core/spending_pace.py`: "Am I spending more on groceries than usual?" (Jarvis brainstorm, round 11; finance from his own records): a spending category this month so far, at the pace it's going, against his usual month, the average of the last three full months it had spending in (the same normal core/unusual.py learns from
 - `core/spoken_approval.py`: Approving a waiting card by voice, "approve it from now on" included (DEC-0215; Zac, 2026-11-17: "MIA should offer an approve for now or Approve going forward option"; the card's two buttons, said). A quick command (core/quick_commands.py): his own words, matched in code, never the model's, so nothi
+- `core/standing_reports.py`: "Every Sunday tell me what's due this week" (the automation sweep, 2026-11-26: the model answered once and kept nothing): a question he asks her to answer on a schedule, kept in his own folder and answered then, in code, from his records, through the communication gate like any message of hers.
 - `core/starter_actions.py`: Starter sets on the web's Settings (DEC-0125: offered on the desktop's setup and Settings, and by voice, but not on the web). `starters(context)` lists each set with its parts for the page; `starter.add` adds a set, or just the parts ticked, as one action whose Undo takes it all back (core/starter_t
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one:
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing."
@@ -1035,7 +1036,7 @@
 
 ## tests/: the test suite: what each part must do
 
-739 files, 107,421 lines; 8,898 of 8,962 classes and functions documented
+740 files, 107,503 lines; 8,903 of 8,967 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1615,6 +1616,7 @@
 - `tests/test_spending_pace.py`: "Am I spending more on groceries than usual?" (core/spending_pace.py): his words read to a category, this month at its pace against his usual month, the early days said as too early, and the ones running over said when none is named.
 - `tests/test_spent_reply.py`: What he says he spent is recorded (core/assistant_turn._spent_reply; brainstorm round 14's sweep: "I spent $30 on groceries" went to the money month's plan and nothing was kept, "spent 12 dollars on gas" got small talk): an expense in the category its words name, undoable through add_expense; feed w
 - `tests/test_spoken_approval.py`: Approving a waiting card by voice, "approve it from now on" included (core/spoken_approval.py, DEC-0215). *(1 undocumented)*
+- `tests/test_standing_reports.py`: His questions answered on a schedule (core/standing_reports.py, the automation sweep 2026-11-26): read from his words, kept only when her code can answer them, sent on their day once through the gate, stopped by his words.
 - `tests/test_starter_actions.py`: Starter sets from the web's Settings (core/starter_actions.py, DEC-0125): each set with its parts on the page, and starter.add adding a set, or the parts ticked, as one action whose Undo takes it all back.
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice.
 - `tests/test_startup_briefing.py`: Unit tests for core.startup_briefing's pure functions — see gui/home_dashboard.py for how these feed the launch-greeting banner.

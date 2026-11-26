@@ -287,7 +287,9 @@ HIS_WORDS_TOOLS = frozenset({"canning_time", "feed_mix", "bleach_for_water", "me
                              "get_mia_docs", "ask_specialist", "generator_runtime", "hens_for_eggs", "water_to_store",
                              "get_capability",
                              # "tell me when..." is read from his own words in code (core/condition_watch.parse)
-                             "watch_condition", "stop_condition_watch"})
+                             "watch_condition", "stop_condition_watch",
+                             # "every Sunday tell me ..." is read from his own words in code (core/standing_reports)
+                             "keep_standing_report", "stop_standing_report"})
 
 
 def his_words(registry, call: ToolCall, prompt: str) -> dict:

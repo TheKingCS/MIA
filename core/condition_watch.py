@@ -155,7 +155,8 @@ def book(context) -> WatchList:
 
 # ------------------------------------------------------------------ reading his words
 
-_STANDING = re.compile(r"\b(?:whenever|every time|each time|any ?time)\b", re.I)
+_STANDING = re.compile(r"\b(?:whenever|every time|each time|any ?time|every (?:morning|day|night|evening)|each "
+                       r"(?:morning|day|night|evening))\b", re.I)
 _NUMBER = r"(\d+(?:\.\d+)?)"
 _WORD_NUMBERS = {"a dozen": 12, "two dozen": 24, "three dozen": 36, "one": 1, "two": 2, "three": 3, "four": 4,
                  "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}

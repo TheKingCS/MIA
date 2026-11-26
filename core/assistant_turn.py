@@ -1303,10 +1303,11 @@ _HOBBIES = re.compile(r"^\s*(?:(?:how(?:'s| is| are)|hows) (?:my |the )?hobbies(
                       r"(?:my |the )?hobbies' progress|(?:my )?hobby progress|(?:my )?hobbies this month|"
                       r"what have i done for (?:fun|myself|my hobbies) this month)(?:,? mia)?\s*[?.!]*\s*$", re.I)
 _MY_WEEK = re.compile(r"^\s*(?:(?:what(?:'s| is| does)|whats) (?:my|the) week (?:look(?:ing)? like|ahead(?: look like)?)|"
-                      r"what(?:'s| is) (?:on|coming up|happening) (?:for )?this week|(?:my |the )?week ahead|"
+                      r"what(?:'s| is) (?:on|coming up|happening|due) (?:for )?this week|(?:my |the )?week ahead|"
                       r"what(?:'s| is) my week(?: (?:going to|gonna) look like)?)(?:,? mia)?\s*[?.!]*\s*$", re.I)
 _WATCH_ASK = re.compile(r"^\s*(?:please |hey mia,? )?(?:(?:tell|let|warn|alert|ping) me(?: know)?|remind me) "
-                        r"(?:when(?:ever)?|if|once|every time|each time)\b", re.I)
+                        r"(?:(?:every|each) (?:morning|day|night|evening) )?(?:when(?:ever)?|if|once|every time|each time)"
+                        r"\b", re.I)
 _WATCHING = re.compile(r"^\s*what (?:are|r) you (?:watching|keeping an eye on)(?: for)?(?: for me)?\s*[?.!]*\s*$", re.I)
 _TRIP_EVE = re.compile(r"^\s*(?:hey mia,? )?(?:what (?:do i need|should i (?:pack|bring)|do i (?:pack|bring))"
                        r"(?: (?:for|to pack for|to bring (?:on|for)|on) (?:my |the |tomorrow'?s |this )?(?:\w+ )?trip"
@@ -1397,6 +1398,19 @@ _AFFORD_ONCE = re.compile(r"^\s*(?:hey mia,? )?can (?:i|we) afford (?:a |an |to 
 _SIDE_HUSTLE = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| would be) a good side (?:hustle|business|gig|income)(?: for "
                           r"me)?|how (?:can|could) i (?:make|earn) (?:some )?(?:extra|side) (?:money|income|cash)|"
                           r"what (?:side hustle|side business) (?:should|could) i (?:do|start|try))\s*[?.!]*\s*$", re.I)
+_STOP_REMINDING = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:stop|quit|don'?t keep) reminding me (?:to|about|of) "
+                             r"(?P<what>.+?)\s*[.!]*\s*$", re.I)
+_TRACK_SPENDING = re.compile(r"^\s*(?:hey mia,? )?(?:can|could|will) you (?:track|log|watch|keep track of|record) (?:my |our )"
+                             r"(?:spending|expenses|money|purchases)(?: automatically| for me| on your own)?\s*[?.!]*\s*$",
+                             re.I)
+_MORNING_ROUTINE = re.compile(r"^\s*(?:hey mia,? )?(?:can you )?(?:set up|make|build|create|start) (?:a |my )?(?:morning "
+                              r")?routine(?: for (?:my )?mornings?)?\s*[?.!]*\s*$", re.I)
+_WHEN_PAID = re.compile(r"^\s*(?:hey mia,? )?(?:when|whenever|every time) (?:i|we) get paid,? remind me to (?P<what>.+?)"
+                        r"\s*[.!]*\s*$", re.I)
+_MONTHLY_BILL = re.compile(r"^\s*(?:hey mia,? )?remind me (?:on the (?:first|1st|\d{1,2}(?:st|nd|rd|th)) of (?:every|each) "
+                           r"month |every month |monthly )?to (?P<what>pay (?:the |my )?(?:rent|mortgage|[\w ]+? bill))"
+                           r"(?: (?:every|each) month| monthly| on the (?:first|1st|\d{1,2}(?:st|nd|rd|th)))*\s*[.!]*\s*$",
+                           re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1436,7 +1450,9 @@ def _own_tool_reply(context, prompt: str):
     off the card or the truck first?" his own debts compared (get_debt_payoff_plan), his reminders listed and one
     cancelled by its words (never all on one sentence), "good morning" back in kind with the day, and "what did I do
     yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
-    (core/assistant_today_actions.due_through), "I'm thinking about building a chicken coop" what she can work
+    (core/assistant_today_actions.due_through), and the automation asks she can't or mustn't claim (core/reminders_view:
+    "stop reminding me to ..." only stops one that's there, spending tracked automatically, a morning routine,
+    "when I get paid remind me", rent reminded as a bill), "I'm thinking about building a chicken coop" what she can work
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "what's a good side hustle for me?" from what he already sells,
     keeps and owns (core/side_hustle), "what do I need for the chili?" a saved recipe's missing
     ingredients (core/assistant_domain_actions.needs_for; anything not a recipe of his is the model's), "tell me when..." a watch from his whole sentence
@@ -1467,6 +1483,12 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't say the hobbies' progress")
             return None
+    from core import standing_reports
+
+    if standing_reports.parse(said) is not None:  # "every Sunday tell me what's due this week": kept, from his words
+        kept = _run_own(context, "keep_standing_report", {"question": said})
+        if kept:
+            return kept
     if _WATCH_ASK.match(said) or _WATCHING.match(said):  # "tell me when...": a watch read from his whole sentence
         from core import condition_watch                  # (core/condition_watch), never the model's few words
         from core.weather import unit_for
@@ -1585,6 +1607,26 @@ def _own_tool_reply(context, prompt: str):
             found = None
         if found:
             return found
+    for pattern, name in ((_STOP_REMINDING, "stop"), (_TRACK_SPENDING, "track"), (_MORNING_ROUTINE, "routine"),
+                          (_WHEN_PAID, "paid"), (_MONTHLY_BILL, "bill")):
+        found = pattern.match(said)
+        if not found:
+            continue
+        from core import reminders_view  # never a claim she did what she can't (the automation sweep, 2026-11-26)
+
+        try:
+            if name == "stop":
+                return reminders_view.stop_reminding(context, found.group("what"))
+            if name == "track":
+                return reminders_view.TRACK_SPENDING
+            if name == "routine":
+                return reminders_view.MORNING_ROUTINE
+            if name == "paid":
+                return reminders_view.when_paid(context, found.group("what"))
+            return reminders_view.bill_reminder(found.group("what"))
+        except Exception:
+            log.exception("Couldn't answer %s", name)
+            return None
     if _DUE_MONTH.match(said):  # "what's due this month?": the month to its end, overdue first (get_week's sources)
         from core.assistant_today_actions import due_through
 
@@ -2022,7 +2064,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A reminder every day goes on the calendar daily (`_daily_reminder_reply`).
     A plain go-ahead ("ok, start it") to her own 'Say "..." and I'll ...' runs those words
     (core/conversation_state.offered_phrase); a short follow-up to a code answer is made whole
-    (`_follow_through_reply`).
+    (`_follow_through_reply`); "every Monday remind me to ..." is read as "remind me every Monday to ...".
     A reply is taken for a tool call only when it names one of her tools.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
@@ -2044,6 +2086,10 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     add_message(conversation, "user", prompt)
     if offered and prepared.fixed_reply is None:
         prompt = offered
+    day_first = re.match(r"^\s*(?:hey mia,?\s+)?(?:every|each) (monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?,?"
+                         r"\s+remind me to\s+(.+?)\s*[.!]?\s*$", prompt, re.I)
+    if day_first and prepared.fixed_reply is None:  # the weekday first (the automation sweep: it said it had, and hadn't)
+        prompt = f"Remind me every {day_first.group(1)} to {day_first.group(2)}"
     if prepared.fixed_reply is not None:
         add_message(conversation, "assistant", prepared.fixed_reply)
         after_fixed_reply(context, conversation)

@@ -1,0 +1,346 @@
+"""
+core.standing_reports
+=======================
+
+"Every Sunday tell me what's due this week" (the automation sweep, 2026-11-26: the model answered once and kept
+nothing): a question he asks her to answer on a schedule, kept in his own folder and answered then, in code, from
+his records, through the communication gate like any message of hers.
+
+**What can be kept** (`parse`): a schedule (every day or morning, a weekday, every week, every month) and a
+question, from his words, in code: "every Sunday tell me what's due this week", "every month tell me how much I
+spent" (the month just gone), "tell me every Friday how my money looks". Only a question her own code answers
+(`answer`: the read-only code answers of core/assistant_turn, never the model and never one that changes a record),
+checked when it's kept, so a report never says "I don't know". A watch ("tell me every morning if it's going to
+freeze") is core/condition_watch's.
+
+**When** (`due`): from REPORT_HOUR on its day (a weekday, the 1st for a monthly one, every day for a daily one), once
+in its period (its fingerprint names the day, the week or the month).
+
+**The store** (`ReportList`, each person's own, standing_reports.json, sealed at rest and written through
+atomic_write_text so "undo that" restores it): kept and stopped by the actions `standing_report.add` /
+`standing_report.remove` (his own words: act_within_grant), by voice (keep_standing_report, list_standing_reports,
+stop_standing_report) and the daily check `standing_reports` (`offer`), AMBIENT, never paused for dismissals but
+paced like her other messages.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import uuid
+from dataclasses import asdict, dataclass
+from datetime import date, datetime
+from pathlib import Path
+from typing import Optional
+
+from core.actions import ACTION_TYPES, ActionError, ActionType
+from core.atomic_write import atomic_write_text
+from core.data_root import DATA_DIR
+from core.logger import get_logger
+
+log = get_logger(__name__)
+
+FILE_NAME = "standing_reports.json"
+REPORT_HOUR = 7
+DAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+EVERY_WORDS = {"day": "daily", "morning": "daily", "night": "daily", "evening": "daily", "week": "weekly",
+               "month": "monthly", **{d: d for d in DAYS}}
+CAN_KEEP = ("I can send on a schedule what I can answer from your records, like \"every Sunday tell me what's due "
+            "this week\", \"every month tell me how much I spent\" or \"every Friday tell me how my money looks\".")
+
+
+@dataclass
+class Report:
+    """One standing report: its id, when (daily, weekly, monthly or a weekday), the question asked then, his words,
+    when it was kept and the period it was last sent in ("" for never)."""
+    report_id: str
+    every: str
+    question: str
+    words: str = ""
+    created_at: str = ""
+    sent: str = ""
+
+    def to_dict(self) -> dict:
+        """As saved."""
+        return asdict(self)
+
+    @staticmethod
+    def from_dict(raw: dict) -> "Report":
+        """From what was saved; unknown keys left out."""
+        return Report(**{k: raw[k] for k in Report.__dataclass_fields__ if k in raw})
+
+
+class ReportList:
+    """A person's standing reports (standing_reports.json in their own folder). Each is known by what he said
+    (`EPISTEMIC`, DEC-0173 G3)."""
+    EPISTEMIC = {"record": Report, "source": "words", "at": "created_at", "how": "said"}
+
+    def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Loads them from the person's folder (or data/)."""
+        self.context = context
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
+        self._file = self.data_dir / FILE_NAME
+        self.reports: list[Report] = []
+        self._load()
+
+    def _load(self) -> None:
+        """Reads the file, sealed on disk (core/at_rest.open_text); missing or unreadable is none."""
+        from core.at_rest import open_text
+
+        try:
+            raw = json.loads(open_text(self._file)) if self._file.exists() else {}
+            raw = raw if isinstance(raw, dict) else {}
+            self.reports = [Report.from_dict(d) for d in raw.get("reports", []) if isinstance(d, dict)]
+        except (OSError, ValueError, TypeError) as problem:
+            log.warning("Couldn't read the standing reports: %s", problem)
+            self.reports = []
+
+    def _save(self) -> None:
+        """Writes it atomically (so "undo that" can restore it)."""
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._file, json.dumps({"reports": [r.to_dict() for r in self.reports]}, indent=1,
+                                                 ensure_ascii=False))
+
+    def add(self, report: Report) -> Report:
+        """Keeps a new one."""
+        self.reports.append(report)
+        self._save()
+        return report
+
+    def remove(self, report_id: str) -> Report:
+        """Stops one. KeyError for one that isn't there."""
+        found = self.get(report_id)
+        if found is None:
+            raise KeyError(report_id)
+        self.reports = [r for r in self.reports if r.report_id != report_id]
+        self._save()
+        return found
+
+    def get(self, report_id: str) -> Optional[Report]:
+        """One by its id."""
+        return next((r for r in self.reports if r.report_id == report_id), None)
+
+    def mark_sent(self, report_id: str, period: str) -> None:
+        """Her bookkeeping: the period a report was sent in."""
+        found = self.get(report_id)
+        if found is not None:
+            found.sent = period
+            self._save()
+
+
+def book(context) -> ReportList:
+    """The person's standing reports: the context's, else one on the data folder."""
+    found = getattr(context, "standing_reports", None) if context is not None else None
+    return found if found is not None else ReportList(context)
+
+
+# ------------------------------------------------------------------ his words
+
+_KEEP = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:(?:every|each) (?P<every1>" + "|".join(EVERY_WORDS) + r")s?,? "
+                   r"(?:tell|give|send|show) me (?P<what1>.+?)|(?:tell|give|send|show) me (?P<what2>.+?) (?:every|each) "
+                   r"(?P<every2>" + "|".join(EVERY_WORDS) + r")s?)\s*[.!?]*\s*$", re.I)
+_LAST = {"monthly": "last month", "weekly": "last week", "daily": "yesterday"}
+
+
+def _question(what: str, every: str) -> str:
+    """Pure logic. His words as the question asked then ("how much I spent" monthly: "how much did I spend last
+    month?")."""
+    what = what.strip().rstrip("?.! ")
+    spent = re.fullmatch(r"how much (?:i|we) (?:spent|spend|have spent)", what, re.I)
+    if spent:
+        return f"How much did I spend {_LAST.get(every, 'last week')}?"
+    looks = re.fullmatch(r"how (?:my|our) money (?:looks|is looking|is doing)", what, re.I)
+    if looks:
+        return "How's my money this week?"
+    return what[:1].upper() + what[1:] + "?"
+
+
+def parse(words: str) -> Optional[dict]:
+    """Pure logic. {every, question} from his words, or None (a watch, "if ...", is the condition watch's)."""
+    found = _KEEP.match(" ".join((words or "").split()))
+    if not found:
+        return None
+    what = found.group("what1") or found.group("what2")
+    if re.match(r"\s*(?:if|when|whenever)\b", what, re.I):
+        return None  # "tell me every morning if it's going to freeze": a watch
+    every = EVERY_WORDS[(found.group("every1") or found.group("every2")).lower()]
+    return {"every": every, "question": _question(what, every)}
+
+
+def answer(context, question: str) -> Optional[str]:
+    """The question answered by her own read-only code answers (never the model, never a change), or None."""
+    if not re.match(r"\s*(?:what|how|who|which|when|where|did|do|does|is|are|am|have)\b", question or "", re.I):
+        return None
+    from core import assistant_turn
+
+    for route in (assistant_turn._records_reply, assistant_turn._own_tool_reply, assistant_turn._everyday_reply):
+        try:
+            found = route(context, question)
+        except Exception:  # noqa: BLE001 - one that fails is skipped
+            log.exception("Standing report: %s failed", getattr(route, "__name__", route))
+            found = None
+        if found:
+            return found
+    return None
+
+
+def describe(report: Report) -> str:
+    """Pure logic. A report in words: 'every Sunday: "What's due this week?"'."""
+    when = {"daily": "every morning", "weekly": "every Monday", "monthly": "on the 1st of every month"}.get(
+        report.every, f"every {report.every.capitalize()}")
+    return f"{when}: \"{report.question}\""
+
+
+# ------------------------------------------------------------------ sending
+
+def _period(report: Report, today: date) -> str:
+    """The period a report is sent once in, by its schedule ("" when today isn't its day)."""
+    if report.every == "daily":
+        return today.isoformat()
+    if report.every == "monthly":
+        return today.strftime("%Y-%m") if today.day == 1 else ""
+    if report.every == "weekly":
+        year, week, _ = today.isocalendar()
+        return f"{year}-W{week:02d}" if today.weekday() == 0 else ""
+    if report.every in DAYS:
+        return today.isoformat() if DAYS[today.weekday()] == report.every else ""
+    return ""
+
+
+def offer(context, now: datetime) -> list:
+    """The daily check: each report whose day it is, from REPORT_HOUR, once in its period, answered in code and
+    offered through the gate (AMBIENT)."""
+    from core.communication_gate import AMBIENT, Candidate
+
+    if now.hour < REPORT_HOUR:
+        return []
+    reports = book(context)
+    out = []
+    for report in list(reports.reports):
+        period = _period(report, now.date())
+        if not period or report.sent == period:
+            continue
+        said = answer(context, report.question)
+        if not said:
+            continue
+        out.append(Candidate(topic="standing_report", title=report.question, message=said, urgency=AMBIENT,
+                             source="system", fingerprint=f"report-{report.report_id}-{period}"))
+        reports.mark_sent(report.report_id, period)
+    return out
+
+
+# ------------------------------------------------------------------ actions and tools
+
+def _made(context, params) -> Report:
+    """The report the action would keep, from his words; ActionError when it can't be kept."""
+    words = str(params.get("words") or "").strip()
+    found = parse(words)
+    if found is None:
+        raise ActionError("I couldn't tell what to send or when. " + CAN_KEEP)
+    if answer(context, found["question"]) is None:
+        raise ActionError(f"I can't answer \"{found['question']}\" from your records in code, so I won't put it on a "
+                          f"schedule. " + CAN_KEEP)
+    return Report(report_id=str(params.get("report_id") or uuid.uuid4().hex[:8]), every=found["every"],
+                  question=found["question"], words=words[:200], created_at=datetime.now().isoformat(timespec="seconds"))
+
+
+def _name(report: Report) -> str:
+    """Pure logic. A report's short name for stopping it: "monthly", "Sunday"."""
+    return report.every.capitalize() if report.every in DAYS else report.every
+
+
+def _add_describe(context, params) -> str:
+    """What standing_report.add says."""
+    report = _made(context, params)
+    return f"Send you {describe(report)}"
+
+
+def _add_execute(context, params) -> str:
+    """Does standing_report.add."""
+    report = book(context).add(_made(context, params))
+    return f"I'll send you {describe(report)}. Say \"stop the {_name(report)} report\" to stop it."
+
+
+def _remove_describe(context, params) -> str:
+    """What standing_report.remove says."""
+    report = book(context).get(str(params.get("report_id") or ""))
+    if report is None:
+        raise ActionError("That isn't one of your standing reports.")
+    return f"Stop sending {describe(report)}"
+
+
+def _remove_execute(context, params) -> str:
+    """Does standing_report.remove."""
+    report = book(context).remove(str(params.get("report_id") or ""))
+    return f"Stopped: no more {describe(report)}."
+
+
+ACTIONS = {a.kind: a for a in (
+    ActionType("standing_report.add", "Send This On A Schedule", {"words": "what to send and when, in his words"},
+               _add_describe, _add_execute),
+    ActionType("standing_report.remove", "Stop This Report", {"report_id": "one of his reports"},
+               _remove_describe, _remove_execute),
+)}
+ACTION_TYPES.update(ACTIONS)
+
+
+def _keep_tool(context, arguments: dict) -> str:
+    """Tool keep_standing_report: keeps a report from his words."""
+    from core.actions import run_as_tool
+
+    return run_as_tool(context, "standing_report.add", {"words": str(arguments.get("question") or "")})
+
+
+def _list_tool(context, arguments: dict) -> str:
+    """Tool list_standing_reports: what she sends him on a schedule."""
+    reports = book(context).reports
+    if not reports:
+        return "I'm not sending you anything on a schedule. " + CAN_KEEP
+    return "On a schedule I send you: " + "; ".join(describe(r) for r in reports) + "."
+
+
+def _stop_tool(context, arguments: dict) -> str:
+    """Tool stop_standing_report: stops the one his words name (every word of it in its question), or the only one."""
+    from core.actions import run_as_tool
+
+    reports = book(context).reports
+    if not reports:
+        return "I'm not sending you anything on a schedule."
+    words = {w for w in re.findall(r"[a-z]+", str(arguments.get("question") or "").lower()) if len(w) > 2} - {
+        "stop", "the", "report", "reports", "sending", "send", "me", "that", "every", "about"}
+    named = [r for r in reports if words and words <= set(re.findall(r"[a-z]+", r.question.lower())) | {r.every}]
+    chosen = named[0] if len(named) == 1 else (reports[0] if len(reports) == 1 and not named else None)
+    if chosen is None:
+        return "Which one? " + "; ".join(describe(r) for r in reports) + "."
+    return run_as_tool(context, "standing_report.remove", {"report_id": chosen.report_id})
+
+
+def register_standing_report_actions(registry) -> None:
+    """Registers keep_standing_report, list_standing_reports and stop_standing_report."""
+    from core.assistant_actions import AssistantAction
+
+    question = {"type": "object", "properties": {"question": {"type": "string", "description": "his words"}},
+                "required": []}
+    registry.register(AssistantAction(
+        name="keep_standing_report", domain="today",
+        description="Answer one of his questions on a schedule (every Sunday, every month...) from his records and "
+                    "send it to him, like \"every Sunday tell me what's due this week\".",
+        parameters=question, handler=_keep_tool, prompt_arg="question",
+        trigger_phrases=("every sunday tell me", "every monday tell me", "every month tell me", "every week tell me",
+                         "every morning tell me", "every day tell me"),
+        subjects=("report", "schedule"),
+    ))
+    registry.register(AssistantAction(
+        name="list_standing_reports", domain="today",
+        description="What she sends him on a schedule.",
+        parameters={"type": "object", "properties": {}, "required": []}, handler=_list_tool,
+        trigger_phrases=("what do you send me", "my standing reports", "what reports do i get"),
+        subjects=("report", "schedule"),
+    ))
+    registry.register(AssistantAction(
+        name="stop_standing_report", domain="today",
+        description="Stop one of the reports she sends him on a schedule.",
+        parameters=question, handler=_stop_tool, prompt_arg="question",
+        trigger_phrases=("stop the report", "stop sending me", "stop the weekly report", "stop the monthly report"),
+        subjects=("report", "schedule"),
+    ))

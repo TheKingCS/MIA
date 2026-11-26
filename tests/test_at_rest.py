@@ -206,6 +206,7 @@ SEALED_STORES = [
     ("core.price_book", "PriceBook", "price_observations.json"),
     ("core.taught_skills", "SkillBook", "taught_skills.json"),
     ("core.condition_watch", "WatchList", "condition_watches.json"),
+    ("core.standing_reports", "ReportList", "standing_reports.json"),
     ("core.notification_manager", "NotificationManager", "notifications.json"),
     ("core.workout_manager", "WorkoutManager", "workout_exercises.json"),
     ("core.workout_manager", "WorkoutManager", "workout_templates.json"),

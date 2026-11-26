@@ -88,6 +88,7 @@ from core.utility_bills import register_utility_bill_actions
 from core.spending_pace import register_spending_pace_actions
 from core.condition_watch import register_condition_watch_actions
 from core.trip_packing import register_trip_packing_actions
+from core.standing_reports import register_standing_report_actions
 from core.catch_actions import register_catch_actions
 from core.make_next import register_make_next_actions
 from core.project_time import register_project_time_actions
@@ -280,7 +281,7 @@ class AssistantTools:
         fix_jar_count (a batch put up with the wrong count) comes from core/canning_fix.py.
         adjust_greenhouse (the greenhouse node's targets, DEC-0185) comes from core/greenhouse_adjust.py.
         power_outage (the power outage clock) comes from core/outage_actions.py.
-        why_bill_high (why an energy bill was high) comes from core/utility_bills.py; spending_vs_usual from core/spending_pace.py; log_catch and whats_biting from core/catch_actions.py; what_to_make_next from core/make_next.py; work_outside_wind_chill_heat_index from core/outdoor_work.py; tax_set_aside from core/tax_setaside.py; best_time_to_fish from core/fishing_times.py; why_hens_not_laying from core/hen_laying.py; meat_cure from core/meat_cure.py; size_solar from core/solar_size.py; canning_time from core/canning_times.py; rent_collected from core/rent_collected.py; move_calendar_event from core/calendar_move.py; flash_lab, check_lab and lab_board from core/esp32_lab.py; build_along and simulate_lab from core/esp32_sim.py; start_drill from core/drills.py; import_part_spec and part_specs from core/part_specs.py; watch_condition, list_condition_watches and stop_condition_watch ("tell me when...") from core/condition_watch.py; copy_packing_list from core/trip_packing.py.
+        why_bill_high (why an energy bill was high) comes from core/utility_bills.py; spending_vs_usual from core/spending_pace.py; log_catch and whats_biting from core/catch_actions.py; what_to_make_next from core/make_next.py; work_outside_wind_chill_heat_index from core/outdoor_work.py; tax_set_aside from core/tax_setaside.py; best_time_to_fish from core/fishing_times.py; why_hens_not_laying from core/hen_laying.py; meat_cure from core/meat_cure.py; size_solar from core/solar_size.py; canning_time from core/canning_times.py; rent_collected from core/rent_collected.py; move_calendar_event from core/calendar_move.py; flash_lab, check_lab and lab_board from core/esp32_lab.py; build_along and simulate_lab from core/esp32_sim.py; start_drill from core/drills.py; import_part_spec and part_specs from core/part_specs.py; watch_condition, list_condition_watches and stop_condition_watch ("tell me when...") from core/condition_watch.py; copy_packing_list from core/trip_packing.py; keep_standing_report, list_standing_reports and stop_standing_report from core/standing_reports.py.
         The homestead sums too (water to store, generator hours, hens for eggs).
         list_calendar_events takes his words (`prompt_arg`).
         add_expense offers the Animals & Feed category.
@@ -342,6 +343,7 @@ class AssistantTools:
         register_spending_pace_actions(self.context.assistant_actions)  # spending against his usual month
         register_condition_watch_actions(self.context.assistant_actions)  # "tell me when..." in his own world
         register_trip_packing_actions(self.context.assistant_actions)  # a trip's list from the last one
+        register_standing_report_actions(self.context.assistant_actions)  # his questions answered on a schedule
         register_catch_actions(self.context.assistant_actions)  # his catch log
         register_make_next_actions(self.context.assistant_actions)  # what to make next to sell
         register_project_time_actions(self.context.assistant_actions)  # the hours he puts into his projects

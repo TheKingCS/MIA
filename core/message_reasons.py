@@ -68,6 +68,8 @@ REASONS: dict[str, tuple[str, str]] = {
                     "offered to check with you first again; only you take a yes back"),
     "condition_watch": ("something you asked me to watch", "you said \"tell me when...\": I check it in code each "
                         "day and say it when it comes true, once unless you said every time"),
+    "standing_report": ("something you asked me to tell you on a schedule", "you said \"every ... tell me ...\": I "
+                        "answer it from your records on its day; say \"stop the ... report\" to stop it"),
     "trip_eve": ("the day before a trip", "you planned a trip: the afternoon before, I say what isn't packed, "
                  "tomorrow's weather and the checks for that kind of trip"),
     "market_eve": ("the day before a market", "you set a market day: the day before, I say what to bring from what "

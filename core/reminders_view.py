@@ -13,7 +13,10 @@ His reminders and the small everyday turns around them, in code (the live sweep,
 - `greeting`: "good morning" (it had said "I didn't get an answer together for that one"): back in kind, with the
   morning briefing's day when it's morning (core/morning_briefing.briefing);
 - `yesterday`: "what did I do yesterday?" (it had said nothing's kept): yesterday's wins in a few words
-  (core/life_events.WINS, as the evening wrap counts them), never something taken back since.
+  (core/life_events.WINS, as the evening wrap counts them), never something taken back since;
+- the automation asks she mustn't claim (the automation sweep, 2026-11-26): `stop_reminding` stops only one that's
+  there, `TRACK_SPENDING` and `MORNING_ROUTINE` say what she does, `when_paid` his next payday (she can't see pay
+  arrive), and `bill_reminder` rent or a bill as a bill.
 """
 
 from __future__ import annotations
@@ -81,7 +84,8 @@ def _words(text: str) -> set:
 def cancel(context, words: str, today: Optional[date] = None) -> Optional[str]:
     """For "cancel the oil reminder": the one reminder or alarm whose title holds every word he said, cancelled by
     its id through the action contract (undoable); the choice when several fit; for "all", the list and a question.
-    None when no words are left to match or none fits (the model's then)."""
+    None when no words are left to match or none fits (the model's then); with no actions engine here, where to
+    remove it."""
     today = today or date.today()
     if re.search(r"\b(?:all|every|everything)\b", words or "", re.I):
         found = listing(context, today)
@@ -101,7 +105,7 @@ def cancel(context, words: str, today: Optional[date] = None) -> Optional[str]:
     kind, params, name, when = hits[0]
     actions = getattr(context, "actions", None)
     if actions is None:
-        return None
+        return f"I found {name}, but I can't cancel it from here: remove it on the Calendar page."
     from core.actions import ActionError
 
     try:  # his own request, through the action contract: recorded, and "undo that" brings it back
@@ -158,3 +162,56 @@ def yesterday(context, today: Optional[date] = None) -> str:
     totals = life_events.counts(kept)
     said = ", ".join(_count(n, life_events.TYPES.get(t, t)) for t, n in sorted(totals.items(), key=lambda kv: -kv[1])[:6])
     return f"Yesterday ({day:%A}): {said}."
+
+
+TRACK_SPENDING = ("Not from your bank yet: bank linking stays off until MIA's further along, so nothing comes in on its "
+                  "own. What I do keep: what you tell me (\"I spent $30 on groceries\"), receipts you drop in your "
+                  "Inbox (I read the amount and file it), and your bills as they come due. Ask \"how much did I spend "
+                  "last month?\" any time, or say \"every month tell me how much I spent\" and I'll send it on the 1st.")
+MORNING_ROUTINE = ("Two ways. Say \"every morning tell me the weather and my day\" and I'll send that each morning. And "
+                   "for a routine you do, tell me its steps, like \"my morning routine is coffee, feed the hens, check "
+                   "the water\", and I'll keep it and count the mornings you do it.")
+
+
+def stop_reminding(context, words: str, today: Optional[date] = None) -> str:
+    """For "stop reminding me to take out the trash": the reminder his words name cancelled (`cancel`), or that
+    there's none about it, never a claim that one stopped (the automation sweep, 2026-11-26: "I'll stop reminding
+    you" with nothing set)."""
+    found = cancel(context, words, today)
+    if found:
+        return found
+    want = re.sub(r"^(?:the|my|a)\s+", "", (words or "").strip(" .?!"), flags=re.I) if _words(words) else ""
+    listed = listing(context, today)
+    return (f"I don't have a reminder about {want or 'that'}, so there's nothing to stop. " + listed) if want else listed
+
+
+def bill_reminder(what: str) -> str:
+    """For "remind me on the 1st of every month to pay rent": a bill reminds him itself, so he's told how to add it
+    (the automation sweep, 2026-11-26: it had become an alarm at midnight)."""
+    thing = re.sub(r"^\s*pay (?:the |my )?", "", what or "", flags=re.I).strip(" .") or "it"
+    return (f"Add {thing} as a bill and I'll remind you before it's due each month, and count it when you pay: say "
+            f"\"add a bill: {thing}, $amount, due the 1st, monthly\" with its amount.")
+
+
+def when_paid(context, what: str) -> str:
+    """For "when I get paid, remind me to put 10% in savings": she can't see pay arrive (no bank link), so his next
+    payday from his income sources, and how to remind himself on it."""
+    budget = getattr(context, "budget", None)
+    sources = []
+    try:
+        sources = [s for s in budget.all_income_sources() if not getattr(s, "entity_id", "")] if budget else []
+    except Exception:  # noqa: BLE001
+        sources = []
+    from core import money_ahead
+
+    ahead = [m for m in money_ahead.flows([], sources, [], date.today(), 9) if m["amount"] > 0 and m["note"] != "late"]
+    names = {s.name: s for s in sources}
+    dated = [(m["day"], names[m["what"]]) for m in ahead if m["what"] in names]  # the next one from today, never past
+    task = what.strip(" .") or "that"
+    if not dated:
+        return (f"I can't see your pay arrive (no bank is linked), and you don't have a payday in Money yet. Add your "
+                f"pay as income with how often it comes, and I'll put \"{task}\" on your calendar for each payday.")
+    day, source = dated[0]
+    how = getattr(source, "recurrence", "") or "once"
+    return (f"I can't see your pay arrive (no bank is linked), but your {source.name} pay is next due {day:%A, %B} "
+            f"{day.day} ({how}). Say \"remind me on {day:%A} to {task}\" and I'll put it on your calendar.")

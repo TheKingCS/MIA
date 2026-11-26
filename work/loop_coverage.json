@@ -481,6 +481,18 @@
    "status": "none",
    "why": "adding or stopping a watch he asked for, read from his words in code and said back as it's kept; undo takes it back"
   },
+  "check:standing_reports": {
+   "status": "none",
+   "why": "each is his own question, answered in code from his records on its day; the gate's pacing learns from what he opens or dismisses (topic standing_report)"
+  },
+  "store:standing_reports": {
+   "status": "none",
+   "why": "what he asked her to tell him on a schedule, in his words, checked answerable in code when kept; he keeps and stops each"
+  },
+  "action:standing_report": {
+   "status": "none",
+   "why": "keeping or stopping a report he asked for, read from his words in code and said back as it's kept; undo takes it back"
+  },
   "check:trip_eve": {
    "status": "none",
    "why": "his own trip's packing list and the forecast, joined in code, once per trip; the gate's pacing learns from what he opens or dismisses (topic trip_eve)"

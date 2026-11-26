@@ -111,6 +111,7 @@ from core.utility_bills import register_utility_bill_actions
 from core.spending_pace import register_spending_pace_actions
 from core.condition_watch import register_condition_watch_actions
 from core.trip_packing import register_trip_packing_actions
+from core.standing_reports import register_standing_report_actions
 from core.catch_actions import register_catch_actions
 from core.make_next import register_make_next_actions
 from core.project_time import register_project_time_actions
@@ -366,7 +367,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     fix_jar_count (core/canning_fix.py) is among them.
     adjust_greenhouse (core/greenhouse_adjust.py) is among them.
     power_outage (core/outage_actions.py) is among them.
-    why_bill_high (core/utility_bills.py) spending_vs_usual (core/spending_pace.py) the condition watches (core/condition_watch.py) copy_packing_list (core/trip_packing.py) the catch log's tools (core/catch_actions.py) what_to_make_next (core/make_next.py) work_outside_wind_chill_heat_index (core/outdoor_work.py) tax_set_aside
+    why_bill_high (core/utility_bills.py) spending_vs_usual (core/spending_pace.py) the condition watches (core/condition_watch.py) copy_packing_list (core/trip_packing.py) the standing reports (core/standing_reports.py) the catch log's tools (core/catch_actions.py) what_to_make_next (core/make_next.py) work_outside_wind_chill_heat_index (core/outdoor_work.py) tax_set_aside
     (core/tax_setaside.py) best_time_to_fish (core/fishing_times.py) why_hens_not_laying (core/hen_laying.py) meat_cure
     (core/meat_cure.py) size_solar (core/solar_size.py) canning_time (core/canning_times.py) rent_collected
     (core/rent_collected.py) move_calendar_event (core/calendar_move.py) the ESP32 lab bench's tools
@@ -410,6 +411,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_spending_pace_actions(registry)  # spending against his usual month
     register_condition_watch_actions(registry)  # "tell me when..." in his own world
     register_trip_packing_actions(registry)  # a trip's list from the last one
+    register_standing_report_actions(registry)  # his questions answered on a schedule
     register_catch_actions(registry)  # his catch log
     register_make_next_actions(registry)  # what to make next to sell
     register_project_time_actions(registry)  # the hours he puts into his projects

@@ -43,6 +43,18 @@ def test_one_is_cancelled_by_its_words_never_all_at_once():
     assert said.startswith("Your reminders:") and "Which should I cancel?" in said and len(ran) == 1
 
 
+def test_the_automation_asks_are_never_claimed():
+    said = reminders_view.stop_reminding(_context(), "take out the trash", TODAY)
+    assert said.startswith("I don't have a reminder about take out the trash, so there's nothing to stop.")
+    assert reminders_view.bill_reminder("pay rent").startswith("Add rent as a bill")
+    assert "no bank is linked" in reminders_view.when_paid(SimpleNamespace(), "put 10% in savings")
+    ask = lambda w: assistant_turn._own_tool_reply(_context(), w)  # noqa: E731
+    assert ask("Can you track my spending automatically?") == reminders_view.TRACK_SPENDING
+    assert ask("Set up a routine for my mornings") == reminders_view.MORNING_ROUTINE
+    assert ask("Remind me on the first of every month to pay rent").startswith("Add rent as a bill")
+    assert ask("Stop reminding me to take out the trash").startswith("I don't have a reminder about")
+
+
 def test_good_morning_back_in_kind(monkeypatch):
     from core import morning_briefing
 
