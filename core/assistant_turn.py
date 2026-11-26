@@ -1457,7 +1457,7 @@ def _own_tool_reply(context, prompt: str):
     yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
     (core/assistant_today_actions.due_through), and the automation asks she can't or mustn't claim (core/reminders_view:
     "stop reminding me to ..." only stops one that's there, "when did I last change the oil?" from his maintenance
-    record, "remind me in 2 hours to ..." (or "an hour and a half") with the clock worked out, spending tracked automatically, a morning routine,
+    record (or his history: "when did I last work out?"), "remind me in 2 hours to ..." (or "an hour and a half") with the clock worked out, spending tracked automatically, a morning routine,
     "when I get paid remind me", rent reminded as a bill only when said monthly), a report on a schedule kept only
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "what's a good side hustle for me?" from what he already sells,
@@ -1644,7 +1644,8 @@ def _own_tool_reply(context, prompt: str):
         from core import reminders_view
 
         try:
-            found = reminders_view.last_done(context, done.group("what") or done.group("what2"))
+            asked = done.group("what") or done.group("what2")
+            found = reminders_view.last_done(context, asked) or reminders_view.last_in_history(context, asked)
         except Exception:
             log.exception("Couldn't say when it was last done")
             found = None

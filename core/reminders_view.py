@@ -331,3 +331,47 @@ def in_a_while(context, amount: str, unit: str, what: str, now: Optional[datetim
     label = what.strip(" .!?")[:60]
     said = actions.execute(context, "add_alarm", {"label": label[:1].upper() + label[1:], "time": f"{at:%H:%M}"})
     return said + (" That's tomorrow." if at.date() != now.date() else "")  # the alarm's own reply says its time
+
+
+# what "when did I last ..." asks of his history, beyond the maintenance tasks: (his words, the history's kinds)
+HISTORY_ASKS = (
+    (r"work(?:ed)? out|workout|lift(?:ed)?|train(?:ed)?|exercis(?:e|ed)|(?:go|went) to the gym", ("workout_logged",), "worked out"),
+    (r"(?:collect(?:ed)?|g[eo]t|gather(?:ed)?) (?:the |any )?eggs", ("eggs_collected",), "collected eggs"),
+    (r"(?:catch|caught) (?:a |any )?fish|(?:go|went) fishing", ("fish_caught",), "caught a fish"),
+    (r"pa(?:y|id) (?:a |any |the |my )?bills?$", ("bill_paid",), "paid a bill"),
+    (r"harvest(?:ed)?", ("harvest",), "harvested"),
+    (r"plant(?:ed)? (?:anything|something|seeds)", ("batch_planted",), "planted"),
+    (r"cook(?:ed)?|ma(?:k|d)e dinner", ("meal_logged",), "cooked"),
+    (r"finish(?:ed)? a (?:build|project)", ("build_finished", "project_completed"), "finished a build"),
+)
+
+
+def last_in_history(context, words: str, today: Optional[date] = None) -> Optional[str]:
+    """For "when did I last work out?" / "... collect eggs" / "... catch a fish" / "... pay a bill" (the model had
+    guessed): the latest of that kind in his history (core/life_events, never one taken back), its day and what it
+    was; that none is logged when there's none; None when his words aren't one of HISTORY_ASKS."""
+    from core import life_events
+
+    today = today or date.today()
+    said = " ".join((words or "").lower().split())
+    for pattern, types, did in HISTORY_ASKS:
+        if not re.fullmatch(rf"(?:{pattern})(?: today| yesterday)?", said):
+            continue
+        try:
+            events = life_events.events_for(context, types=types + ("undone",))
+        except Exception:  # noqa: BLE001
+            log.exception("Couldn't read the history for %s", did)
+            return None
+        taken_back = life_events.reversed_ids(events)
+        kept = sorted((e for e in events if e.type in types and e.event_id not in taken_back), key=lambda e: e.at)
+        if not kept:
+            return f"I don't have a time you {did} logged yet. Tell me when you do, and I'll keep it."
+        last = kept[-1]
+        when = date.fromisoformat(str(last.at)[:10])
+        ago = (today - when).days
+        since = "" if ago < 0 else " (today)" if ago == 0 else " (yesterday)" if ago == 1 else f" ({ago} days ago)"
+        said_it = (last.summary or "").rstrip(".")
+        same = said_it.lower().startswith(did.split()[0]) or said_it.lower().endswith("a session")
+        what = f": {said_it}" if said_it and not same else ""  # never "worked out: Worked out: a session"
+        return f"You last {did} on {when:%A, %B} {when.day}{since}{what}."
+    return None
