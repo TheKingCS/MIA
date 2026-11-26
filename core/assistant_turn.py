@@ -1667,6 +1667,13 @@ _CUT_BACK = re.compile(r"^\s*(?:hey mia,? )?(?:so\s+|ok(?:ay)?,?\s+)?(?:where|wh
                        r"less|save money)(?: on| back on)?(?: spending| money)?|(?:cut|trim)(?: back)? (?:on )?(?:spending|"
                        r"money|costs|expenses))(?: this month)?\s*[?.!]*\s*$|"
                        r"^\s*(?:hey mia,? )?(?:help me )?(?:cut back|spend less)(?: on spending)?\s*[?.!]*\s*$", re.I)
+# "the tenant paid $1800 today", "rent came in, $1,800": rent on his one rental (record_rental_income), the property
+# named when he has several (the rentals conversation check, 2026-11-26: "I don't have a property called 'the tenant'")
+_RENT_IN = re.compile(r"^\s*(?:hey mia,? )?(?:(?:the |my |our )?(?:tenants?|renters?)(?: (?:at|in|on) (?P<prop>[\w' .-]{2,40}?))? "
+                      r"(?:just )?paid(?: me| us)?(?: the)?(?: rent)?(?: of)?|(?:the )?rent (?:came in|was paid|got paid|is in)(?: "
+                      r"(?:at|for|on) (?P<prop2>[\w' .-]{2,40}?))?,?(?: for| at)?|(?:i |we )?got (?:the )?rent(?: (?:for|from) "
+                      r"(?P<prop3>[\w' .-]{2,40}?))?,?(?: of)?)\s*\$\s?(?P<amt>\d[\d,]*(?:\.\d{1,2})?)(?: (?:in )?rent)?"
+                      r"(?: (?:today|this month|just now))?\s*[.!]*\s*$", re.I)
 _DUE_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is)|whats|what do i have) due (?:today|for today)\s*[?.!]*\s*$|"
                         r"^\s*(?:hey mia,? )?what(?:'s| is) (?:on )?(?:my )?(?:list|plate) (?:for )?today\s*[?.!]*\s*$", re.I)
 _REPORTS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|which) (?:reports|updates) (?:do|will) you (?:send|give) me|what (?:are )?"
@@ -1794,7 +1801,7 @@ def _own_tool_reply(context, prompt: str):
     from his records (core/storm_ready.ready_for), "cancel the dentist appointment" that event of his, or a question first (core/reminders_view.cancel_event), "I practiced for 30 minutes today" a session on
     his
     course (log_practice: the course named whole, never "guitar hero"; unnamed only as "practiced", never a day or a
-    game), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
+    game), "the tenant paid $1800 today" rent on his rental (record_rental_income), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
     me?" and "stop the Sunday one" her standing reports (core/standing_reports), "what's overdue?" everything
     overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
@@ -2171,6 +2178,28 @@ def _own_tool_reply(context, prompt: str):
                                                               "worked_on": practiced.group("on") or ""})
         except Exception:
             log.exception("Couldn't log the practice")
+    rent_in = _RENT_IN.match(said)
+    estate = getattr(context, "real_estate", None)
+    if rent_in and estate is not None:  # rent on his rental, the property named or his only one
+        from core.real_estate_manager import is_sold
+
+        try:
+            named = (rent_in.group("prop") or rent_in.group("prop2") or rent_in.group("prop3") or "").strip()
+            owned = [p for p in estate.all_properties() if not is_sold(p)
+                     and str(getattr(p, "property_type", "")).lower() == "rental"]
+            prop = None
+            if named:
+                fits = [p for p in owned if named.lower() in p.name.lower()]
+                prop = fits[0] if len(fits) == 1 else None
+            elif len(owned) == 1:
+                prop = owned[0]
+            if prop is None and owned:
+                return "Which property? " + ", ".join(p.name for p in owned) + "."
+            if prop is not None:
+                return _run_own(context, "record_rental_income", {"property_name": prop.name,
+                                                                   "amount": float(rent_in.group("amt").replace(",", ""))})
+        except Exception:
+            log.exception("Couldn't record the rent")
     if _DUE_TODAY.match(said):  # "what's due today?": today's things, then what's overdue (core/today.due_today_said)
         from core import today as _today
 

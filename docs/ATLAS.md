@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1924 files, 402,051 lines; 1924 files describe themselves; 21,758 of 21,905 classes and functions are documented.
+1925 files, 402,109 lines; 1925 files describe themselves; 21,760 of 21,907 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,863 lines; 10,390 of 10,469 classes and functions documented
+741 files, 210,892 lines; 10,390 of 10,469 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-773 files, 109,026 lines; 8,994 of 9,062 classes and functions documented
+774 files, 109,055 lines; 8,996 of 9,064 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1560,6 +1560,7 @@
 - `tests/test_reminder_part_of_day.py`: "Remind me to go fishing Saturday morning" keeps its morning (core/assistant_turn._reminder_reply, the fishing conversation check 2026-11-26: the event had no time): a part of the day with no hour is that part's usual time.
 - `tests/test_reminders_view.py`: His reminders and the everyday turns around them (core/reminders_view.py, the live sweep 2026-11-26): listed with the calendar's and the alarms, one cancelled by its words (never all at once), "good morning" back in kind with the day, and yesterday from his history. *(1 undocumented)*
 - `tests/test_rent_collected.py`: "How much rent did I collect this month?" (core/rent_collected.py): this month, last month, this year or a named month read from his words, rent summed by property from his records with the total, and a property that paid before but not yet this month named; no properties says how to add one. "May" 
+- `tests/test_rent_in.py`: "The tenant paid $1800 today" is rent on his one rental (record_rental_income, the rentals conversation check 2026-11-26: "I don't have a property called 'the tenant'"); with several, the one named, else which.
 - `tests/test_repertoire.py`: His songbook (core/repertoire.py): a song learned is dated in his own history, never twice on the same instrument, counted toward the Songbook achievements at once and by a mission objective, and taken back by "undo that".
 - `tests/test_replayed_week.py`: Tests for LS-09, a replayed week (core/replay.py): on a frozen clock, each day's due things are said on their day, nothing twice, and a stop-everything holds her unprompted messages until it lifts.
 - `tests/test_reports_thread.py`: The automation conversation check's fixes (2026-11-26): "every morning tell me what's due today" kept (its question answered in code), "and every Sunday ..." read, "what reports do you send me?" her own list, "stop the Sunday one" that report, never the model's made-up Bank Sync report or a stop it 
