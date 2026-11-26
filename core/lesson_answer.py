@@ -50,6 +50,10 @@ ASKS: dict[tuple, re.Pattern] = {
     # the business (live sweep, 2026-11-25: "what's the markup I should use for my woodworking?" reached the materials
     # calculator, "how do I write a quote for a deck job?" a cut list)
     ("business", "biz_price"): re.compile(r"\b(?:markup|mark-up|margin|mark (?:it|them|things) up)\b"),
+    # "should I form an LLC for my woodworking?" had "I'm not sure what plans you're referring to" (the skills sweep)
+    ("business", "biz_structure"): re.compile(r"\bllcs?\b|\bsole proprietor\w*\b|\bbusiness (?:structure|entity)\b|"
+                                              r"\b(?:form|start|set up|register)\w*\s+(?:a|an|my)\s+(?:business|company)\s+"
+                                              r"(?:legally|officially)\b"),
     ("business", "biz_terms"): re.compile(r"\b(?:write|make|put together|do|draw up)\w*\s+(?:up\s+)?(?:a\s+|an\s+)?"
                                           r"(?:quote|estimate|bid)s?\b"),
     # brainstorm round 19's skills sweep: a load tied down with a bowline, a chainsaw "taken apart" to sharpen, potatoes
@@ -127,7 +131,8 @@ ASKS: dict[tuple, re.Pattern] = {
     ("gardening", "seed_starting"): re.compile(r"\bstart\w*\s+(?:my\s+|the\s+)?(?:\w+\s+)?seeds?\b|\bseeds?\s+"
                                                r"(?:indoors|inside)\b"),
 }
-_HOWTO = re.compile(r"\b(?:what size|which size|what hook|which hook|what knot|which knot|what(?:'s| is) the best knot|"
+_HOWTO = re.compile(r"\b(?:should (?:i|we) (?:form|start|get|make|set up|open|be) (?:a|an|my)\b|is an llc worth|"
+                    r"(?:do|would) (?:i|we) need an llc|llc or (?:a )?sole|sole proprietor or|what size|which size|what hook|which hook|what knot|which knot|what(?:'s| is) the best knot|"
                     r"give me a|show me a|"
                     r"how hot|what temp\w*|where (?:do|should|can|would) (?:i|you)|do i need a|"
                     r"how (?:do|should|would|can|could) (?:i|you|one|we)|how to|what'?s the (?:best|right|safest) "

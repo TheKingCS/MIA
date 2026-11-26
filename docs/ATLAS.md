@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1910 files, 400,677 lines; 1910 files describe themselves; 21,712 of 21,858 classes and functions are documented.
+1910 files, 400,704 lines; 1910 files describe themselves; 21,713 of 21,859 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,104 lines; 10,378 of 10,457 classes and functions documented
+741 files, 210,124 lines; 10,378 of 10,457 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-759 files, 108,411 lines; 8,960 of 9,027 classes and functions documented
+759 files, 108,418 lines; 8,961 of 9,028 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1618,7 +1618,7 @@
 - `tests/test_skill_manager.py`: Unit tests for core.skill_manager.SkillManager — isolates _DATA_DIR _SKILL_DEFINITIONS_FILE/_SKILL_PROGRESS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file. Definitions are written directly to the isolated file per test (not the real seeded data/skill_def
 - `tests/test_skill_patterns.py`: Unit tests for core.skill_patterns — isolates _DATA_DIR for profile/skill/insight files into a tmp_path scratch area, same monkeypatch pattern as test_mission_patterns.py's own isolated_paths.
 - `tests/test_skills_module.py`: Unit tests for modules.skills.module's pure functions, same style as tests/test_missions_module.py (no Qt event loop, no fixtures).
-- `tests/test_skills_sweep.py`: The skills live sweep's fixes (brainstorm round 19, 2026-11-26): her lessons for tying down a load, the chainsaw and storing roots; "the sheet itself shows" never said; a week-long outage asked ahead; garlic from his first fall frost.
+- `tests/test_skills_sweep.py`: The skills live sweep's fixes (brainstorm round 19, 2026-11-26): her lessons for tying down a load, the chainsaw and storing roots, and a business's structure (sole proprietor or LLC); "the sheet itself shows" never said; a week-long outage asked ahead; garlic from his first fall frost.
 - `tests/test_slicing.py`: Slicing for his printer (core/slicing.py): the printer read from Bambu Studio's settings, its stock profiles found, the print time and grams read from the G-code's header, a slice run through Bambu's command line (a stand-in here: never the real program in a test), and plain words when Bambu or a pr
 - `tests/test_smart_closet.py`: Smart Closet (DEC-0162): pieces and outfits, ratings, the day's suggestion worked out in code (weather, occasion, rest, colour), insights, the actions with undo, the page and the voice tools.
 - `tests/test_smart_suggestions.py`: Unit tests for core.smart_suggestions — no Qt, no manager instances, same shape as tests/test_budget_nudges.py.

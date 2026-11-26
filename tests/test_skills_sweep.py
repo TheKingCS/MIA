@@ -3,7 +3,7 @@ tests.test_skills_sweep
 =========================
 
 The skills live sweep's fixes (brainstorm round 19, 2026-11-26): her lessons for tying down a load, the chainsaw and
-storing roots; "the sheet itself shows" never said; a week-long outage asked ahead; garlic from his first fall frost.
+storing roots, and a business's structure (sole proprietor or LLC); "the sheet itself shows" never said; a week-long outage asked ahead; garlic from his first fall frost.
 """
 
 from datetime import date
@@ -42,3 +42,10 @@ def test_garlic_from_his_first_frost():
     late = planting_now.say_garlic(SimpleNamespace(config=config), date(2026, 11, 26))
     assert late.startswith("Garlic's window this fall was about Oct 15 to Nov 12")
     assert "Tell me your first fall frost" in planting_now.say_garlic(SimpleNamespace(), date(2026, 9, 20))
+
+
+def test_the_business_structure_lesson():
+    for words in ("Should I form an LLC for my woodworking?", "do I need an LLC to sell furniture?",
+                  "is an LLC worth it for a small shop?", "LLC or sole proprietor for my shop?"):
+        assert lesson_answer.find(words) == ("business", "biz_structure"), words
+    assert lesson_answer.find("should I get a new truck?") is None

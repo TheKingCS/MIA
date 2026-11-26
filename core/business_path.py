@@ -9,8 +9,8 @@ and growing what sells. Stages of lessons with why and what to watch for, checks
 this is the method, practised on them. Tax and legal rules differ by place: the lessons say to check his own, never
 what they are.
 
-Written from: the US Small Business Administration's guides on pricing, record-keeping and separating business and
-personal finances; general practice, never legal or tax advice. Its XP goes to the Business skill.
+Written from: the US Small Business Administration's guides on pricing, record-keeping, separating business and
+personal finances, and choosing a business structure; general practice, never legal or tax advice. Its XP goes to the Business skill.
 """
 
 from __future__ import annotations
@@ -48,6 +48,21 @@ STAGES: tuple = (
             "Find out the tax and licence rules where you sell, and set money aside for the tax as you go."),
             "Clean records show what's really making money, and make tax time a matter of adding up.",
             ("Mixing the business and household money in one account.", "Records rebuilt from memory at year's end.")),
+        Lesson("biz_structure", "Sole proprietor or LLC", (
+            "Selling on your own, you're a sole proprietor by default: no filing beyond your local licence (and a "
+            "\"doing business as\" name if you use one), and the business's income goes on your own tax return.",
+            "An LLC is filed with your state, with a fee and usually a yearly report. It can keep the business's debts "
+            "and lawsuits off your house and savings, but only while its money, account and records stay its own.",
+            "A one-owner LLC is taxed like a sole proprietor unless you choose otherwise: it doesn't lower the tax by "
+            "itself.",
+            "Liability insurance protects a small shop as much as an LLC does, and often first: ask what a policy for "
+            "what you make costs.",
+            "It's worth looking at once you sell things that could hurt someone (furniture, food, a deck), hire help, "
+            "sign contracts, or earn enough that a lawsuit would hurt. Check your own state's fees and rules, and ask "
+            "an accountant or a lawyer before you file."),
+            "The structure decides what a bad day can reach: the business alone, or your home too.",
+            ("An LLC with the money mixed in with yours may not shield you at all.",
+             "Paying a service a lot to file what your state's own website does for its fee.")),
     ), (
         Check("biz_records", "Keep a week's sales and expenses recorded the day they happen, and tell MIA", "said"),
     )),
