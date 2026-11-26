@@ -114,7 +114,10 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
 - The garden conversation check: "my last frost is April 20" (her own suggested words) is kept as his frost date, with
   what's due from it, undoable (core/planting_now.keep_frost; it had kept nothing), and a bare date after her frost
   ask too; "and peppers?" after a planting question is the planting dates in code (the model's had the wrong date).
-  Fable-reviewed. 8817 passing.
+  Fable-reviewed.
+- The guitar conversation check: "I practiced for 30 minutes today" is a session on his course (it had only been
+  noted), "what should I work on next?" after her course reply is its next step (it had suggested a project).
+  Fable-reviewed. 8818 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
