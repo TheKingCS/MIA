@@ -90,7 +90,7 @@ def merged(prev: str, x: str) -> Optional[str]:
     """Pure logic. His last question with the follow-up's words in place: a period for its period, or a thing for
     its thing (a debt follow-up kept a debt question; a spending one keeps its period, a planting one swaps
     its crop; never a "before ..." or
-    "that"; a sentence of his, `_NOT_A_THING`, never), a bare month as a period, a voltage for its one voltage ("and on 12 volts?"), or a size for the thing's
+    "that"; a sentence of his, `_NOT_A_THING`, never), a bare month as a period, a voltage for its one voltage ("and on 12 volts?", his unit kept), or a size for the thing's
     own (the last) size; None when they can't be joined or his last words weren't a
     question."""
     from core.money_periods import _PERIOD_WORDS, only_period
