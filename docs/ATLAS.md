@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1905 files, 400,041 lines; 1905 files describe themselves; 21,692 of 21,838 classes and functions are documented.
+1905 files, 400,080 lines; 1905 files describe themselves; 21,693 of 21,839 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-740 files, 209,697 lines; 10,370 of 10,449 classes and functions documented
+740 files, 209,726 lines; 10,371 of 10,450 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1039,7 +1039,7 @@
 
 ## tests/: the test suite: what each part must do
 
-755 files, 108,182 lines; 8,948 of 9,015 classes and functions documented
+755 files, 108,192 lines; 8,948 of 9,015 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1439,7 +1439,7 @@
 - `tests/test_no_control_characters.py`: No stray control characters in MIA's code or docs. A shell heredoc turns a regex's \b into a backspace byte, and the pattern then silently matches nothing (it happened in 2026-11 twice: the turn traces' patterns, and the check that keeps passwords out of what MIA remembers by voice).
 - `tests/test_no_flashing_windows.py`: Every program MIA starts is started with no window.
 - `tests/test_no_secrets_in_logs.py`: No secret reaches a log (docs/SECURITY.md step 6). Two checks:
-- `tests/test_no_sheet_words.py`: "The fact sheet" never said aloud in any polished answer (core/response_composer.without_sheet_words, brainstorm round 19's live check: a bare "why?" got "You mentioned a fact sheet, but ...").
+- `tests/test_no_sheet_words.py`: "The fact sheet" never said aloud in the model's answers (core/response_composer.without_sheet_words, brainstorm round 19's live check: a bare "why?" got "You mentioned a fact sheet, but ..."); his own quoted words, a list's items and code stay, and a code answer is never touched.
 - `tests/test_notes_module.py`: Unit test for modules.notes.module.format_entry_row — pure formatting logic, no Qt event loop needed (importing the module only defines widget classes; nothing here instantiates one).
 - `tests/test_notification_manager.py`: Unit tests for core.notification_manager — previously untested (a real, pre-existing gap, not something this file tries to backfill in full). Added now specifically to cover notify()'s new "notifications.enabled" gate (2026-07-15 "ForMIA" design handoff's Quick Bus widget) — the first real, non-cosm
 - `tests/test_obligations.py`: Tax and compliance obligations (DEC-0040): deadlines moved off weekends and holidays, an extension to file never moving the money's date, reminders once each, unverified never shown as confirmed, repeats, and the one next step each Compliance row offers (DEC-0113).

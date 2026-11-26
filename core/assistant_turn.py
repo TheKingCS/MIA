@@ -1393,10 +1393,11 @@ _OWN_TOOLS = (
                                      r"hour (?:on|from) (?:my )?(?:builds|jobs|the shop|the workshop))\s*[?.!]*\s*$", re.I),
      True),
     # "do I have enough firewood?": her own check's words, never rephrased into a question (brainstorm round 19)
-    ("firewood_check", re.compile(r"^(?!.*\b(?:if|neighbou?r'?s?)\b)\s*(?:hey mia,? )?(?:do (?:i|we) have enough (?:fire)?wood"
-                                  r"(?: for (?:the |this )?winter)?|how much (?:fire)?wood do (?:i|we) have(?: left)?|is (?:my|our|"
-                                  r"the) (?:fire)?wood(?:pile)? enough|will (?:my|our|the) (?:fire)?wood(?:pile)? last(?: the "
-                                  r"winter)?)\s*[?.!]*\s*$", re.I), False),
+    # firewood or the woodpile, or wood for the winter: never "how much wood do I have" (his lumber, the Fable review)
+    ("firewood_check", re.compile(r"^(?!.*\b(?:if|neighbou?r'?s?)\b)\s*(?:hey mia,? )?(?:do (?:i|we) have enough (?:firewood|"
+                                  r"wood(?= for (?:the |this )?winter))(?: for (?:the |this )?winter)?|how much firewood do "
+                                  r"(?:i|we) have(?: left)?|is (?:my|our|the) (?:firewood|woodpile) enough|will (?:my|our|the) "
+                                  r"(?:firewood|woodpile) last(?: the winter)?)\s*[?.!]*\s*$", re.I), False),
     ("list_grants", re.compile(r"^\s*what (?:can|may|do|will) you do (?:on your own|by yourself|without (?:asking(?: me)?|"
                                r"me asking))\s*\??\s*$|^\s*what are you allowed to do (?:on your own|by yourself)\s*\??\s*$",
                                re.I), False),
@@ -2393,7 +2394,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     (core/conversation_state.offered_phrase); a short follow-up to a code answer is made whole
     (`_follow_through_reply`); the sentence is put in the shape her routes read (`reshaped`: a greeting before a
     question set aside, "every Saturday morning remind me to ..." as "remind me every Saturday to ... at 8am").
-    A reply is taken for a tool call only when it names one of her tools.
+    A reply is taken for a tool call only when it names one of her tools. The model's "the fact sheet" is never said
+    aloud (response_composer.without_sheet_words, on the model's words only).
     Two logs in one sentence ("I spent $40 on screws and 2 hours on the shed") are each kept by their own code
     (`_two_things_reply`), before a single expense could take the whole sentence.
     """
@@ -2636,11 +2638,12 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         return AssistantTurn(replies=replies, used=used, route="model, tools", tools_offered=offered,
                              tools_called=[c.name for c in calls_to_execute])
 
-    from core.response_composer import polish
+    from core.response_composer import polish, without_sheet_words
 
     # Her own words without the model's habitual "Sure!" first and "let me know" last, on every surface, not
-    # only the phone (docs/CONVERSATION_REVIEW.md). An offer of hers to do something stays.
-    content = with_offer(conversation, polish(reply.content, prompt))
+    # only the phone (docs/CONVERSATION_REVIEW.md), and never "the fact sheet" (her working) said aloud. An offer of
+    # hers to do something stays.
+    content = with_offer(conversation, polish(without_sheet_words(reply.content), prompt))
     from core.claim_check import honest
 
     content = honest(context, prompt, content, keep=not _personal(conversation)

@@ -33,3 +33,6 @@ def test_the_words_reach_the_check():
                   "will my woodpile last the winter?"):
         assert pattern.match(words), words
     assert not pattern.match("do I have enough firewood if it's a cold winter?")
+    for words in ("how much wood do I have?", "do I have enough wood?", "is the wood enough?"):
+        assert not pattern.match(words), words
+    assert pattern.match("do I have enough wood for the winter?")

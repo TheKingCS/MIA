@@ -23,8 +23,8 @@ sentences come first whenever they fit: the model only rewrites an opening
 too long to speak (tried the other way round, the rewrites lost her warmth
 and once added a fact; pc-check, 2026-11-03).
 
-On every surface, a paragraph or sentence the model said twice is said once (`without_repeats`), and "the fact
-sheet" (her own working) is never said aloud (`without_sheet_words`).
+On every surface, a paragraph or sentence the model said twice is said once (`without_repeats`), and the model's
+"the fact sheet" (her own working) is never said aloud (`without_sheet_words`, applied to the model's words only).
 """
 
 from __future__ import annotations
@@ -130,23 +130,49 @@ def without_repeats(text: str) -> str:
     return "\n\n".join(p for p in paragraphs if p.strip())
 
 
+_LIST_MARK = re.compile(r"^\s*(?:[-*\u2022]|\d+[.)])\s")
+
+
+def _sheet_rewrites(text: str) -> str:
+    """Pure logic. "The fact sheet says/doesn't mention/..." said as his records, outside quoted words."""
+    def fix(part: str) -> str:
+        """One stretch outside quotes."""
+        part = re.sub(r"\b(?:the |my )?fact sheet (?:says|shows|lists|suggests) (?:to |that )?(\w)",
+                      lambda m: m.group(1).upper(), part, flags=re.I)  # the sentence starts where the words were
+        part = re.sub(r"\b(?:the |my )?fact sheet (?:doesn'?t|does not) (?:mention|say|show|have|include|list)\b",
+                      "I don't have", part, flags=re.I)
+        part = re.sub(r"\b(?:on|in|from) the fact sheet\b", "in your records", part, flags=re.I)
+        return re.sub(r"\bthe fact sheet\b", "your records", part, flags=re.I)
+
+    pieces = re.split(r'("[^"\n]*"|\u201c[^\u201d\n]*\u201d)', text)
+    return "".join(piece if i % 2 else fix(piece) for i, piece in enumerate(pieces))
+
+
 def without_sheet_words(said: str) -> str:
-    """Pure logic. The answer without her own working said aloud ("the fact sheet says", "the fact sheet doesn't
-    mention": the live sweep, 2026-11-26): a sheet she was given is his records to him. Only "fact sheet" itself, so a
-    balance sheet, a cookie sheet and the rest of the sentence stay as written (the Fable review). A sentence saying
-    he gave or mentioned one ("You mentioned a fact sheet, but ...": brainstorm round 19's live check) goes, when
-    there's anything else."""
-    said = re.sub(r"\b(?:the |my )?fact sheet (?:says|shows|lists|suggests) (?:to |that )?(\w)",
-                  lambda m: m.group(1).upper(), said, flags=re.I)  # the sentence starts where the words were
-    said = re.sub(r"\b(?:the |my )?fact sheet (?:doesn'?t|does not) (?:mention|say|show|have|include|list)\b",
-                  "I don't have", said, flags=re.I)
-    said = re.sub(r"\b(?:on|in|from) the fact sheet\b", "in your records", said, flags=re.I)
-    said = re.sub(r"\bthe fact sheet\b", "your records", said, flags=re.I)
-    if re.search(r"\bfact sheets?\b", said, re.I):
-        kept = [s for s in SENTENCE.findall(said) if not re.search(r"\bfact sheets?\b", s, re.I)]
-        rest = "".join(kept).strip()
-        said = rest if rest else re.sub(r"\ba fact sheet\b", "your records", said, flags=re.I)
-    return said
+    """Pure logic. The model's answer without her own working said aloud ("the fact sheet says", "the fact sheet
+    doesn't mention": the live sweep, 2026-11-26): a sheet she was given is his records to him. Only "fact sheet"
+    itself, so a balance sheet, a cookie sheet and the rest of the sentence stay as written (the Fable review). A
+    sentence still saying one ("You mentioned a fact sheet, but ...": brainstorm round 19's live check) goes when the
+    answer has anything else; never inside quotes, a code block or a list's item (the Fable review: "print the OSHA
+    fact sheet" in his note stays). For the model's words only (core/assistant_turn, core/question_plans), never a
+    code answer's."""
+    out, fenced = [], False
+    for line in (said or "").split("\n"):
+        if line.strip().startswith("```"):
+            fenced = not fenced
+            out.append(line)
+            continue
+        if fenced:
+            out.append(line)
+            continue
+        line = _sheet_rewrites(line)
+        if re.search(r"\bfact sheets?\b", line, re.I) and not _LIST_MARK.match(line) and '"' not in line:
+            kept = "".join(s for s in SENTENCE.findall(line) if not re.search(r"\bfact sheets?\b", s, re.I)).rstrip()
+            if kept or len([x for x in said.split("\n") if x.strip()]) > 1:
+                line = kept
+        out.append(line)
+    result = "\n".join(out).strip()
+    return result or said
 
 
 def polish(text: str, prompt: str = "") -> str:
@@ -158,12 +184,11 @@ def polish(text: str, prompt: str = "") -> str:
     ("I want to learn about tying a bowline.") goes.
     "I don't know what that means." before a real answer goes, and so does the model writing out its own lookup
     ('Tool call: "..." Response: "..."': only the answer stays). "The fact sheet" said aloud never stays
-    (`without_sheet_words`)."""
+    (`without_sheet_words`, for the model's words: core/assistant_turn)."""
     from core.personality import without_copied_example
 
     text = without_copied_example((text or "").strip(), prompt)  # never a humor example's line said as hers
     text = without_repeats(text) or text  # never the same paragraph or sentence twice
-    text = without_sheet_words(text) or text  # her own working ("the fact sheet") is his records to him
     # 'Tool call: "What is the best goat for milk?"  Response: "The best..."' (the live sweep, 2026-11-26): the model
     # wrote out its own lookup; only the answer stays
     framed = re.match(r'^\s*(?:tool call|function call)\s*:\s*(?:"[^"\n]*"\s*|[^\n]*\n\s*)(?:\n\s*)*response\s*:\s*(.+)$',

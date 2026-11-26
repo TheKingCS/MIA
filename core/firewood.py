@@ -124,14 +124,15 @@ _BARE = re.compile(r"^\s*(?:oh,?\s+)?(?:about|around|roughly|maybe|probably|like
 
 def answer_to_ask(context, last_reply: str, text: str) -> Optional[str]:
     """A bare number answering her own question (`ASK`, in her last reply) kept as his winter's figure, then the
-    firewood check against it; None when her last reply didn't ask, or the words aren't a number of cords (1 to 30)."""
+    firewood check against it; None when her last reply didn't ask, or the words aren't a number of cords (a quarter to
+    30)."""
     if ASK not in (last_reply or ""):
         return None
     found = _BARE.match(text or "")
     if not found:
         return None
     cords = float(found.group(1)) * (1 / 3 if found.group(2) else 1)
-    if not 0 < cords <= 30:
+    if not 0.25 <= cords <= 30:
         return None
     from core.assistant_today_actions import _action_set_preparedness
 
