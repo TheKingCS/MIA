@@ -19,6 +19,10 @@ def test_the_shapes():
     assert r("remind me every Saturday morning to collect eggs") == "Remind me every Saturday to collect eggs at 8am"
     assert r("every Sunday evening remind me to plan the week") == "Remind me every Sunday to plan the week at 6pm"
     assert r("remind me every Friday evening to check the oil at 5pm") == "Remind me every Friday to check the oil at 5pm"
+    assert r("every Saturday evening remind me to call mom at 7") == "Remind me every Saturday to call mom at 7pm"
+    assert r("remind me every Sunday afternoon to mow at 3") == "Remind me every Sunday to mow at 3pm"
+    assert r("every Saturday morning remind me to look at the list") == \
+        "Remind me every Saturday to look at the list at 8am"
 
 
 def test_motivation_for_a_task(monkeypatch):
@@ -26,10 +30,12 @@ def test_motivation_for_a_task(monkeypatch):
 
     monkeypatch.setattr(today, "today_items", lambda c, t=None: [])
     shed = SimpleNamespace(name="Shed", time_log=[{"date": "2026-11-20", "hours": 6}])
-    monkeypatch.setattr(project_time, "project_named", lambda c, w, whole=False: shed)
+    seen = []
+    monkeypatch.setattr(project_time, "project_named", lambda c, w, whole=False: seen.append(w) or shed)
     said = motivation.say(SimpleNamespace(), task="finish the shed")
     assert "For the shed: pick the smallest piece you can finish in twenty minutes" in said
-    assert "You've put 6 hours into Shed so far." in said
+    assert "You've put 6 hours into Shed so far." in said and seen == ["the shed"]
+    assert "For the shed:" in motivation.say(SimpleNamespace(), task="work on the shed")
     monkeypatch.setattr(motivation, "say", lambda c, t=None, task="": f"task={task}")
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "I need motivation to finish the shed") == \
         "task=finish the shed"

@@ -1473,7 +1473,7 @@ def reshaped(prompt: str) -> str:
     """Pure logic. A sentence put in the shape her routes read, its meaning kept (the cross-route review,
     2026-11-26): a greeting before a question set aside ("good morning, what's my week look like?" is the question);
     the weekday first ("every Monday remind me to ...") and a part of the day after it ("every Saturday morning")
-    read as "remind me every Saturday to ... at 8am"."""
+    read as "remind me every Saturday to ... at 8am", a bare hour kept in its part of the day (`_with_part`)."""
     said = prompt or ""
     greeted = re.match(r"^\s*(?:good (?:morning|afternoon|evening)|hi|hello|hey|morning)(?:,? mia)?\s*[,!.]+\s*(?P<rest>\S.{5,})$",
                        said, re.I)
@@ -1482,14 +1482,29 @@ def reshaped(prompt: str) -> str:
     first = re.match(rf"^\s*(?:hey mia,?\s+)?(?:every|each) ({_DAYS_RE})s?(?: (morning|afternoon|evening|night))?,?\s+"
                      r"remind me to\s+(.+?)\s*[.!]?\s*$", said, re.I)
     if first:
-        at = f" at {_PART_TIMES[first.group(2).lower()]}" if first.group(2) and " at " not in first.group(3) else ""
-        return f"Remind me every {first.group(1)} to {first.group(3)}{at}"
+        return f"Remind me every {first.group(1)} to {_with_part(first.group(3), first.group(2))}"
     part = re.match(rf"^\s*(?:hey mia,?\s+)?(?:please\s+)?remind me every ({_DAYS_RE}) (morning|afternoon|evening|night)\s+to\s+"
                     r"(.+?)\s*[.!]?\s*$", said, re.I)
     if part:
-        at = "" if re.search(r"\bat \d", part.group(3)) else f" at {_PART_TIMES[part.group(2).lower()]}"
-        return f"Remind me every {part.group(1)} to {part.group(3)}{at}"
+        return f"Remind me every {part.group(1)} to {_with_part(part.group(3), part.group(2))}"
     return said
+
+
+def _with_part(task: str, part: str) -> str:
+    """Pure logic. A task with its part of the day as a time: its default ("at 8am") when it names no hour, or its
+    bare hour made the afternoon's or the evening's ("at 7" on an evening is 7pm); a task with "at noon" or an hour with
+    am or pm as it is (the Fable review, 2026-11-26)."""
+    if not part:
+        return task
+    part = part.lower()
+    if re.search(r"\bat (?:noon|midnight|\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.))\b", task, re.I):
+        return task
+    bare = re.search(r"\bat (\d{1,2})(:\d{2})?\s*$", task)
+    if bare:
+        hour = int(bare.group(1))
+        ampm = "am" if part == "morning" or (part == "night" and hour == 12) else "pm"
+        return task[:bare.start()] + f"at {hour}{bare.group(2) or ''}{ampm}"
+    return f"{task} at {_PART_TIMES[part]}"
 
 
 def _own_tool_reply(context, prompt: str):
