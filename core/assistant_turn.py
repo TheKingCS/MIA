@@ -1549,8 +1549,33 @@ _AFFORD_ONCE = re.compile(r"^\s*(?:hey mia,? )?can (?:i|we) afford (?:to (?:spen
 # "pay the electric bill", "I paid the electric bill", "mark the water bill paid": one of his bills marked paid
 # (mark_bill_paid), only a bill of his by its whole name (the money conversation check: the model had once asked for
 # the bill's amount to add it)
-_BILL_PAID = re.compile(r"^\s*(?:hey mia,? )?(?:ok(?:ay)?,?\s+)?(?:please\s+)?(?:(?:i\s+)?(?:just\s+)?paid|pay|mark)\s+(?:the |my |our )?"
-                        r"(?P<name>[\w&' -]{2,30}?)(?: bill)?(?: as)?(?: paid)?(?: today| this month)?\s*[.!]*\s*$", re.I)
+_BILL_PAID = re.compile(r"^\s*(?:hey mia,? )?(?:ok(?:ay)?,?\s+)?(?:please\s+)?(?:(?P<verb>(?:i\s+)?(?:just\s+)?paid|pay)\s+(?:the |my "
+                        r"|our )?(?P<name>[\w&' -]{2,30}?)(?P<bill> bill)?|mark\s+(?:the |my |our )?(?P<name2>[\w&' -]{2,30}?)"
+                        r"(?P<bill2> bill)?(?: as)? paid)(?: today| this month)?\s*[.!]*\s*$", re.I)
+
+
+def _bill_said(bills, name: str, said_bill: bool):
+    """Pure logic. The bill of his his words name: "the phone bill" is a bill named "Phone Bill" before one named
+    "Phone"; the name alone otherwise (the Fable review)."""
+    from core.assistant_tools import by_name
+
+    if said_bill:
+        return by_name(bills, name + " bill") or by_name(bills, name)
+    return by_name(bills, name) or by_name(bills, name + " bill")
+
+
+def _paid_this_time(bill, today):
+    """Pure logic. The day it was paid when that payment is this time round's (within its period, or ever for a
+    one-off), else None."""
+    from datetime import date as _date
+
+    period = {"weekly": 7, "biweekly": 14, "monthly": 31, "quarterly": 92, "yearly": 366}.get(
+        str(getattr(bill, "recurrence", "") or "").lower())
+    try:
+        paid = _date.fromisoformat(str(getattr(bill, "last_paid_date", "") or "")[:10])
+    except ValueError:
+        return None
+    return paid if period is None or 0 <= (today - paid).days < period else None
 # "how much is left this month?": a money word or a money period said; a bare "how much is left?" is money only after
 # her own money reply (core/her_asks), never after a feed or a loan question (the Fable review)
 _MONEY_LEFT = re.compile(r"^\s*(?:hey mia,? )?(?:and\s+|so\s+|ok(?:ay)?,?\s+)?(?:how much money (?:is|do (?:i|we) have|have (?:i|we) "
@@ -1719,7 +1744,8 @@ def _own_tool_reply(context, prompt: str):
     months side by side (core/money_periods.compare), "what's my best-selling product?" by units sold
     (core/money_periods.best_sellers), "what do I need from the hardware store?" his
     projects' open needs (never a guess from his expenses), "I caught a 3 pound bass at the pond" one catch, as said (core/catch_actions.parse), "how much is left this month?" the month's records after what's due (core/money_periods.afford), "I paid the
-    electric bill" that bill of his marked paid (mark_bill_paid),
+    electric bill" that bill of his marked paid (mark_bill_paid; never twice for one time round, and "pay the electric
+    bill" is what's due and how to mark it, since she pays nothing),
     "what's overdue?" everything
     overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
@@ -1800,12 +1826,22 @@ def _own_tool_reply(context, prompt: str):
     paid_bill = _BILL_PAID.match(said)
     budget = getattr(context, "budget", None)
     if paid_bill and budget is not None and hasattr(budget, "all_bills") and not re.search(r"\$|\d", said):
-        from core.assistant_tools import by_name
+        from datetime import date as _date
 
         try:
-            bill = by_name(budget.all_bills(), paid_bill.group("name")) or by_name(budget.all_bills(),
-                                                                                   paid_bill.group("name") + " bill")
+            name = paid_bill.group("name") or paid_bill.group("name2")
+            bill = _bill_said(budget.all_bills(), name, bool(paid_bill.group("bill") or paid_bill.group("bill2")))
             if bill is not None:
+                already = _paid_this_time(bill, _date.today())
+                if already is not None:  # never a second payment for the same time round (the Fable review)
+                    return f"{bill.name} is already marked paid ({already:%B} {already.day})."
+                if (paid_bill.group("verb") or "").lower().strip() == "pay":  # MIA pays nothing: say what's due
+                    from core.region import money
+
+                    amount = float(getattr(bill, "amount", 0) or 0)
+                    return (f"I can't pay it for you, but I can keep track: {bill.name}"
+                            + (f" is {money(amount)}" if amount else "") + ". Once it's paid, say \"I paid the "
+                            f"{bill.name.lower().replace(' bill', '')} bill\" and I'll mark it.")
                 return context.assistant_actions.execute(context, "mark_bill_paid", {"name": bill.name})
         except Exception:
             log.exception("Couldn't mark the bill paid")

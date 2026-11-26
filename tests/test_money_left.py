@@ -40,9 +40,17 @@ def test_a_bill_of_his_marked_paid():
     bills = [SimpleNamespace(name="Electric"), SimpleNamespace(name="Water Bill")]
     context = SimpleNamespace(budget=SimpleNamespace(all_bills=lambda: bills),
                               assistant_actions=SimpleNamespace(execute=lambda c, n, a: ran.append((n, a)) or "Marked."))
-    for words in ("pay the electric bill", "I paid the electric bill", "mark the water bill paid"):
+    for words in ("I paid the electric bill", "mark the water bill paid"):
         assert assistant_turn._own_tool_reply(context, words) == "Marked.", words
-    assert ran == [("mark_bill_paid", {"name": "Electric"}), ("mark_bill_paid", {"name": "Electric"}),
-                   ("mark_bill_paid", {"name": "Water Bill"})]
-    for words in ("pay attention", "I paid $85 for the electric bill", "pay the plumber"):
+    assert ran == [("mark_bill_paid", {"name": "Electric"}), ("mark_bill_paid", {"name": "Water Bill"})]
+    for words in ("pay attention", "I paid $85 for the electric bill", "pay the plumber", "mark the electric bill"):
         assert assistant_turn._own_tool_reply(context, words) != "Marked.", words
+    said = assistant_turn._own_tool_reply(context, "pay the electric bill")
+    assert said.startswith("I can't pay it for you") and "I paid the electric bill" in said
+    from datetime import date
+
+    bills[0].last_paid_date, bills[0].recurrence = date.today().isoformat(), "monthly"
+    assert assistant_turn._own_tool_reply(context, "I paid the electric bill").startswith("Electric is already marked paid")
+    both = [SimpleNamespace(name="Phone"), SimpleNamespace(name="Phone Bill")]
+    assert assistant_turn._bill_said(both, "phone", True).name == "Phone Bill"
+    assert assistant_turn._bill_said(both, "phone", False).name == "Phone"
