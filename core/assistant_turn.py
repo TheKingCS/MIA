@@ -139,7 +139,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
     A quote from a job's words too (`_job_quote_reply`).
-    A daily reminder too (`_daily_reminder_reply`)."""
+    A daily reminder too (`_daily_reminder_reply`).
+    Two logs in one sentence too (`_two_things_reply`: "$40 on screws and 2 hours on the shed")."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -194,6 +195,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _monthly_reminder_reply(context, prompt)  # "remind me to change the filter every month", as in a turn
     if walked is None:
         walked = _daily_reminder_reply(context, prompt)  # "remind me every morning to ...", as in a turn
+    if walked is None:
+        walked = _two_things_reply(context, prompt)  # "I spent $40 on screws and 2 hours on the shed", as in a turn
     if walked is None:
         walked = _spent_reply(context, prompt)  # "I spent $30 on groceries", as in a turn
     if walked is None:
@@ -627,6 +630,9 @@ def _next_lesson_reply(context, prompt: str):
         return None
 
 
+# "...and 2 hours on the shed" inside what money was for: a second thing, never part of the first (_two_things_reply)
+_AND_HOURS = re.compile(r"\band\s+(?:i\s+\w+(?:\s+in)?\s+)?(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|"
+                        r"eight|half an?)\s*(?:hours?|hrs?|minutes?|mins?)\b", re.I)
 _AMOUNT = r"(?:\$\s?(?P<d>\d[\d,]*(?:\.\d{1,2})?)|(?P<n>\d[\d,]*(?:\.\d{1,2})?)\s*(?:dollars|bucks))"
 _SPENT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:spent|paid|dropped)\s+" + _AMOUNT + r"\s+(?:on|for)\s+(?P<what>.+?)"
                     r"\s*[.!]*\s*$", re.I)
@@ -710,14 +716,15 @@ def _spent_reply(context, prompt: str):
     The bill tools' words are checked again once a day said is cut off ("my phone yesterday"); family words (my
     mother, the kids) are people. Anything left it can't read whole (`_NOT_WHOLE`: another day, a debt, a
     retraction) is the model's (the Fable review). Money paid for one of his bills ("I paid $85 for propane") is that
-    bill's to mark paid, never a stray expense (the cross-route review)."""
+    bill's to mark paid, never a stray expense (the cross-route review). A second thing after "and" ("...and 2 hours
+    on the shed", `_AND_HOURS`) is never part of what it was for: the sentence is `_two_things_reply`'s."""
     said = prompt.replace("’", "'").strip()
     found = _SPENT.match(said) or _BOUGHT.match(said)
     if not found or "?" in said:
         return None
     what = found.group("what").strip().rstrip(",.")
     if _NOT_SPENDING.search(what) or re.search(r"\$\s?\d|\b\d+\s*(?:dollars|bucks)\b", what, re.I) \
-            or re.fullmatch(r"(?:it|that|this|them|one)", what, re.I):
+            or re.fullmatch(r"(?:it|that|this|them|one)", what, re.I) or _AND_HOURS.search(what):
         return None  # two amounts in one ("$5 on a coffee and $10 on gas") are the model's to split
     when = _SPENT_WHEN.search(" " + what)
     day = ""
@@ -1016,7 +1023,8 @@ def _project_time_reply(context, prompt: str):
     on this week?" run project_hours. "Log 2 hours on" something that's neither a project nor one of his machines is
     said as no such project, with his projects' names, only when the words say it's a project ("the shed build"); a
     machine's ("the mower") stays its engine hours, and an oven timer or guitar practice is never one. A day it
-    doesn't read is the model's (the Fable review). None otherwise."""
+    doesn't read is the model's (the Fable review). Money in the project's words ("the shed and $40 on screws") is
+    `_two_things_reply`'s, never one project's hours. None otherwise."""
     from core import project_time
     from core.budget_manager import read_date
 
@@ -1029,6 +1037,8 @@ def _project_time_reply(context, prompt: str):
             found = pattern.match(said)
             if found and _DAY_LEFT.search(found.group("p")):
                 return None  # "on the deck on Saturday", "two days ago": a day it doesn't read is the model's
+            if found and re.search(r"\$\s?\d|\b\d+\s*(?:dollars|bucks)\b", found.group("p"), re.I):
+                return None  # "2 hours on the shed and $40 on screws": both halves are _two_things_reply's
             if found and n == 0 and project_time.project_named(context, found.group("p")) is None \
                     and re.search(r"\b(?:build|project|job|remodel|rewire|renovation|reno|addition)\b", found.group("p"),
                                   re.I):
@@ -1054,6 +1064,78 @@ def _project_time_reply(context, prompt: str):
     except Exception:
         log.exception("Couldn't log or read his project hours")
     return None
+
+
+_TWO_THINGS = re.compile(
+    r"^\s*(?P<left>.+?)\s*,?\s+and\s+(?:then\s+)?(?P<right>(?:i\s+(?:also\s+)?(?:just\s+)?(?:spent|paid|dropped|bought|"
+    r"purchased|worked|put in|put|logged)\s.+|(?:also\s+)?(?:\$\s?\d|\d[\d,.]*\s*(?:dollars|bucks|hours?|hrs?|minutes?|"
+    r"mins?)\b|(?:an?|one|two|three|four|five|six|seven|eight|half an?)\s+(?:hours?|hrs?|minutes?|mins?)\b).*))$", re.I)
+
+
+def _one_thing(context, clause: str) -> str:
+    """Pure logic. Which of her two logging routes a clause is whole for: "money" ("I spent $40 on screws"), "time"
+    ("I spent 2 hours on the shed", a day it reads), or "" for neither."""
+    found = _SPENT.match(clause) or _BOUGHT.match(clause)
+    if found and "?" not in clause and not re.search(r"\$\s?\d|\b\d+\s*(?:dollars|bucks)\b", found.group("what"),
+                                                     re.I) and not _AND_HOURS.search(found.group("what")):
+        return "money"
+    for pattern in _TIME_ON:
+        found = pattern.match(clause)
+        if found and not re.search(r"\$\s?\d", found.group("p")) and not _DAY_LEFT.search(found.group("p")):
+            return "time"
+    return ""
+
+
+def _no_such_project(context, clause: str):
+    """The hours half naming no project of his: log_project_time's own answer (no such project, and his projects'
+    names; nothing kept), unless the words are one of his machines' ("the mower"), handed back as None."""
+    from core import project_time
+
+    for pattern in _TIME_ON:
+        found = pattern.match(clause)
+        if found:
+            named = project_time._words(found.group("p"))
+            if any(named & project_time._words(a) for a in _assets(context)):
+                return None
+            return context.assistant_actions.execute(context, "log_project_time",
+                                                     {"project": found.group("p"), "hours": 1})
+    return None
+
+
+def _two_things_reply(context, prompt: str):
+    """Two things in one sentence (brainstorm round 18): "I spent $40 on screws and 2 hours on the shed", "I paid $5
+    for coffee and $10 for gas", each half through its own code (an expense by `_spent_reply`, a project's hours by
+    `_project_time_reply`) and said back together. A half with no verb takes "I spent"; a day said at the end
+    ("...yesterday") is both halves'. Only when both halves are whole for one of them; if one is then turned down (a
+    bill of his, a person), the other's record is said and that half handed back in his words, never dropped; hours on
+    no project of his are said as that, with his projects (`_no_such_project`). None otherwise."""
+    said = (prompt or "").replace("’", "'").strip()
+    found = _TWO_THINGS.match(said)
+    if not found or getattr(context, "assistant_actions", None) is None:
+        return None
+    left = found.group("left").strip().rstrip(",")
+    right = re.sub(r"^also\s+", "", found.group("right").strip(), flags=re.I)
+    right = re.sub(r"^i\s+also\s+", "I ", right, flags=re.I)
+    if not re.match(r"^i\s", right, re.I):
+        right = "I spent " + right
+    day = re.search(r"\s+(today|yesterday)\s*[.!]*\s*$", right, re.I)
+    if day and not re.search(r"\b(?:today|yesterday)\b", left, re.I):
+        left = f"{left} {day.group(1)}"
+    kinds = [_one_thing(context, left), _one_thing(context, right)]
+    if not all(kinds):
+        return None
+    replies = []
+    for clause, kind in zip((left, right), kinds):
+        reply = _spent_reply(context, clause) if kind == "money" else _project_time_reply(context, clause)
+        if reply is None and kind == "time":
+            reply = _no_such_project(context, clause)
+        replies.append((clause, reply))
+    kept = [r for _c, r in replies if r]
+    if not kept:
+        return None
+    left_out = [c for c, r in replies if not r]
+    return " ".join(kept) + "".join(f' I didn\'t keep "{c}": say it on its own and I\'ll sort it out.'
+                                    for c in left_out)
 
 
 _MAINS = re.compile(r"^(?!.*\b(?:power bill|outlet mall|outlet store|solar panels?|breaker list)\b)(?=.*\b(?:check|test|"
@@ -2235,6 +2317,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     (`_follow_through_reply`); the sentence is put in the shape her routes read (`reshaped`: a greeting before a
     question set aside, "every Saturday morning remind me to ..." as "remind me every Saturday to ... at 8am").
     A reply is taken for a tool call only when it names one of her tools.
+    Two logs in one sentence ("I spent $40 on screws and 2 hours on the shed") are each kept by their own code
+    (`_two_things_reply`), before a single expense could take the whole sentence.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -2355,6 +2439,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _monthly_reminder_reply(context, prompt)  # "every month": a monthly event on his calendar
         if walked is None:
             walked = _daily_reminder_reply(context, prompt)  # "every morning": a daily event on his calendar
+        if walked is None:
+            walked = _two_things_reply(context, prompt)  # two logs in one sentence: each its own, said together
         if walked is None:
             walked = _spent_reply(context, prompt)  # "I spent $30 on groceries": an expense, undoable
         if walked is None:

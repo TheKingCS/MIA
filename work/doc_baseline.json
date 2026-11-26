@@ -39,6 +39,7 @@
   "tests/test_sweep_26.py": 1,
   "tests/test_trip_eve.py": 2,
   "tests/test_trip_packing.py": 1,
+  "tests/test_two_things.py": 1,
   "tests/test_ual.py": 1,
   "tests/test_unusual.py": 1,
   "tests/test_weather_watch.py": 2,
