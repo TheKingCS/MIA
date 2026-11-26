@@ -109,11 +109,14 @@ STAGES: tuple[Stage, ...] = (
             "Dry herbs and fruit in a dehydrator. Jerky: heat the meat to 160°F (poultry 165°F) before or after "
             "drying, as the USDA says: a dehydrator alone may not kill what's in it. Store dried food airtight, cool "
             "and dark.",
-            "Potatoes, onions, squash and roots keep for months in a cool, dark, airy place, each at its own "
-            "temperature and humidity.",
+            "Potatoes: cure them 1 to 2 weeks at 50 to 60°F and humid, then keep them dark at 38 to 45°F and humid "
+            "(light greens them, and colder turns them sweet). Onions: cure them dry, keep them at 32 to 40°F and "
+            "dry. Winter squash: cure 10 days warm (80 to 85°F), keep at 50 to 55°F and dry. Carrots and beets: 32 to "
+            "40°F and very humid (in damp sand). Only sound, unbruised ones go into storage.",
             "Label everything with what and when; eat the oldest first."),
             "Storing well stretches a harvest through the winter without a freezer.",
-            ("Storing apples beside potatoes: the apples' gas sprouts them.",)),
+            ("Storing apples beside potatoes: the apples' gas sprouts them.", "Washing potatoes before storing them: "
+             "brush the soil off once they're dry.")),
     ), (
         Check("canned_batch", "Can a batch from a tested recipe and tell MIA how every jar sealed", "said"),
     )),

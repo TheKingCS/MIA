@@ -52,6 +52,20 @@ ASKS: dict[tuple, re.Pattern] = {
     ("business", "biz_price"): re.compile(r"\b(?:markup|mark-up|margin|mark (?:it|them|things) up)\b"),
     ("business", "biz_terms"): re.compile(r"\b(?:write|make|put together|do|draw up)\w*\s+(?:up\s+)?(?:a\s+|an\s+)?"
                                           r"(?:quote|estimate|bid)s?\b"),
+    # brainstorm round 19's skills sweep: a load tied down with a bowline, a chainsaw "taken apart" to sharpen, potatoes
+    # "no information": each is a lesson of hers now
+    ("bushcraft", "knots"): re.compile(r"\b(?:tie|tying|secure|securing|lash|lashing)\w*\s+(?:down\s+)?(?:a\s+|the\s+|my\s+)?"
+                                       r"(?:load|tarp|ridgeline|ridge line|guy ?lines?|canoe|kayak)\b|\btrucker'?s hitch\b|"
+                                       r"\btaut-?line\b|\bbowline\b|\bclove hitch\b|\bknots?\b.{0,30}\b(?:load|tarp|"
+                                       r"ridgeline|tie (?:it )?down|tie-?down|truck|trailer|camp|camping)\b"),
+    # sharpening it, or running it safely: never "choke a chainsaw" or "start a chainsaw" (its manual's, not taught)
+    ("carpentry", "chainsaw"): re.compile(r"\b(?:sharpen|file)\w*\s+(?:a\s+|my\s+|the\s+)?(?:chain ?saw|saw\s+chain|chain)\b|"
+                                          r"\bchain ?saw\b.{0,25}\b(?:safe\w*|kickback|tension\w*|sharp\w*|chain|chaps)\b|"
+                                          r"\b(?:use|run|running|cut with)\s+(?:a\s+|my\s+|the\s+)?chain ?saw\b"),
+    ("gardening", "dry_store"): re.compile(r"\bstor\w*\s+(?:\w+\s+){0,2}(?:potatoes|onions|squash|carrots|beets|roots|root "
+                                           r"(?:crops|vegetables))\b|\broot cellar\b|\bkeep\w*\s+(?:my\s+|the\s+)?(?:potatoes|"
+                                           r"onions|squash|carrots)\b.{0,25}\b(?:winter|months|fresh|from (?:rotting|sprouting))"
+                                           r"\b|\bcure\w*\s+(?:my\s+|the\s+)?(?:potatoes|onions|squash)\b"),
     ("carpentry", "tape"): re.compile(r"\bread\w*\s+(?:a\s+)?tape(?:\s+measure)?\b"),
     ("carpentry", "square_level"): re.compile(r"\b(?:check|tell)\w*\s+(?:if\s+)?(?:\w+\s+){0,3}(?:is\s+)?"
                                               r"(?:plumb|level|square)\b|\b3-4-5\b|\bspeed square\b"),

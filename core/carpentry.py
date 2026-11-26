@@ -13,7 +13,8 @@ Three stages to begin: safety, tools and measuring; layout and cutting; framing 
 
 Written from: Floyd Vogt, Carpentry (Cengage); American Wood Council, Wood Frame Construction Manual (WFCM) 2018;
 International Code Council, IRC 2021, Section R602 (wood wall framing) and Table R602.3(1) (fastening schedule);
-OSHA 29 CFR 1926 Subpart I (tools: hand and power).
+OSHA 29 CFR 1926 Subpart I (tools: hand and power); OSHA 29 CFR 1910.266 and the chain makers' filing guides (Oregon,
+Stihl) for the chainsaw.
 """
 
 from __future__ import annotations
@@ -59,6 +60,21 @@ STAGES: tuple[Stage, ...] = (
             "Set up right, a circular saw is accurate and safe; set up wrong, it kicks back.",
             ("Kickback comes from a pinched blade: never cut a board supported at both ends with the cut between.",
              "A dull blade burns and wanders.")),
+        Lesson("chainsaw", "The chainsaw: running it and sharpening the chain", (
+            "Wear chaps, a helmet with a face screen and ear muffs, gloves and boots; start it on the ground with the "
+            "chain brake on, and cut with both hands, the saw below shoulder height.",
+            "To sharpen: saw off and cool, chain brake on, the bar clamped in a vise (or a stump vise). Use the round "
+            "file the chain calls for (its size is on the box or in the manual: often 5/32, 3/16 or 7/32 in) in a "
+            "file guide, held at the angle marked on the cutters (often 30 degrees).",
+            "File each cutter from the inside out, the same number of strokes on each; do every cutter on one side, "
+            "then turn the saw and do the other side.",
+            "Every few sharpenings, check the depth gauges (the rakers ahead of each cutter) with a depth-gauge tool "
+            "and a flat file.",
+            "Tension it cold: snug on the bar, yet it still pulls round by hand (gloved)."),
+            "A sharp chain pulls itself into the wood and throws chips; a dull one makes dust, has to be forced, and "
+            "kicks back more.",
+            ("Kickback comes from the upper tip of the bar touching wood: keep the tip clear.",
+             "Uneven cutters make it pull to one side; never file with it running.")),
     ), (
         Check("safety_said", "Tell MIA what to wear running a circular saw, and what to do before changing its blade",
               "said"),

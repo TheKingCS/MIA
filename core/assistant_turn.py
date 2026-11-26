@@ -979,7 +979,7 @@ def _garden_kit_reply(context, prompt: str):
     Never "when should I start selling tomatoes?" (a verb after start), and the kit only when what's in it is asked.
     Spring and string are crops' words, never a verb ("start spring peas").
     "What should I plant in the spring?" is what's due to plant from his frost (core/planting_now.say_now,
-    `_PLANT_NOW`)."""
+    `_PLANT_NOW`); "when should I plant garlic?" is fall's, from his first frost (planting_now.say_garlic)."""
     found = _PLANT_WHEN.match(prompt)
     try:
         if _PLANT_NOW.match(prompt):  # "what should I plant in the spring?": what's due from his frost (the live sweep)
@@ -992,6 +992,8 @@ def _garden_kit_reply(context, prompt: str):
         if found:
             from core import planting_now
 
+            if re.search(r"\bgarlic\b", found.group("rest"), re.I):  # fall-planted: from his first frost
+                return planting_now.say_garlic(context)
             return planting_now.say_crop(context, found.group("rest")) if planting_now.crop_named(found.group("rest")) \
                 else None
         if _KIT_ASK.match(prompt):

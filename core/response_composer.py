@@ -134,7 +134,8 @@ _LIST_MARK = re.compile(r"^\s*(?:[-*\u2022]|\d+[.)])\s")
 
 
 def _sheet_rewrites(text: str) -> str:
-    """Pure logic. "The fact sheet says/doesn't mention/..." said as his records, outside quoted words."""
+    """Pure logic. "The fact sheet says/doesn't mention/...", "the sheet itself shows" said as his records, outside
+    quoted words; a sheet of plywood stays."""
     def fix(part: str) -> str:
         """One stretch outside quotes."""
         part = re.sub(r"\b(?:the |my )?fact sheet (?:says|shows|lists|suggests) (?:to |that )?(\w)",
@@ -142,7 +143,11 @@ def _sheet_rewrites(text: str) -> str:
         part = re.sub(r"\b(?:the |my )?fact sheet (?:doesn'?t|does not) (?:mention|say|show|have|include|list)\b",
                       "I don't have", part, flags=re.I)
         part = re.sub(r"\b(?:on|in|from) the fact sheet\b", "in your records", part, flags=re.I)
-        return re.sub(r"\bthe fact sheet\b", "your records", part, flags=re.I)
+        part = re.sub(r"\bthe fact sheet\b", "your records", part, flags=re.I)
+        # "the sheet itself shows", "the sheet says" (the skills sweep, 2026-11-26); "on the sheet" only at a sentence's
+        # end, so a sheet of plywood and a sheet pan stay
+        part = re.sub(r"\b(?:what )?the sheet(?: itself)? (says|shows|lists|suggests)\b", r"your records \1", part, flags=re.I)
+        return re.sub(r"\b(?:on|in|from) the sheet(?: itself)?(?=\s*[,.;:!?]|\s*$)", "in your records", part, flags=re.I)
 
     pieces = re.split(r'("[^"\n]*"|\u201c[^\u201d\n]*\u201d)', text)
     return "".join(piece if i % 2 else fix(piece) for i, piece in enumerate(pieces))

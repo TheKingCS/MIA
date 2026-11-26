@@ -12,7 +12,7 @@ coming up (with its date), or past its spring window. `now(last_frost, today)` l
 the next DUE_DAYS days or the last LATE_DAYS (still fine). A crop is named by whole words (`crop_named`: "sweet
 potatoes" are never potatoes, "peanuts" never peas); a crop sown again and again is still sowable through the summer,
 until its days to harvest before his first frost (`garden.first_frost`). `say_now` and `say_crop` read his frost date and put it in
-words. Read-only.
+words; `say_garlic` is fall's garlic, from his first frost. Read-only.
 """
 
 from __future__ import annotations
@@ -142,6 +142,25 @@ def say_now(context, today: Optional[date] = None) -> str:
                 f"{frost.day}). Ask me about one crop, like \"when do I plant tomatoes?\"")
     lines = [f"{x['name']}: {x['step']} {_when(x['days'], x['on'])}" for x in found]
     return f"From your last frost ({frost:%b} {frost.day}): " + "; ".join(lines) + "."
+
+
+def say_garlic(context, today: Optional[date] = None) -> str:
+    """For "when should I plant garlic?" (the skills sweep, 2026-11-26: the model said 6 to 8 weeks before frost):
+    garlic goes in in the fall, from about his first fall frost to four weeks after, so the cloves root before the
+    ground freezes (land-grant extension garlic guides); without his first frost, said as the rule and asked for."""
+    today = today or date.today()
+    first = _first_frost(context, today)
+    how = ("Plant the cloves pointed end up, 2 in deep and 6 in apart, and mulch them with 4 to 6 in of straw once "
+           "the ground cools; harvest next summer when about half the leaves have browned.")
+    if first is None:
+        return ("Garlic goes in in the fall, from about your first fall frost to a few weeks after, so it roots before "
+                "the ground freezes. " + how + " Tell me your first fall frost date and I'll put dates on it.")
+    end = first + timedelta(days=28)
+    if today > end:
+        return (f"Garlic's window this fall was about {first:%b} {first.day} to {end:%b} {end.day}, after your first "
+                f"frost; if the ground isn't frozen yet, you can still get it in now. " + how)
+    return (f"Garlic goes in this fall, from about your first frost ({first:%b} {first.day}) to {end:%b} {end.day}, so "
+            f"the cloves root before the ground freezes. " + how)
 
 
 def say_crop(context, said: str, today: Optional[date] = None) -> str:

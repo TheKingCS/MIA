@@ -9,7 +9,7 @@ conditions with someone told the plan; first aid is the emergency floor's and th
 not this program's.
 
 Written from: US Army ATP 3-50.21, Survival (2018); The Mountaineers, Mountaineering: The Freedom of the Hills (the Ten
-Essentials); Boy Scouts of America Fieldbook (fire and map and compass); CDC, Making Water Safe in an Emergency (boil
+Essentials); Boy Scouts of America Fieldbook (fire, map and compass, and knots); CDC, Making Water Safe in an Emergency (boil
 1 minute, 3 minutes above 6,500 ft); US EPA, Emergency Disinfection of Drinking Water. Its XP goes to the Survival
 skill.
 """
@@ -87,6 +87,17 @@ STAGES: tuple[Stage, ...] = (
             "Always know where you are on the map; the GPS is the backup, not the plan."),
             "A map and compass need no battery or signal; it's the skill that gets you out when the phone can't.",
             ("Ignoring declination: a few degrees off becomes far off over a mile.",)),
+        Lesson("knots", "Knots for camp and load", (
+            "A bowline makes a fixed loop that won't slip or jam: around a tree, a tarp's corner, a person in a rescue "
+            "(\"the rabbit comes out of the hole, round the tree and back down the hole\").",
+            "A taut-line hitch makes a loop you can slide to tighten: guy lines and a tent's lines.",
+            "A trucker's hitch tensions a line hard, for a ridgeline or a load: tie a loop in the standing part, run "
+            "the end round the anchor (a tie-down point or tree) and back through the loop, pull down for about three "
+            "to one, and finish with two half hitches.",
+            "A clove hitch holds a line to a post or pole quickly; back it up with a half hitch when it matters."),
+            "The right knot holds under load and still unties after; the wrong one slips, or jams so it has to be cut.",
+            ("A load on a truck or trailer: rated ratchet straps at each corner beat any rope; rope and a trucker's "
+             "hitch are for light loads or a tarp.", "Leave a tail a few inches long: a short one works loose.")),
     ), (
         Check("night_out", "Spend a night in a shelter you built, close to home and with someone told, and tell MIA",
               "said"),

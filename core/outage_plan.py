@@ -33,7 +33,8 @@ _ASKED = re.compile(r"\b(?:what (?:do|should|would|can) (?:i|we) do|how (?:do|sh
                     r"electricity|grid) (?:goes|go|went|were to go) (?:out|down)\b|\bif (?:the )?(?:power|electricity|grid) (?:goes|go|were to go|went) (?:out|"
                     r"down)\b|\bif (?:we|i) (?:lose|lost) (?:the )?(?:power|electricity)\b|\b(?:prepare|get ready|be "
                     r"ready) for (?:a |the )?(?:long )?(?:power outage|blackout|outage)\b|\bpower outage (?:for|that lasts|"
-                    r"of) (?:a |several |a few )?(?:days?|weeks?|week)\b", re.I)
+                    r"of) (?:a |several |a few )?(?:days?|weeks?|week)\b|\b(?:if|when) (?:the )?(?:power|electricity|grid) (?:is|was|"
+                    r"were|stays|goes|went) (?:out|down) for (?:a |several |a few |two |three )?(?:days?|weeks?)\b", re.I)
 _NOT = re.compile(r"\b(?:bill|bills|rate|rates|company'?s? number|solar panels?|power tools?|power steering|power "
                   r"washer|power supply|power bank|powerpoint|game|show|movie|drill|right now|comes back|came back|still "
                   r"out|legs?|arms?|scream|sump pump|truck|cabin|inverter|again tonight)\b", re.I)
