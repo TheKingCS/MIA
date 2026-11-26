@@ -1482,7 +1482,10 @@ NOT_FOR = {
     "tonight": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|first (thing )?tomorrow|tomorrow first)\b",
                           re.I),
     # what she did on her own today is "catch me up"'s (her own changes), not today's list
-    "today": re.compile(rf"\b(on your own|you been up to|while i was (out|gone|away)|{_LEARNING})\b"
+    # what's on his grocery list is list_grocery_list's (the live sweep, 2026-11-25: the day's plan had said it didn't
+    # know)
+    "today": re.compile(rf"\b(on your own|you been up to|while i was (out|gone|away)|{_LEARNING}|(?:grocery|shopping) "
+                        r"list)\b"
                         r"|\bwhat did i miss\b(?!.*\b(do|deadlines?|priorit\w*|supposed)\b)", re.I),
     # quitting a habit or a club isn't quitting the job
     "quit by": re.compile(r"\b(smoking|drinking|vaping|chew|caffeine|coffee|soda|sugar|gym|band|team|club|league|"

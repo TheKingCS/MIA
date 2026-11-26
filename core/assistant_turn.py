@@ -129,7 +129,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
     A monthly reminder (`_monthly_reminder_reply`) too, a unit conversion (`_convert_reply`) and a holiday's date
     (`_holiday_reply`), and the house's trouble (`_home_trouble_reply`), and when to fish (`_fish_when_reply`), and the
-    power out (`_outage_reply`).
+    power out (`_outage_reply`), and the small everyday answers (`_everyday_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -203,6 +203,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _home_trouble_reply(context, prompt)  # a burst pipe, a flooded basement, as in a turn
     if walked is None:
         walked = _outage_reply(context, prompt)  # the power out, and his readiness, as in a turn
+    if walked is None:
+        walked = _everyday_reply(context, prompt)  # the time, days until, square feet, a walk logged, as in a turn
     if walked is None:
         walked = _fish_when_reply(context, prompt)  # "when's a good time to fish?", as in a turn
     if walked is None:
@@ -1085,6 +1087,94 @@ def _fish_when_reply(context, prompt: str):
         return None
 
 
+_TIME_NOW = re.compile(r"^\s*(?:hey\s+mia[,:]?\s+)?(?:what(?:'s| is)? (?:the )?time(?: is it)?(?: (?:now|right now))?|what time "
+                       r"is it(?: (?:now|right now))?|(?:do you know )?what time it is|what(?:'s| is) (?:the |today'?s )?"
+                       r"date(?: today)?|what day is (?:it|today)|what(?:'s| is) today)\s*\??\s*$", re.I)
+_DAYS_UNTIL = re.compile(r"^\s*how (?:many|much) (?:days|weeks|time)(?: is it| are there| left| do i have)? (?:until|till|til|to|"
+                         r"before)\s+(?P<what>.+?)\s*\??\s*$", re.I)
+_AREA = re.compile(r"\b(?:square (?:footage|feet|foot)|sq\.? ?ft|area)\b.{0,25}?\b(?P<a>\d+(?:\.\d+)?)\s*(?:'|ft|feet|foot)?\s*"
+                   r"(?:by|x)\s*(?P<b>\d+(?:\.\d+)?)\b|\b(?P<a2>\d+(?:\.\d+)?)\s*(?:by|x)\s*(?P<b2>\d+(?:\.\d+)?)\b.{0,25}\b"
+                   r"(?:in square feet|square (?:footage|feet)|sq\.? ?ft)\b", re.I)
+_LOG_ACTIVITY = re.compile(r"^\s*(?:please\s+)?log (?:a |an |my )?(?P<n>\d+(?:\.\d+)?)[- ]?(?P<unit>minutes?|mins?|hours?|"
+                           r"hrs?) (?P<what>walk|run|jog|hike|bike ride|ride|swim|workout|yoga|stretch(?:ing)?|"
+                           r"lift(?:ing)?|row(?:ing)?)\s*[.!]?\s*$", re.I)
+_EGG_PRICE = re.compile(r"\b(?:charge|price|sell|ask)\b.{0,30}\b(?:dozen|eggs?)\b|\b(?:dozen|eggs?)\b.{0,20}\b(?:sell|price|"
+                        r"charge)\b", re.I)
+
+
+def _everyday_reply(context, prompt: str):
+    """The small everyday answers, in code (the live sweep, 2026-11-25): the time and the date ("I'm not sure what
+    time it is"), days until a holiday ("how many days until Christmas?" had said the library's instruction aloud),
+    a floor's square footage ("12 by 16": the model had listed a shed's materials), "log a 30 minute walk" through
+    log_workout (the model had only said "I'll log it"), and an egg price from his own feed cost per dozen
+    (core/flock.figures). None otherwise."""
+    from datetime import datetime as _dt
+
+    said = prompt.replace("’", "'")
+    if _TIME_NOW.match(said):
+        now = _dt.now()
+        if re.search(r"\b(?:date|day)\b", said, re.I):
+            return f"It's {now:%A}, {now:%B} {now.day}, {now.year}."
+        return f"It's {now.strftime('%I:%M %p').lstrip('0')}, {now:%A}."
+    found = _DAYS_UNTIL.match(said)
+    if found:
+        from core import holidays
+
+        name = holidays.named(found.group("what"))
+        if name is None:
+            return None
+        today = _dt.now().date()
+        when = holidays.day_of(name, today.year)
+        when = when if when >= today else holidays.day_of(name, today.year + 1)
+        days = (when - today).days
+        label = name.split(" (")[0]
+        return (f"{days} days until {label} ({when:%A}, {when:%B} {when.day})." if days else f"{label} is today.")
+    found = _AREA.search(said)
+    if found and not re.search(r"\b(?:materials?|lumber|how many|cost|price|build)\b", said, re.I):
+        a, b = float(found.group("a") or found.group("a2")), float(found.group("b") or found.group("b2"))
+        return f"{a:g} by {b:g} feet is {a * b:,.0f} square feet." if (a * b).is_integer() else \
+            f"{a:g} by {b:g} feet is {a * b:,.2f} square feet."
+    found = _LOG_ACTIVITY.match(said)
+    if found:
+        minutes = float(found.group("n")) * (60 if found.group("unit").lower().startswith("h") else 1)
+        what = found.group("what").lower()
+        try:
+            return context.assistant_actions.execute(context, "log_workout", {
+                "exercises": [f"{minutes:g} minute {what}"], "duration_minutes": minutes, "notes": what})
+        except Exception:
+            log.exception("Couldn't log the activity")
+            return None
+    if _EGG_PRICE.search(said) and re.search(r"\b(?:eggs?|dozen)\b", said, re.I) and "?" in said:
+        return _egg_price(context)
+    return None
+
+
+def _egg_price(context):
+    """What a dozen of his eggs costs him in feed (core/flock.figures, the last 30 days) and how to price from it;
+    the general rule when there's no flock or no feed logged."""
+    from datetime import date as _date
+
+    flock = getattr(context, "flock", None)
+    rows = getattr(flock, "flocks", None) or []
+    cost = None
+    if rows:
+        try:
+            from core.flock import figures
+
+            got = figures(rows[0], flock.entries_for(rows[0].flock_id), _date.today())
+            cost = got.get("feed_per_dozen") or None
+        except Exception:
+            log.exception("Couldn't work out the feed cost per dozen")
+    from core.region import money
+
+    rule = ("Price from your costs up: feed per dozen, plus cartons (about 50 cents each new), plus something for your "
+            "time, then check what farm eggs sell for near you (a farm stand, a feed store's board, local listings) and "
+            "sit at or a little under that. Many places need a permit or labeling to sell eggs: check your state's rules.")
+    if cost:
+        return f"Your feed costs you about {money(cost)} a dozen (the last 30 days). {rule}"
+    return "Log your feed and eggs and I'll work out what a dozen costs you. " + rule
+
+
 def _outage_reply(context, prompt: str):
     """Ready for the power going out: the first things to do and his own readiness (core/outage_plan.reply); the
     power going out now is the outage clock's (core/outage.py). None otherwise."""
@@ -1332,7 +1422,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     safe words (`_mains_reply`); a monthly reminder goes on his calendar (`_monthly_reminder_reply`); a unit
     conversion (`_convert_reply`) and a holiday's date (`_holiday_reply`) are worked out in code; a burst pipe or a
     flooded basement is said in fixed words (`_home_trouble_reply`), and when to fish from his catches
-    (`_fish_when_reply`), and the power out with his own readiness (`_outage_reply`). A turn the
+    (`_fish_when_reply`), and the power out with his own readiness (`_outage_reply`); the time, days until a holiday,
+    square feet, a walk logged and an egg price are worked out in code (`_everyday_reply`). A turn the
     model answers ends a question plan's thread
     (core/conversation_state.forget), and a reply that is only a humor example is never said.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
@@ -1481,6 +1572,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         if walked is None:
             walked = _outage_reply(context, prompt)  # the power out: the first things, then his own stores
         if walked is None:
+            walked = _everyday_reply(context, prompt)  # the time, days until, square feet, a walk, an egg price
+        if walked is None:
             walked = _fish_when_reply(context, prompt)  # when to fish, from his own catches and the weather
         if walked is None:
             walked = _convert_reply(context, prompt)  # a unit conversion, worked out by the converter
@@ -1580,7 +1673,12 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     content = honest(context, prompt, content, keep=not _personal(conversation)
                      and not getattr(conversation, "off_record", False))  # never "I've added a reminder" (claim_check)
     earlier = [m.content for m in (getattr(conversation, "messages", None) or [])[-6:] if m.role == "user"]
+    from core.offline_library import FROM_WHAT_YOU_KNOW
     from core.personality import only_example
+
+    if FROM_WHAT_YOU_KNOW in content:  # the library's note to the model, said back (the live sweep): never to him
+        content = content.replace(FROM_WHAT_YOU_KNOW, "").replace(
+            "The offline library has no packs yet (they can be fetched on the Knowledge page).", "").strip() or ECHO_REPLY
 
     if echoes(content, prompt) or any(echoes(content, said) for said in earlier) or only_example(content):
         content = ECHO_REPLY  # never the person's own words, or a humor example alone, said back as if an answer
