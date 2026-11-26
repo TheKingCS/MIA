@@ -580,7 +580,8 @@ def _reminder_reply(context, prompt: str):
     "Morning" counts only in the day and time, never in the task ("the morning glories"). Said the other way, the
     day is the one after the task, never one inside it ("remind me to send the invoice by Friday on Monday": the
     Fable review). A task ending on "before", "by", "and" or "or" is a deadline, the model's ("order feed before
-    Friday": the cross-route review, 2026-11-26)."""
+    Friday": the cross-route review, 2026-11-26). A part of the day with no hour ("Saturday morning", "tonight") is
+    that part's usual time: 8am, 2pm, 6pm, 8pm."""
     first = _REMIND_FIRST.match(prompt.replace("’", "'"))
     day_words = None
     if first:
@@ -611,6 +612,11 @@ def _reminder_reply(context, prompt: str):
         hour = 0 if (found.group(5) or "").lower() == "am" and hour == 12 else hour
         if hour < 24 and minute < 60:
             args["time"] = f"{hour:02d}:{minute:02d}"
+    else:  # "Saturday morning" with no hour: that part of the day's usual time (the fishing conversation check)
+        part = re.search(r"\b(morning|afternoon|evening|night)\b", day_words, re.I)
+        named = part.group(1).lower() if part else ("night" if re.search(r"\btonight\b", day_words, re.I) else "")
+        if named:
+            args["time"] = {"morning": "08:00", "afternoon": "14:00", "evening": "18:00", "night": "20:00"}[named]
     try:
         return context.assistant_actions.execute(context, "add_calendar_event", args)
     except Exception:

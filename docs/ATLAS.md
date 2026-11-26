@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1913 files, 401,041 lines; 1913 files describe themselves; 21,722 of 21,868 classes and functions are documented.
+1914 files, 401,068 lines; 1914 files describe themselves; 21,723 of 21,869 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,312 lines; 10,380 of 10,459 classes and functions documented
+741 files, 210,318 lines; 10,380 of 10,459 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-762 files, 108,567 lines; 8,968 of 9,035 classes and functions documented
+763 files, 108,588 lines; 8,969 of 9,036 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1551,6 +1551,7 @@
 - `tests/test_relationships_module.py`: Unit tests for modules.relationships.module's pure row formatters — no Qt widget construction, same shape as tests/test_kitchen_module.py's own formatter tests.
 - `tests/test_relay_offers.py`: What the phone will offer the glasses through the relay (DEC-0064). Relay.kt holds the list; these keep it inside what the glasses may do at all.
 - `tests/test_relevance.py`: World Intelligence's relevance from the person's own records (W2, DEC-0170; core/relevance.py): a find that fits a goal, a project or the homestead plan's next step scores above one that only matched a watch, with a reason naming each record; it can fit several at once; a long record name needs two 
+- `tests/test_reminder_part_of_day.py`: "Remind me to go fishing Saturday morning" keeps its morning (core/assistant_turn._reminder_reply, the fishing conversation check 2026-11-26: the event had no time): a part of the day with no hour is that part's usual time.
 - `tests/test_reminders_view.py`: His reminders and the everyday turns around them (core/reminders_view.py, the live sweep 2026-11-26): listed with the calendar's and the alarms, one cancelled by its words (never all at once), "good morning" back in kind with the day, and yesterday from his history. *(1 undocumented)*
 - `tests/test_rent_collected.py`: "How much rent did I collect this month?" (core/rent_collected.py): this month, last month, this year or a named month read from his words, rent summed by property from his records with the total, and a property that paid before but not yet this month named; no properties says how to add one. "May" 
 - `tests/test_repertoire.py`: His songbook (core/repertoire.py): a song learned is dated in his own history, never twice on the same instrument, counted toward the Songbook achievements at once and by a mission objective, and taken back by "undo that".

@@ -18,7 +18,9 @@ need from the hardware store?", "what's my best-selling product?". Her asks answ
 firewood). Skills sweep: knots, chainsaw, root storage lessons; garlic dates.
 Then the LLC lesson, a build kept up across turns ("a 10 by 12", "add it to my projects"), and false claims
 about projects or expenses caught. Fishing: a catch said whole read in code, "go back" after it, spending on
-"fishing gear" from what names it.
+"fishing gear" from what names it; a reminder's "Saturday morning" kept as 8am.
+Open (needs a design): adding the bait to a catch after it's logged ("it was biting on a green pumpkin worm"): catches
+are life events, never rewritten, so it would be an amending event of its own.
 Next (no decision): more of her asks there as sweeps find them, and more sweeps (the corpus's areas); "why?" after a code answer needs a better idea than repeating its reasons. Waiting on
 Zac: Q-0018 (the writing shortcuts), Q-0019 (a fire how-to through the emergency floor).
 
