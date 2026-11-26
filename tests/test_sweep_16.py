@@ -6,7 +6,8 @@ The tenth live sweep's fixes (2026-11-25): a unit conversion and a holiday's dat
 had said "The conversion is complete." and "I don't have that information"); "I don't know what that means" before
 a real answer goes; "do you remember what I told you yesterday?" is his past conversations, never one person. The
 coming week's holidays, which the morning briefing names. The Fable review's: each route takes only its own; and
-Fable's check of that narrowing: what it had refused is answered again.
+Fable's check of that narrowing: what it had refused is answered again. Pricing a thing he hasn't recorded
+gets the way to price it, never his plywood.
 """
 
 from datetime import date
@@ -108,3 +109,18 @@ def test_fable_checks_the_narrowings_losses_are_back():
     assert assistant_turn._mains_reply(None, "check the voltage on my solar panel") is None
     said = AssistantTools._action_convert_units(None, {"value": 0, "from_unit": "mpg", "to_unit": "L/100km"})
     assert "divides by zero" in said or "=" in said
+
+
+def test_pricing_a_thing_he_hasnt_recorded_never_lists_his_plywood():
+    """"How do I price my firewood?": the way to price it, never the workshop's materials."""
+    ran = []
+    context = SimpleNamespace(products=SimpleNamespace(all_products=lambda: [SimpleNamespace(name="Cutting Board")]),
+                              assistant_actions=SimpleNamespace(_actions={"list_products": 1, "get_build_costs": 1,
+                                                                         "list_materials": 1},
+                                                                execute=lambda c, n, a: ran.append(n) or ""))
+    sheet = question_plans.Sheet("product cost", "What one thing costs to make")
+    question_plans._product_cost(context, sheet, "How do I price my firewood?", date.today())
+    assert "list_materials" not in ran and "How to price one" in sheet.as_text()
+    ran.clear()
+    question_plans._product_cost(context, sheet, "how much does it cost me to make a cutting board?", date.today())
+    assert "list_materials" in ran

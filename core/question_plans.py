@@ -402,11 +402,27 @@ def _returns(context, sheet, prompt, today):
 
 def _product_cost(context, sheet, prompt, today):
     """Plan gatherer (what one thing costs to make): the product, its build costs and materials, and that labour and
-    overhead aren't recorded (an estimate line).
-    """
-    _look(context, sheet, "list_products", "Workshop", query=_subject(prompt))
-    _look(context, sheet, "get_build_costs", "Workshop", build=_subject(prompt))
-    _look(context, sheet, "list_materials", "Workshop")
+    overhead aren't recorded (an estimate line). The workshop's materials only for a product of his: "how do I price
+    my firewood?" is never answered with the plywood on hand (the live sweep, 2026-11-25); for one he hasn't
+    recorded, the way to price it (the business course's pricing lesson) is on the sheet instead."""
+    subject = _subject(prompt)
+    _look(context, sheet, "list_products", "Workshop", query=subject)
+    _look(context, sheet, "get_build_costs", "Workshop", build=subject)
+    book = getattr(context, "products", None)
+
+    def stems(text):
+        """Its words of three letters or more, a plural as its one."""
+        return {w[:-1] if w.endswith("s") and len(w) > 3 else w for w in re.findall(r"[a-z]{3,}", str(text).lower())}
+
+    said = stems(prompt)  # the whole question: a product of his is one whose name's words are all in it
+    his = [pr for pr in (book.all_products() if book is not None and hasattr(book, "all_products") else [])
+           if stems(getattr(pr, "name", "")) and stems(getattr(pr, "name", "")) <= said]
+    if his:
+        _look(context, sheet, "list_materials", "Workshop")
+    else:
+        sheet.add(ESTIMATE, "How to price one: what it costs you in materials, plus your hours on it at the rate you "
+                            "want, plus a share of your running costs (tools, fuel, a vehicle); then check what the same "
+                            "thing sells for near you, and don't price below your costs.", "the business course")
     sheet.add(ESTIMATE, "Labour and overhead aren't recorded per product: a price needs your time per piece and "
                         "what you want an hour for it.", "Workshop")
 
