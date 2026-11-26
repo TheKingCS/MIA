@@ -84,7 +84,7 @@ def test_affording_a_purchase_from_this_months_records(monkeypatch):
                                                    total_expenses_by_category=lambda s, e, entity_id=None: {}))
     said = money_periods.afford(broke, 500.0, TODAY)
     assert said.startswith("I can't tell from your records: no income is logged this month")
-    assert "Not marked paid yet: Electric." in said and "$120.00" not in said, "an overdue bill named, never summed"
+    assert "Not marked paid yet: Electric (each counted once)." in said, "an overdue bill named once"
     paid = SimpleNamespace(budget=SimpleNamespace(total_income=lambda s, e: 2000.0,
                                                   total_expenses_by_category=lambda s, e, entity_id=None: {"Food": 600.0}))
     assert money_periods.afford(paid, 500.0, TODAY).startswith("From what's logged, $500.00 fits: $1,280.00 is left")
