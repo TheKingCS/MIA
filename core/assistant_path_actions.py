@@ -108,7 +108,7 @@ def _ask_which(context, book: paths.PathBook, words: str = "") -> str:
 
 def _action_start(context, arguments: dict) -> str:
     """Tool start_learning: starts the program the interest means (built in, or a draft of theirs); with none, drafts
-    one and describes it, to be started by saying start it."""
+    one and describes it, to be started by saying start it. Its plan said as "1 day a week" or "3 days a week"."""
     book = _book(context)
     if book is None:
         return "Learning paths aren't on this MIA."
@@ -130,7 +130,8 @@ def _action_start(context, arguments: dict) -> str:
     paths.ensure_homework(context)
     plan = book.path(program.id)["plan"]
     return (f"You're set for {program.name}" + (" (a plan I drafted)" if program.drafted else "") + f": "
-            f"{plan['minutes_a_day']} minutes a day, {plan['days_a_week']} days a week. This week's homework is in "
+            f"{plan['minutes_a_day']} minutes a day, {plan['days_a_week']} day{'' if plan['days_a_week'] == 1 else 's'} a "
+            f"week. This week's homework is in "
             "Missions. " + paths.next_step(book, program) + " Want the first lesson now?")
 
 

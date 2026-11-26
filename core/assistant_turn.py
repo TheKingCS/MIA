@@ -1638,6 +1638,12 @@ _HARDWARE_NEEDS = re.compile(r"^\s*(?:hey mia,? )?(?:what do (?:i|we) (?:need|ha
 _OVERDUE = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| am i)|whats|is (?:there )?anything|anything|do i have anything) "
                       r"(?:overdue|past due|late|behind on)(?: (?:today|right now|now))?\s*[?.!]*\s*$|^\s*(?:show me |list )?"
                       r"(?:what'?s |everything )?overdue\s*[?.!]*\s*$", re.I)
+# "I practiced for 30 minutes today", "practiced guitar for an hour": a session on his course (log_practice), before
+# what-he-did's "Noted" took it (the guitar conversation check, 2026-11-26)
+_PRACTICED = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:practiced|practised|played)(?:\s+(?:the\s+|my\s+)?(?P<what>(?!for\b)[a-z][\w' -]{1,25}?))?"
+                        r"\s+(?:for\s+)?(?P<n>\d+(?:\.\d+)?|an?|half an?|one|two)\s*(?P<unit>minutes?|mins?|hours?|hrs?)"
+                        r"(?:\s+on\s+(?P<on>[\w' -]{2,30}?))?(?:\s+(?:today|tonight|this morning|this evening))?\s*[.!]*\s*$",
+                        re.I)
 _DUE_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is)|whats|what do i have) due (?:today|for today)\s*[?.!]*\s*$|"
                         r"^\s*(?:hey mia,? )?what(?:'s| is) (?:on )?(?:my )?(?:list|plate) (?:for )?today\s*[?.!]*\s*$", re.I)
 _REPORTS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|which) (?:reports|updates) (?:do|will) you (?:send|give) me|what (?:are )?"
@@ -1760,7 +1766,8 @@ def _own_tool_reply(context, prompt: str):
     projects' open needs (never a guess from his expenses), "I caught a 3 pound bass at the pond" one catch, as said (core/catch_actions.parse), "how much is left this month?" the month's records after what's due (core/money_periods.afford), "I paid the
     electric bill" that bill of his marked paid (mark_bill_paid; never twice for one time round, and "pay the electric
     bill" is what's due and how to mark it, since she pays nothing),
-    "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
+    "I practiced for 30 minutes today" a session on his
+    course (log_practice), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
     me?" and "stop the Sunday one" her standing reports (core/standing_reports), "what's overdue?" everything
     overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
@@ -2073,6 +2080,26 @@ def _own_tool_reply(context, prompt: str):
         actions = getattr(context, "assistant_actions", None)
         if actions is not None:
             return actions.execute(context, "log_catch", caught)
+    practiced = _PRACTICED.match(said)
+    if practiced:  # a practice session on his course: the one named, else the only one started (core/paths)
+        from core import paths
+
+        book = getattr(context, "paths", None)
+        try:
+            started = [paths.program_of(context, p) for p in (book.started() if book is not None else [])]
+            started = [p for p in started if p is not None]
+            named = paths.find_program(context, practiced.group("what")) if practiced.group("what") else None
+            program = named if named is not None and named in started else (
+                started[0] if len(started) == 1 and not practiced.group("what") else None)
+            if program is not None:
+                n = practiced.group("n").lower()
+                amount = {"a": 1, "an": 1, "one": 1, "two": 2, "half a": 0.5, "half an": 0.5}.get(n) or float(n)
+                minutes = amount * (60 if practiced.group("unit").lower().startswith("h") else 1)
+                if 0 < minutes <= 600:
+                    return _run_own(context, "log_practice", {"minutes": minutes, "path": program.id,
+                                                              "worked_on": practiced.group("on") or ""})
+        except Exception:
+            log.exception("Couldn't log the practice")
     if _DUE_TODAY.match(said):  # "what's due today?": today's things, then what's overdue (core/today.due_today_said)
         from core import today as _today
 

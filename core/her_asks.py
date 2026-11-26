@@ -23,6 +23,7 @@ yet" a made-up forecast). Each ask is known by its own words in her last message
   (best_time_to_fish).
 
 - after her ask for his last spring frost, a bare date ("April 20") is kept as it (core/planting_now.keep_frost);
+- after one of her course replies, "what should I work on next?" is that course's next step;
 - after her own money reply (a bill marked paid, income or an expense recorded), "how much is left (after that)?"
   is the month's money after what's due.
 
@@ -58,6 +59,12 @@ _BUILD_ADD = re.compile(r"^\s*(?:ok(?:ay)?,?\s+|great,?\s+|yes,?\s+)?(?:please\s
 _AFTER_MONEY = re.compile(r"\bMarked '[^']+' paid\b|\bRecorded \$[\d,.]+ (?:of income|expense)\b|\bFrom what's logged\b")
 _BARE_LEFT = re.compile(r"^\s*(?:and\s+|so\s+|ok(?:ay)?,?\s+)?(?:how much (?:is|do (?:i|we) have|have (?:i|we) got) left(?: over)?|"
                         r"what(?:'s| is) left)(?:\s+(?:now|after that))?\s*[?.!]*\s*$", re.I)
+# her own course replies ("Guitar, stage 1 ...", "From Guitar, stage 1", "Logged. Guitar this week:"): "what should I
+# work on next?" is that course's next step (core/paths.next_step), never a project's (the guitar conversation check)
+_COURSE_SAID = re.compile(r"(?:^|\. |\n)(?:From )?(?P<prog>[A-Z][\w' ]{1,40}?), stage \d+|\bLogged\. (?P<prog2>[A-Z][\w' ]{1,40}?) "
+                          r"this week:")
+_NEXT = re.compile(r"^\s*(?:so\s+|ok(?:ay)?,?\s+|and\s+)?(?:what(?:'s| is) next|what next|what (?:should|do) i (?:work on|do|practi[cs]e)"
+                   r" next|what(?:'s| is) my next step)\s*[?.!]*\s*$", re.I)
 _AFTER_CATCH = re.compile(r"\b\d+ fish logged in all\b", re.I)  # her catch replies' own words, never hours or eggs
 _GO_BACK = re.compile(r"^\s*(?:so\s+|and\s+)?(?:when(?:'s| is) (?:the )?best (?:time|day) to go (?:back|again|fishing)|when "
                       r"should (?:i|we) go (?:back|again|fishing)|when (?:can|could) (?:i|we) go back)(?: out)?(?: there)?\s*"
@@ -91,7 +98,7 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
     own thread; a board's size ("a 2 by 4") is never the build's, a fence takes its feet, and a project of that name
     already kept is said so, never added twice (the Fable review). After a catch she logged, "when's the best time to
     go back?" is the fishing times; after her money reply, "how much is left?" is the month's money; after her frost ask, a bare
-    date is his last frost."""
+    date is his last frost; after her course reply, "what should I work on next?" is that course's next step."""
     asked, said = str(last_reply or ""), str(prompt or "").strip()
     if not asked or not said or len(said) > 60:
         return None
@@ -128,6 +135,14 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
         kept = planting_now.keep_frost(context, said, "last")  # "April 20" after her frost ask
         if kept is not None:
             return kept
+    course = _COURSE_SAID.search(asked) if _NEXT.match(said) else None
+    if course:
+        from core import paths
+
+        book = getattr(context, "paths", None)
+        program = paths.find_program(context, course.group("prog") or course.group("prog2"))
+        if book is not None and program is not None and book.path(program.id) is not None:
+            return paths.next_step(book, program)
     if _AFTER_MONEY.search(asked) and _BARE_LEFT.match(said):
         from core import money_periods
 

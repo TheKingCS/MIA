@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1918 files, 401,511 lines; 1918 files describe themselves; 21,742 of 21,888 classes and functions are documented.
+1919 files, 401,583 lines; 1919 files describe themselves; 21,743 of 21,889 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,569 lines; 10,385 of 10,464 classes and functions documented
+741 files, 210,612 lines; 10,385 of 10,464 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-767 files, 108,780 lines; 8,983 of 9,050 classes and functions documented
+768 files, 108,809 lines; 8,984 of 9,051 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1288,6 +1288,7 @@
 - `tests/test_greenhouse_setup.py`: The greenhouse's setup as one sequence (core/greenhouse_setup.py, DEC-0150): "let's set up the greenhouse" and "what's next?" say the step you're on, with its device, what it needs and what to say; each step is done from what's recorded (a job finished, the MCU flashed, the node pushed, PlatformIO f
 - `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable; and a planting's stage from what's known.
 - `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a
+- `tests/test_guitar_thread.py`: The guitar conversation check's fixes (2026-11-26): "I practiced for 30 minutes today" is a session on his course (it had only been noted), "what should I work on next?" after her course reply is its next step (never a project).
 - `tests/test_habit_offers.py`: Routines offered from his habits (core/habit_offers.py, DEC-0294): the same kind of thing on the same weekday three weeks running, from his own doing, offered as a weekly reminder once ever, never what MIA did herself or an email brought; one counts as offered only once the gate let it through, trie
 - `tests/test_harvest_log.py`: Harvests by voice (core/harvest_log.py): a harvest goes on his growing batch of that crop (plurals alike), a crop not in the grow lab gets a batch dated by him first, two batches of it are asked about, a place none is in is a new one, eggs and honey aren't crops; this year's harvest adds up by crop 
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks).
