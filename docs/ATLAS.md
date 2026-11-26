@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1908 files, 400,485 lines; 1908 files describe themselves; 21,709 of 21,855 classes and functions are documented.
+1909 files, 400,534 lines; 1909 files describe themselves; 21,708 of 21,854 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-740 files, 209,973 lines; 10,377 of 10,456 classes and functions documented
+741 files, 210,015 lines; 10,377 of 10,456 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -308,6 +308,7 @@
 - `core/health_manager.py`: Health and Fitness's records (DEC-0129, Zac 2026-11-08: "sleep, doctor and dentist visits, medications and supplements, health records... are good"). One personal store, `health.json` in the person's own folder, sealed at rest (core/at_rest.SEALED, DEC-0126), never on a shared screen and never sent 
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it:
 - `core/hen_laying.py`: "Why did my hens stop laying?" (Jarvis brainstorm, round 12; asked for, so no unprompted message: the daily check's egg drop is core/unusual.py's): the likely causes for his flock, worked out from his own records and the sun for his town, the most likely first, never one his records rule out.
+- `core/her_asks.py`: His bare answer to her own last question, finished in code (brainstorm round 19; the live check 2026-11-26: "5 gallons" after "How much fuel?" got the question echoed back, "Springfield, Illinois" after "I don't know your town yet" a made-up forecast). Each ask is known by its own words in her last 
 - `core/hobby_progress.py`: His hobbies' progress in one answer (brainstorm round 16, 2026-11-25): this month so far, across everything he does for himself: each learning path's practice (core/paths: minutes, days and the stage he's on), the fish he caught and his best (core/catch_log), his workouts (the workout store) and the
 - `core/holidays.py`: When a holiday falls (the live sweep, 2026-11-25: "What day is Thanksgiving this year?" got "I don't have that information"), worked out in code: the ones on a fixed date (Christmas, the Fourth of July, Halloween...), the ones on a weekday of a month (Thanksgiving, the fourth Thursday of November in
 - `core/home_link.py`: Supercharged online (DEC-0022, level 2): when the phone can reach MIA on the home computer (same Wi-Fi, or anywhere through Tailscale), Talk uses the computer's bigger model; when it can't, mid-conversation or not, the phone's own model answers. MIA always says which one did (`level`).
@@ -1039,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-758 files, 108,350 lines; 8,958 of 9,025 classes and functions documented
+758 files, 108,357 lines; 8,957 of 9,024 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1065,7 +1066,6 @@
 - `tests/test_ambient.py`: MIA's ambient view for the second monitor, flowing to one monitor when the other goes (core/ambient.py, gui/ambient_screens.py, DEC-0231, Zac's Q-80).
 - `tests/test_answer_compare.py`: How MIA answers (DEC-0138): offering an answer two ways, the facts checked, the picks and the screen, and the voice tools that run the same style.* actions.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own.
-- `tests/test_answered_ask.py`: His bare answer to her own last question made whole (core/conversation_state.answered_ask, brainstorm round 19): "5 gallons" after "How much fuel?", "half a gallon an hour" after her burn-rate ask, his town after "I don't know your town yet"; never when she didn't ask it, never a no or a question.
 - `tests/test_app_ecosystem.py`: MIA's understanding of her own apps (migration phase M2, DEC-0178; core/app_ecosystem.py, core/assistant_app_registry_actions.py): the inventory, one app's parts, which app does something, and the check (health, overlaps, gaps) are answered from the manifests and the runtime; a failing job is pinned
 - `tests/test_app_registry.py`: The Application Registry (DEC-0175, DEC-0178, migration phase M1; core/app_registry.py, apps/*/manifest.json): every MIA-native app has one manifest that matches the published schema; together the manifests claim every tool, action kind, store, job and daily check in the code exactly once, and name 
 - `tests/test_app_scaffold.py`: MIA Forge's scaffold (phase M7, core/app_scaffold.py, tools/new_app.py): from one short description it writes a manifest the Application Registry accepts, a screen on the shared frame, a first test, and the two code edits that list the app; it refuses a bad id, a taken id, an unknown area and a file
@@ -1291,6 +1291,7 @@
 - `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; nothing about a medication's name reaches a s
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while.
 - `tests/test_hen_laying.py`: "Why did my hens stop laying?" (core/hen_laying.py): short winter days counted from the sun for his town with the day they're back over 14 hours, molt season by hemisphere, a young or old flock by when it came, a change in the flock first, and his log's lay rate this week against before; with no flo
+- `tests/test_her_asks.py`: His bare answer to her own last question finished in code (core/her_asks, brainstorm round 19): the generator's fuel and burn rate, his town (only when found, never a command of his), and "is it a good day to work outside?" said in her forecast's own words so her ask reaches him as hers.
 - `tests/test_his_words_reach_the_tool.py`: A calculator whose one detail is his question (canning_time, feed_mix, bleach_for_water, meat_cure) gets his own words, never the model's (core/tool_loop.his_words; live check, 2026-11-25: "how long do I pressure can quart jars of green beans?" reached canning_time with the tool's own description as
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
 - `tests/test_hobby_lessons.py`: His hobbies' courses answer their own how-tos (core/lesson_answer.py, the live sweep 2026-11-25): tuning, a chord progression, barre and power chords, the pentatonic, string bends, wood joints and finishes, progressive overload; never a car's finish or an oil change.

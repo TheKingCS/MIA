@@ -140,8 +140,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     The morning briefing too (`_morning_briefing_reply`).
     A quote from a job's words too (`_job_quote_reply`).
     A daily reminder too (`_daily_reminder_reply`).
-    Two logs in one sentence too (`_two_things_reply`: "$40 on screws and 2 hours on the shed"), and a bare answer to
-    her own last question made whole first (core/conversation_state.answered_ask)."""
+    Two logs in one sentence too (`_two_things_reply`: "$40 on screws and 2 hours on the shed")."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -159,9 +158,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         return None
     from core.conversation_state import offered_phrase
 
-    from core.conversation_state import answered_ask
-
-    prompt = offered_phrase(conversation, prompt) or answered_ask(conversation, prompt) or prompt  # as in a turn
+    prompt = offered_phrase(conversation, prompt) or prompt  # "ok, start it" to her offer, as in a turn
     prompt = reshaped(prompt)  # a greeting before a question, the weekday first, as in a turn
     from core.trade_actions import reply as job_reply
 
@@ -1402,7 +1399,7 @@ _OWN_TOOLS = (
                                   r"(?:i|we) have(?: left)?|is (?:my|our|the) (?:firewood|woodpile) enough|will (?:my|our|the) "
                                   r"(?:firewood|woodpile) last(?: the winter)?)\s*[?.!]*\s*$", re.I), False),
     # "is it a good day to work outside?": her forecast's own words (or her ask for his town, which a bare town answers:
-    # core/conversation_state.answered_ask), never the model's "can you tell me your city or zip code?"
+    # core/her_asks), never the model's "can you tell me your city or zip code?"
     ("work_outside_wind_chill_heat_index", re.compile(
         r"^(?!.*\bif\b)\s*(?:hey mia,? )?(?:is (?:it|today|tomorrow) (?:a )?good (?:day|time|weather) (?:to|for) "
         r"(?:work(?:ing)? outside|outside work)|(?:can|should) i work outside|is it (?:too hot|too cold|safe) to work "
@@ -2107,20 +2104,20 @@ def _follow_through_reply(context, conversation, prompt: str):
     "what about this month?" after last month's spending, "and the card?" after the truck loan): his last question
     with the new words in place (the last one that wasn't itself a follow-up, each follow-up since folded in:
     core/follow_through.thread, so "and groceries?" after "what about this month?" is groceries this month), answered by the same code answers (`_records_reply`,
-    `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_everyday_reply`). A bare number answering her
-    own question for one ("about 4" after "How many cords does a winter take you?") is kept first
-    (core/firewood.answer_to_ask). None when it isn't one, can't be joined, or no code answer takes the joined question (the
+    `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_everyday_reply`). His bare answer to her own
+    last question ("about 4" after her firewood ask, "5 gallons" after "How much fuel?", his town) is kept first
+    (core/her_asks). None when it isn't one, can't be joined, or no code answer takes the joined question (the
     model has it)."""
     from core import follow_through
 
-    if conversation is not None:  # a bare number answering her own question for one (core/firewood.answer_to_ask)
+    if conversation is not None:  # his bare answer to her own last question (core/her_asks)
         said = [str(getattr(m, "content", "") or "") for m in getattr(conversation, "messages", []) or []
                 if getattr(m, "role", "") == "assistant"]
         if said:
             try:
-                from core import firewood
+                from core import her_asks
 
-                kept = firewood.answer_to_ask(context, said[-1], prompt)
+                kept = her_asks.reply(context, said[-1], prompt)
                 if kept:
                     return kept
             except Exception:
@@ -2464,8 +2461,6 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     question set aside, "every Saturday morning remind me to ..." as "remind me every Saturday to ... at 8am").
     A reply is taken for a tool call only when it names one of her tools. The model's "the fact sheet" is never said
     aloud (response_composer.without_sheet_words, on the model's words only).
-    His bare answer to her own last question ("5 gallons" after "How much fuel?") is made whole first
-    (core/conversation_state.answered_ask).
     Two logs in one sentence ("I spent $40 on screws and 2 hours on the shed") are each kept by their own code
     (`_two_things_reply`), before a single expense could take the whole sentence.
     """
@@ -2484,10 +2479,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     prepared = pre_turn(context, conversation, prompt)
     from core.conversation_state import offered_phrase
 
-    from core.conversation_state import answered_ask
-
-    # "ok, start it" to her 'Say "..." and I'll ...': those words; "5 gallons" to her "How much fuel?": the whole question
-    offered = offered_phrase(conversation, prompt) or answered_ask(conversation, prompt)
+    offered = offered_phrase(conversation, prompt)  # "ok, start it" to her 'Say "..." and I'll ...': those words
     add_message(conversation, "user", prompt)
     if offered and prepared.fixed_reply is None:
         prompt = offered
