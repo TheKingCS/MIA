@@ -23,6 +23,11 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
 - Two courses: Fishing basics (core/fishing_path.py) and Soldering and the meter (core/soldering_path.py).
 - Waiting on Zac: Q-0018; which other hobbies get courses (hunting, 3D printing, small engines); shop mode; the
   offline packs and SearXNG; PlatformIO; phone access. 8626 passing.
+- From brainstorm round 16 (from answering to anticipating), built and Fable-reviewed: the homestead's health line
+  (core/homestead_health.py: days of water, food, feed and generator fuel, the lowest first; "how's the homestead?";
+  the morning briefing names water, food or fuel at a week or under, each once a week) and a money pulse
+  (core/money_pulse.py: Sundays through the gate, and "how's my money this week?": the category drifting over its
+  usual pace, what's due this week, bills not marked paid, the tightest week ahead). 8648 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
