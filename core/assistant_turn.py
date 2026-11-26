@@ -1986,9 +1986,9 @@ _HOW_MANY_HAVE = re.compile(r"^\s*how many (?!days\b|weeks\b|months\b|hours\b|ye
 def _follow_through_reply(context, conversation, prompt: str):
     """A short follow-up to one of her code answers, made whole (core/follow_through, the live sweep 2026-11-26:
     "what about this month?" after last month's spending, "and the card?" after the truck loan): his last question
-    with the new words in place (the last one that wasn't itself a follow-up, so "and last week?" after "what about
-    this month?" still leans on the spending question), answered by the same code answers (`_records_reply`,
-    `_own_tool_reply`, `_water_on_hand_reply`, `_everyday_reply`). None when it isn't one, can't be joined, or no code answer takes the joined question (the
+    with the new words in place (the last one that wasn't itself a follow-up, each follow-up since folded in:
+    core/follow_through.thread, so "and groceries?" after "what about this month?" is groceries this month), answered by the same code answers (`_records_reply`,
+    `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_everyday_reply`). None when it isn't one, can't be joined, or no code answer takes the joined question (the
     model has it)."""
     from core import follow_through
 
@@ -1997,15 +1997,15 @@ def _follow_through_reply(context, conversation, prompt: str):
         return None
     asked = [str(getattr(m, "content", "") or "") for m in getattr(conversation, "messages", []) or []
              if getattr(m, "role", "") == "user"]
-    # the question a chain of follow-ups leans on ("what about this month?", then "and last week?")
-    asked = [a for a in asked if a.strip() != prompt.strip() and follow_through.follow_on(a) is None]
-    if not asked:
-        return None
-    whole = follow_through.merged(asked[-1], x)
+    if asked and asked[-1].strip() == prompt.strip():
+        asked = asked[:-1]  # the new words, already stored
+    # the thread: the question a chain of follow-ups leans on, each since folded in ("what about this month?", then
+    # "and groceries?" is groceries this month)
+    whole = follow_through.thread(asked, x)
     if not whole:
         return None
-    return (_records_reply(context, whole) or _own_tool_reply(context, whole) or _water_on_hand_reply(context, whole)
-            or _everyday_reply(context, whole))
+    return (_records_reply(context, whole) or _own_tool_reply(context, whole) or _spent_on_reply(context, whole)
+            or _water_on_hand_reply(context, whole) or _everyday_reply(context, whole))
 
 
 def _records_reply(context, prompt: str):

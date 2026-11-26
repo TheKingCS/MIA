@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1899 files, 399,584 lines; 1899 files describe themselves; 21,675 of 21,821 classes and functions are documented.
+1900 files, 399,636 lines; 1900 files describe themselves; 21,678 of 21,824 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-739 files, 209,429 lines; 10,364 of 10,443 classes and functions documented
+739 files, 209,456 lines; 10,365 of 10,444 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1038,7 +1038,7 @@
 
 ## tests/: the test suite: what each part must do
 
-750 files, 107,993 lines; 8,937 of 9,004 classes and functions documented
+751 files, 108,018 lines; 8,939 of 9,006 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1253,6 +1253,7 @@
 - `tests/test_flock_and_harvests.py`: DEC-0037: chickens (eggs, feed, birds; cartons into goods, eggs into the bakery), Grow Lab harvests into stock, goods added by hand, and the starter recipes.
 - `tests/test_flow_loops.py`: The flow loops Night School's teacher drafted (T-0047, core/loops.py): actions that broke or were turned down, email drafts thrown away or left open, unprompted messages dismissed or expired. Each reads records the person already keeps; an action's record carries its kind only, never what was in it.
 - `tests/test_focus_presets.py`: Each person's Apps screen (core/focus_presets.py) and MIA's setup questions (gui/onboarding_dialog.py), 2026-10-01.
+- `tests/test_follow_thread.py`: A conversation's thread (core/follow_through.thread, brainstorm round 18): a chain of follow-ups folded in turn, so the third leans on what the first two made of the question, and "same for X" is one of them.
 - `tests/test_follow_through.py`: A short follow-up to a code answer, made whole (core/follow_through.py, the live sweep 2026-11-26): a period for a period, a thing for a thing, answered by the same code; "my card" is his one credit card.
 - `tests/test_food_table.py`: MIA's built-in food table (core/food_table.py, DEC-0020): matching an ingredient to a food, turning amounts into grams, and a recipe's nutrition per serving. Uses a small table in the real file's format (real USDA names and values for these foods).
 - `tests/test_free_build.py`: My Bench (core/free_build.py, core/part_specs.py): his own parts wired as he likes, checked by each part's spec and the board's limits (the HC-SR04's 5 V echo into a 3.3 V pin, a 3.3 V-only BME280 on 5 V, I2C off its pins, an analog output with no ADC, a pot across VIN, an LED without its resistor, 

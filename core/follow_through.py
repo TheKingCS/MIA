@@ -13,10 +13,14 @@ joined question goes to the same code answers that took the first one:
 - a size for a size: "and a 10 by 12?" after "the square footage of a 12 by 16 shed?" (only the question's own
   shapes are swapped).
 
-`follow_on(text)` is the new words of a follow-up ("what about X", "how about X", "and X"), or None; `merged(prev,
+`follow_on(text)` is the new words of a follow-up ("what about X", "how about X", "and X", "same for X"), or None; `merged(prev,
 x)` the whole question, or None when it can't be joined (then the model has it, as before). Only a question is
 joined, never a command (the Fable review: "cancel the dentist reminder" then "what about today?"), and a debt
 follow-up stays a debt question ("and the mortgage?" is what he owes on it).
+
+`thread(asked, x)` follows a conversation's thread (brainstorm round 18): the question his follow-ups lean on, each
+follow-up since folded in turn ("how much did I spend on gas last month?", "what about this month?", "and
+groceries?" is groceries this month), then the new words; at most `THREAD_TURNS` follow-ups back.
 """
 
 from __future__ import annotations
@@ -25,8 +29,13 @@ import re
 from typing import Optional
 
 _LEAD = re.compile(r"^\s*(?:ok(?:ay)?,?\s+|so,?\s+|and\s+|but\s+)?(?:what about|how about|and what about|and how about|"
-                   r"and)\s+(?P<x>[^?]{1,40}?)\s*[?.!]*\s*$", re.I)
+                   r"(?:and |now )?(?:do |say )?(?:the )?same (?:thing |question )?for|and for|and)\s+"
+                   r"(?P<x>[^?]{1,40}?)\s*[?.!]*\s*$", re.I)
 _THING_ASKS = (
+    # "how much did I spend on gas last month?" then "and groceries?": the thing swapped, its period kept (a thread;
+    # the debt question is [1], the days-until question last)
+    re.compile(r"^(?P<ask>\s*how much (?:did|have) (?:i|we) (?:spent|spend) on )(?P<thing>[\w' -]+?)(?P<end>(?:\s+(?:this|"
+               r"last|in|so far|yesterday|today)\b[\w ]*?)?\s*\??\s*)$", re.I),
     re.compile(r"^(?P<ask>\s*how much (?:is|do (?:i|we) (?:still )?owe on|is left on) (?:my|the|our) )(?P<thing>[\w' -]+?)"
                r"(?P<end>\s*\??\s*)$", re.I),
     re.compile(r"^(?P<ask>\s*did (?:i|we) (?:already )?pay (?:the |my |our )?)(?P<thing>[\w' -]+?)(?P<end>(?: bill)?"
@@ -43,6 +52,23 @@ _THING_ASKS = (
 _SIZE = re.compile(r"\b\d+(?:\.\d+)?\s*(?:by|x)\s*\d+(?:\.\d+)?\b", re.I)
 
 
+THREAD_TURNS = 4
+
+
+def thread(asked: list, x: str) -> Optional[str]:
+    """Pure logic. His questions so far (oldest first, the new follow-up not among them) and the new follow-up's
+    words: the last question that wasn't a follow-up, with each follow-up after it folded in (one that can't be
+    joined leaves it as it was), then `x`; None when there's no such question, it's more than `THREAD_TURNS`
+    follow-ups back, or `x` can't be joined."""
+    base = next((i for i in range(len(asked) - 1, -1, -1) if follow_on(asked[i]) is None), None)
+    if base is None or len(asked) - 1 - base > THREAD_TURNS:
+        return None
+    whole = asked[base]
+    for said in asked[base + 1:]:
+        whole = merged(whole, follow_on(said) or "") or whole
+    return merged(whole, x)
+
+
 def follow_on(text: str) -> Optional[str]:
     """Pure logic. The new words of a short follow-up ("what about this month?" -> "this month"), or None."""
     found = _LEAD.match(text or "")
@@ -51,7 +77,8 @@ def follow_on(text: str) -> Optional[str]:
 
 def merged(prev: str, x: str) -> Optional[str]:
     """Pure logic. His last question with the follow-up's words in place: a period for its period, or a thing for
-    its thing (a debt follow-up kept a debt question; never a "before ..." or "that"), or a size for the thing's
+    its thing (a debt follow-up kept a debt question; a spending one keeps its period; never a "before ..." or
+    "that"), or a size for the thing's
     own (the last) size; None when they can't be joined or his last words weren't a
     question."""
     from core.money_periods import _PERIOD_WORDS, only_period
@@ -79,7 +106,7 @@ def merged(prev: str, x: str) -> Optional[str]:
                 return None  # "and before interest?", "and before that?": not a thing to swap in
             words = r"(?:the|my|our|until|till|til|to|before)" if days else r"(?:the|my|our)"
             thing = re.sub(rf"^{words}\s+", "", x, flags=re.I)  # "until" only for the days-until question
-            if shape is _THING_ASKS[0] and re.search(r"\b(?:loan|card|debt|balance|owe|left on)\b", prev, re.I) and \
+            if shape is _THING_ASKS[1] and re.search(r"\b(?:loan|card|debt|balance|owe|left on)\b", prev, re.I) and \
                     not re.search(r"\b(?:loan|card|debt|balance)\b", thing, re.I):
                 return f"How much do I owe on my {thing}?"  # "and the mortgage?" after a loan: still a debt question
             return f"{found.group('ask')}{thing}{found.group('end')}"

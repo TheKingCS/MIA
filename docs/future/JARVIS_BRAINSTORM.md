@@ -353,7 +353,7 @@ schedule) and where the next step is. Each idea says what it needs:
 - **Teach me something** (built, core/teach_something): a lesson from her own courses, his stage when he's on one.
 - **Two things in one sentence** (built, core/assistant_turn._two_things_reply): "I spent $40 on screws and 2 hours on
   the shed" logs both, each through its own code and said back together; one half never swallows the other.
-- **A conversation's thread** (no decision): "and that one?", "the other one", "same for the truck" across three or
+- **A conversation's thread** (built, core/follow_through.thread: each follow-up folded in turn): "and that one?", "the other one", "same for the truck" across three or
   four turns, not only the last question (core/follow_through holds one step back).
 - **What she noticed today** (built, core/evening_wrap.noticed_today): one line in the evening wrap of the thing in his records most off its
   usual (core/unusual already finds them), said once.
