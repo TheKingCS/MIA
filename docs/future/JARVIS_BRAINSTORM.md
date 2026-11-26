@@ -344,7 +344,25 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
-## Round 17 (2026-11-25, after round 16 was built): from noticing to joining up
+## Round 18 (2026-11-26, after a day of sweeps): from answering to keeping up a conversation
+
+A day of live sweeps (everyday asks, follow-ups, money, automation, a cross-route review of some 200 sentences)
+showed where she's strong now (his records said in code, follow-ups joined to the question before, reports on a
+schedule) and where the next step is. Each idea says what it needs:
+
+- **Teach me something** (built, core/teach_something): a lesson from her own courses, his stage when he's on one.
+- **Two things in one sentence** (no decision): "I spent $40 on screws and 2 hours on the shed" logs both, each
+  through its own code and said back together; today one of them is dropped to the model.
+- **A conversation's thread** (no decision): "and that one?", "the other one", "same for the truck" across three or
+  four turns, not only the last question (core/follow_through holds one step back).
+- **What she noticed today** (no decision): one line in the evening wrap of the thing in his records most off its
+  usual (core/unusual already finds them), said once.
+- **A season's homestead list** (no decision): "what should I be doing on the homestead this month?" from his frost
+  dates, his flock, his garden plans and his upkeep, December's different from May's.
+- **Retiring the writing shortcuts** (his say: Q-0018): the model picks the tool and code checks it, so new
+  phrasings stop needing new patterns.
+- **The fire how-to** (his say: Q-0019).
+
 
 Every round 16 idea is built (the homestead's health line, the money pulse, what she learned, hobbies' progress,
 the week's look-ahead, "tell me when...", "before you go"), each Fable-reviewed and swept on the PC's model. What
