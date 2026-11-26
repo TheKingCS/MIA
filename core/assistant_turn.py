@@ -128,7 +128,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
     A monthly reminder (`_monthly_reminder_reply`) too, a unit conversion (`_convert_reply`) and a holiday's date
-    (`_holiday_reply`), and the house's trouble (`_home_trouble_reply`), and when to fish (`_fish_when_reply`).
+    (`_holiday_reply`), and the house's trouble (`_home_trouble_reply`), and when to fish (`_fish_when_reply`), and the
+    power out (`_outage_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -200,6 +201,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _mains_reply(context, prompt)  # an outlet's voltage, in fixed safe words, as in a turn
     if walked is None:
         walked = _home_trouble_reply(context, prompt)  # a burst pipe, a flooded basement, as in a turn
+    if walked is None:
+        walked = _outage_reply(context, prompt)  # the power out, and his readiness, as in a turn
     if walked is None:
         walked = _fish_when_reply(context, prompt)  # "when's a good time to fish?", as in a turn
     if walked is None:
@@ -1082,6 +1085,18 @@ def _fish_when_reply(context, prompt: str):
         return None
 
 
+def _outage_reply(context, prompt: str):
+    """Ready for the power going out: the first things to do and his own readiness (core/outage_plan.reply); the
+    power going out now is the outage clock's (core/outage.py). None otherwise."""
+    from core import outage_plan
+
+    try:
+        return outage_plan.reply(context, prompt)
+    except Exception:
+        log.exception("Couldn't answer the outage")
+        return None
+
+
 def _home_trouble_reply(context, prompt: str):
     """A burst or frozen pipe or a flooded basement, in fixed words (core/home_trouble.reply); None otherwise."""
     from core import home_trouble
@@ -1317,7 +1332,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     safe words (`_mains_reply`); a monthly reminder goes on his calendar (`_monthly_reminder_reply`); a unit
     conversion (`_convert_reply`) and a holiday's date (`_holiday_reply`) are worked out in code; a burst pipe or a
     flooded basement is said in fixed words (`_home_trouble_reply`), and when to fish from his catches
-    (`_fish_when_reply`). A turn the
+    (`_fish_when_reply`), and the power out with his own readiness (`_outage_reply`). A turn the
     model answers ends a question plan's thread
     (core/conversation_state.forget), and a reply that is only a humor example is never said.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
@@ -1463,6 +1478,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _mains_reply(context, prompt)  # an outlet's voltage: a tester first, an electrician if off
         if walked is None:
             walked = _home_trouble_reply(context, prompt)  # the house's trouble: the main shutoff, the power first
+        if walked is None:
+            walked = _outage_reply(context, prompt)  # the power out: the first things, then his own stores
         if walked is None:
             walked = _fish_when_reply(context, prompt)  # when to fish, from his own catches and the weather
         if walked is None:

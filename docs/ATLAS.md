@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1841 files, 392,117 lines; 1841 files describe themselves; 21,325 of 21,450 classes and functions are documented.
+1843 files, 392,224 lines; 1843 files describe themselves; 21,330 of 21,455 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-722 files, 204,566 lines; 10,178 of 10,257 classes and functions documented
+723 files, 204,639 lines; 10,180 of 10,259 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -438,6 +438,7 @@
 - `core/orchard.py`: The orchard (Zac, 2026-11-24: "will manage my orchard"; docs/future/SMART_AG_PLAN.md phase A1). Before this MIA had nothing for fruit trees.
 - `core/outage.py`: The power's out (Jarvis brainstorm, round 10): a clock from when it went out, and what that means for him right now, worked out in code from the hours gone and his own records. Survival at home, offline: it needs nothing but this PC on a battery, or the phone.
 - `core/outage_actions.py`: The power outage clock from the screen and by voice (core/outage.py; DEC-0125, both ways). The actions `outage.start` (the Power page's "The Power's Out", with an optional time) and `outage.end` ("The Power's Back"), and the tool `power_outage` ("the power went out at 6 am", "how long is the food go
+- `core/outage_plan.py`: Ready for the power going out (the live sweep, 2026-11-25: "What do I do if the power goes out for a week?" got a generic list that knew nothing of his own stores): the first things to do, in fixed words from Ready.gov and the USDA's food safety guidance, then his own readiness from his records (cor
 - `core/outdoor_work.py`: "Is it safe to work outside today?" (Jarvis brainstorm, round 12; asked for, so no unprompted message): the day's hourly forecast (core/weather.py `hours`) read for heat and cold, with the National Weather Service's own formulas, worked out here and never by the model.
 - `core/ownership.py`: Whose is it? (2026-10-01) In a shared household some things belong to one person: the truck is Zac's, the sewing machine is Faith's, the tractor is everyone's. A maintenance item (vehicle, tool, appliance) can name its owner (`MaintenanceAsset.owner_profile_id`; None means shared by the household).
 - `core/pack_index.py`: Her own search index for the offline packs Kiwix didn't index (core/offline_library.py). Many of the most useful ones have no full-text index of their own: iFixit's repair guides, the USDA canning guide, the LibreTexts textbooks, and the preppers' collections, which are PDFs inside the pack (water t
@@ -1020,7 +1021,7 @@
 
 ## tests/: the test suite: what each part must do
 
-710 files, 105,536 lines; 8,776 of 8,822 classes and functions documented
+711 files, 105,570 lines; 8,779 of 8,825 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1419,6 +1420,7 @@
 - `tests/test_os_image.py`: FW-01's checks on how the MIA OS image is made (DEC-0263, DEC-0279; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): the base pinned by digest, MIA's Python packages hash-locked and the locks covering `requirements.txt`, the reference PC's model set in the image, the GPU bench measuring tha
 - `tests/test_os_session.py`: FW-03, MIA's own desktop session on MIA OS (DEC-0227, DEC-0278): her runtime writes where her shell finds her (`core/desktop_session.py`), owner-only, and removes it when it stops; the shell (`gui/os_shell.py`) opens her front end when she answers and a recovery page when she doesn't, whose links ac
 - `tests/test_outage.py`: The power outage clock (core/outage.py): when he said it went out read in code, the fridge's 4 hours and the freezer's 24 or 48 said as time left or past, the fish, hens and well only when they apply, and the end said with what to throw out; by voice and from the Power page. And a day without safe w
+- `tests/test_outage_plan.py`: Ready for the power going out (core/outage_plan.py, 2026-11-25): the first things to do in fixed words, then his own readiness from his records, then the drill; never his power bill, a solar panel or a power tool.
 - `tests/test_outdoor_work.py`: "Is it safe to work outside today?" (core/outdoor_work.py): the NWS heat index and wind chill match the Weather Service's own tables, a hot day names its level and cooler hours with the heat-stroke signs, a bitter day the minutes to frostbite, a mild day says so, and the forecast's hours come throug
 - `tests/test_ownership.py`: Whose is it (core/ownership.py), 2026-10-01: owner marks on vehicles, tools and appliances; Today shows your things and shared ones.
 - `tests/test_parity.py`: Full use both ways on every device (DEC-0125, core/parity.py): every app can be used by voice, on the PC, on the phone and on the glasses, or the gap is decided in work/parity.json; parity can only grow, and docs/PARITY.md is current. Each app's ask (its screen's "Say: …") reaches that app's own too
