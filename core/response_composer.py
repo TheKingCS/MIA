@@ -23,7 +23,8 @@ sentences come first whenever they fit: the model only rewrites an opening
 too long to speak (tried the other way round, the rewrites lost her warmth
 and once added a fact; pc-check, 2026-11-03).
 
-On every surface, a paragraph or sentence the model said twice is said once (`without_repeats`).
+On every surface, a paragraph or sentence the model said twice is said once (`without_repeats`), and "the fact
+sheet" (her own working) is never said aloud (`without_sheet_words`).
 """
 
 from __future__ import annotations
@@ -129,6 +130,25 @@ def without_repeats(text: str) -> str:
     return "\n\n".join(p for p in paragraphs if p.strip())
 
 
+def without_sheet_words(said: str) -> str:
+    """Pure logic. The answer without her own working said aloud ("the fact sheet says", "the fact sheet doesn't
+    mention": the live sweep, 2026-11-26): a sheet she was given is his records to him. Only "fact sheet" itself, so a
+    balance sheet, a cookie sheet and the rest of the sentence stay as written (the Fable review). A sentence saying
+    he gave or mentioned one ("You mentioned a fact sheet, but ...": brainstorm round 19's live check) goes, when
+    there's anything else."""
+    said = re.sub(r"\b(?:the |my )?fact sheet (?:says|shows|lists|suggests) (?:to |that )?(\w)",
+                  lambda m: m.group(1).upper(), said, flags=re.I)  # the sentence starts where the words were
+    said = re.sub(r"\b(?:the |my )?fact sheet (?:doesn'?t|does not) (?:mention|say|show|have|include|list)\b",
+                  "I don't have", said, flags=re.I)
+    said = re.sub(r"\b(?:on|in|from) the fact sheet\b", "in your records", said, flags=re.I)
+    said = re.sub(r"\bthe fact sheet\b", "your records", said, flags=re.I)
+    if re.search(r"\bfact sheets?\b", said, re.I):
+        kept = [s for s in SENTENCE.findall(said) if not re.search(r"\bfact sheets?\b", s, re.I)]
+        rest = "".join(kept).strip()
+        said = rest if rest else re.sub(r"\ba fact sheet\b", "your records", said, flags=re.I)
+    return said
+
+
 def polish(text: str, prompt: str = "") -> str:
     """Pure logic. The whole answer, for a screen: only the filler opening,
     a last sentence that offers more help, and a humor example's line copied
@@ -137,11 +157,13 @@ def polish(text: str, prompt: str = "") -> str:
     A paragraph or sentence said twice is said once (`without_repeats`), and his request said back as her opening
     ("I want to learn about tying a bowline.") goes.
     "I don't know what that means." before a real answer goes, and so does the model writing out its own lookup
-    ('Tool call: "..." Response: "..."': only the answer stays)."""
+    ('Tool call: "..." Response: "..."': only the answer stays). "The fact sheet" said aloud never stays
+    (`without_sheet_words`)."""
     from core.personality import without_copied_example
 
     text = without_copied_example((text or "").strip(), prompt)  # never a humor example's line said as hers
     text = without_repeats(text) or text  # never the same paragraph or sentence twice
+    text = without_sheet_words(text) or text  # her own working ("the fact sheet") is his records to him
     # 'Tool call: "What is the best goat for milk?"  Response: "The best..."' (the live sweep, 2026-11-26): the model
     # wrote out its own lookup; only the answer stays
     framed = re.match(r'^\s*(?:tool call|function call)\s*:\s*(?:"[^"\n]*"\s*|[^\n]*\n\s*)(?:\n\s*)*response\s*:\s*(.+)$',
