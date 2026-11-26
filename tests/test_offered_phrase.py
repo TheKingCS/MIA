@@ -20,7 +20,10 @@ def test_a_go_ahead_runs_her_offer():
     talk = _talk('You haven\'t started Guitar yet. Say "I want to learn guitar" and I\'ll set it up with you.')
     assert offered_phrase(talk, "Ok, start it") == "I want to learn guitar"
     assert offered_phrase(talk, "yes please") == "I want to learn guitar"
+    assert offered_phrase(talk, "go ahead") == "I want to learn guitar"
     assert offered_phrase(talk, "what's a barre chord?") is None
+    for ack in ("ok", "sure", "okay thanks", "sounds good"):
+        assert offered_phrase(talk, ack) is None, ack
 
 
 def test_never_an_undo_a_stop_or_two_offers():

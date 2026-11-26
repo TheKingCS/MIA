@@ -453,6 +453,9 @@ def needs_for(context: AppContext, dish: str) -> Optional[str]:
     recipe, error = _find_recipe(context, dish)
     if error or recipe is None:
         return None
+    wanted = set(re.findall(r"[a-z]+", dish.lower())) - {"the", "my", "a", "some", "that"}
+    if not wanted or not wanted <= set(re.findall(r"[a-z]+", recipe.name.lower())):
+        return None  # every word of the dish in the recipe's name: "the coop" is never "Coop Cleaner"
     missing = next((m for r, m in kitchen.recipes_makeable_now() if r.recipe_id == recipe.recipe_id), None)
     if missing is None:
         names = [str(i.get("name", "")) for i in recipe.ingredients if i.get("name")]

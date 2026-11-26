@@ -208,7 +208,7 @@ def _amount(row: dict) -> str:
 def say_year(context, today: Optional[date] = None) -> str:
     """This year's harvest in words, with what it would cost at his recorded store prices beside what its plantings
     cost (never called savings when their cost isn't recorded), and what isn't valued; the greenhouse's fish said on
-    their own, never as produce or priced."""
+    their own, never as produce or priced. With none logged, an example to say, worded so a bare "ok" never logs it."""
     from core.region import money
 
     today = today or date.today()
@@ -221,8 +221,8 @@ def say_year(context, today: Optional[date] = None) -> str:
         return (f"So far in {today.year} the greenhouse has given you " + "; ".join(
             f"{r['crop']}: {_amount(r)}" for r in fish) + " of fish, and no produce is logged yet.")
     if not rows:
-        return (f"No harvests logged in {today.year} yet. Say \"I harvested 3 pounds of beans\" and I'll keep it with "
-                "that crop.")
+        return (f"No harvests logged in {today.year} yet. Say one, like \"I harvested 3 pounds of beans\", to keep "
+                "it with that crop.")
     said = "; ".join(f"{r['crop']}: {_amount(r)}" + (f" (about {money(r['value'])} at {r['price_from']}'s price)"
                                                     if r["value"] is not None else "") for r in rows)
     valued = [r for r in rows if r["value"] is not None]

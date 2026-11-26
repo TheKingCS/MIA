@@ -124,7 +124,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A reminder on a day too (`_reminder_reply`).
     A course's next lesson too (`_next_lesson_reply`).
     His upkeep (`_upkeep_reply`) and an LED's resistor (`_led_reply`) too.
-    A short follow-up to a code answer, made whole, too (`_follow_through_reply`: "what about this month?").
+    A short follow-up to a code answer, made whole, too (`_follow_through_reply`: "what about this month?"), and a
+    go-ahead to her own offer runs its words (core/conversation_state.offered_phrase), as in a turn.
     What he spent on a category (`_spent_on_reply`) too.
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
@@ -153,6 +154,9 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         return stopped
     if _personal(conversation):
         return None
+    from core.conversation_state import offered_phrase
+
+    prompt = offered_phrase(conversation, prompt) or prompt  # "ok, start it" to her offer, as in a turn
     from core.trade_actions import reply as job_reply
 
     try:  # a job in progress, or "walk me through ..." (DEC-0149), as in a turn
@@ -1616,8 +1620,10 @@ _HOW_MANY_HAVE = re.compile(r"^\s*how many (?!days\b|weeks\b|months\b|hours\b|ye
 def _follow_through_reply(context, conversation, prompt: str):
     """A short follow-up to one of her code answers, made whole (core/follow_through, the live sweep 2026-11-26:
     "what about this month?" after last month's spending, "and the card?" after the truck loan): his last question
-    with the new words in place, answered by the same code answers (`_records_reply`, `_own_tool_reply`). None when it
-    isn't one, can't be joined, or no code answer takes the joined question (the model has it)."""
+    with the new words in place (the last one that wasn't itself a follow-up, so "and last week?" after "what about
+    this month?" still leans on the spending question), answered by the same code answers (`_records_reply`,
+    `_own_tool_reply`). None when it isn't one, can't be joined, or no code answer takes the joined question (the
+    model has it)."""
     from core import follow_through
 
     x = follow_through.follow_on(prompt)
@@ -1625,7 +1631,8 @@ def _follow_through_reply(context, conversation, prompt: str):
         return None
     asked = [str(getattr(m, "content", "") or "") for m in getattr(conversation, "messages", []) or []
              if getattr(m, "role", "") == "user"]
-    asked = [a for a in asked if a.strip() != prompt.strip()]
+    # the question a chain of follow-ups leans on ("what about this month?", then "and last week?")
+    asked = [a for a in asked if a.strip() != prompt.strip() and follow_through.follow_on(a) is None]
     if not asked:
         return None
     whole = follow_through.merged(asked[-1], x)

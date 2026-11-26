@@ -19,6 +19,8 @@ def test_the_follow_up_is_joined_to_his_last_question():
     assert follow_through.merged("How much is my truck loan?", "the card") == "How much is my card?"
     assert follow_through.merged("How many cutting boards do I have?", "the bowls") == "How many bowls do I have?"
     assert follow_through.merged("What's the weather tomorrow?", "the garden") is None
+    assert follow_through.merged("cancel the dentist reminder", "today") is None, "never a command re-run"
+    assert follow_through.merged("How much is my truck loan?", "the mortgage") == "How much do I owe on my mortgage?"
 
 
 def test_and_the_card_after_the_truck_loan_reads_his_card():

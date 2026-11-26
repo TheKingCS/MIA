@@ -125,15 +125,18 @@ def agreed_to(conversation, prompt: str) -> Optional[str]:
     return sentences[-1]
 
 
-_GO_ON = re.compile(r"^(?:yes|yeah|yep|yup|sure|ok(?:ay)?|please|please do|do it|go ahead|sounds good|let'?s do it|"
-                    r"let'?s go|start it|start|let'?s start|set it up|do that)(?:[\s,!.]+(?:yes|ok(?:ay)?|please|start "
-                    r"it|do it|go ahead|set it up|let'?s go|thanks|thank you))*[\s!.]*$", re.I)
+# a go-ahead says to act ("do it", "start it", "go ahead", "yes please"): a bare "ok", "sure" or "thanks" is only an
+# acknowledgement, never a yes to run her example (the Fable review, 2026-11-26: "ok" would have logged a harvest)
+_GO_ON = re.compile(r"^(?:(?:yes|yeah|yep|sure|ok(?:ay)?|alright),?\s+)?(?:please do|do it|go ahead|let'?s do it|let'?s go|"
+                    r"start it|let'?s start|set it up|do that|yes please|yes,? do it)(?:[\s,!.]+(?:please|thanks|thank "
+                    r"you))?[\s!.]*$", re.I)
 _SAY_OFFER = re.compile(r"\bSay [\"“]([^\"”]{3,80})[\"”],? (?:and I'?ll|and I will)\b", re.I)
 _NEVER_ON_A_YES = re.compile(r"\b(?:undo|stop|cancel|delete|remove|take back|forget|turn off|unlearn|clear)\b", re.I)
 
 
 def offered_phrase(conversation, prompt: str) -> Optional[str]:
-    """Pure logic. When `prompt` is a plain go-ahead ("ok, start it") to her own last message's one offer to do
+    """Pure logic. When `prompt` is a go-ahead that says to act ("ok, start it", "do it", "go ahead"; never a bare
+    "ok") to her own last message's one offer to do
     something ('Say "I want to learn guitar" and I'll set it up with you.'), the words she said to say; else None
     (the live sweep, 2026-11-26: "Ok, start it" got "What would you like to learn?"). Only an offer she'd carry out
     ("and I'll ..."), only one in the message, and never one that undoes, stops, cancels or deletes: a yes is never

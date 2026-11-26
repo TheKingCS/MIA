@@ -25,6 +25,7 @@ def test_a_recipes_missing_ingredients(monkeypatch):
     assert said == ('For Venison Chili you still need: ground venison; the rest is in your pantry. Say "add what I '
                     'need for the venison chili to my grocery list" and I\'ll put it on.')
     assert dom.needs_for(_context(), "a chicken coop") is None
+    assert dom.needs_for(_context(), "the chili bowls") is None, "every word of the dish in the recipe's name"
 
 
 def test_the_words_reach_it(monkeypatch):

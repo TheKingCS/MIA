@@ -12,7 +12,9 @@ joined question goes to the same code answers that took the first one:
   kitchen?" after "how many cutting boards do I have?" never (only the question's own shapes are swapped).
 
 `follow_on(text)` is the new words of a follow-up ("what about X", "how about X", "and X"), or None; `merged(prev,
-x)` the whole question, or None when it can't be joined (then the model has it, as before).
+x)` the whole question, or None when it can't be joined (then the model has it, as before). Only a question is
+joined, never a command (the Fable review: "cancel the dentist reminder" then "what about today?"), and a debt
+follow-up stays a debt question ("and the mortgage?" is what he owes on it).
 """
 
 from __future__ import annotations
@@ -40,12 +42,16 @@ def follow_on(text: str) -> Optional[str]:
 
 def merged(prev: str, x: str) -> Optional[str]:
     """Pure logic. His last question with the follow-up's words in place: a period for its period, or a thing for
-    its thing; None when they can't be joined."""
+    its thing (a debt follow-up kept a debt question); None when they can't be joined or his last words weren't a
+    question."""
     from core.money_periods import _PERIOD_WORDS, only_period
 
     prev, x = (prev or "").strip(), (x or "").strip()
     if not prev or not x:
         return None
+    if not re.match(r"^\s*(?:hey mia,?\s+)?(?:what|how|did|do|does|is|are|was|were|when|where|who|which|have|has)\b",
+                    prev, re.I):
+        return None  # only a question is asked again: never a command re-run ("cancel the dentist reminder today?")
     if only_period(" " + x) and _PERIOD_WORDS.search(x):
         if _PERIOD_WORDS.search(prev):
             return _PERIOD_WORDS.sub(x, prev, count=1)
@@ -54,5 +60,8 @@ def merged(prev: str, x: str) -> Optional[str]:
     for shape in _THING_ASKS:
         found = shape.match(prev)
         if found:
+            if shape is _THING_ASKS[0] and re.search(r"\b(?:loan|card|debt|balance|owe|left on)\b", prev, re.I) and \
+                    not re.search(r"\b(?:loan|card|debt|balance)\b", thing, re.I):
+                return f"How much do I owe on my {thing}?"  # "and the mortgage?" after a loan: still a debt question
             return f"{found.group('ask')}{thing}{found.group('end')}"
     return None
