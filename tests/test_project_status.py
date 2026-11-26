@@ -3,7 +3,7 @@ tests.test_project_status
 ===========================
 
 "How's the shed coming along?" (core/project_status.py, brainstorm round 19): one project's picture from his records,
-said in code, only for a project of his.
+said in code, only for a project of his; and its whole cost (its money and his hours).
 """
 
 from datetime import date
@@ -41,3 +41,21 @@ def test_past_due_and_the_words_reach_it(monkeypatch):
                   "status of the garage rewire project"):
         assert assistant_turn._own_tool_reply(SimpleNamespace(), words) == "picture of Garage Rewire", words
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "how's the weather looking?") != "picture of Garage Rewire"
+
+
+def test_the_whole_cost_is_its_money_and_his_hours_at_his_rate(monkeypatch):
+    from core import homestead_costs
+
+    shed = SimpleNamespace(project_id="p1", name="Shed", status="Active", budget=0.0, time_log=[{"hours": 10}])
+    monkeypatch.setattr(homestead_costs, "build_cost", lambda c, p: SimpleNamespace(expense_count=2))
+    monkeypatch.setattr(homestead_costs, "describe_build", lambda cost: "You've spent $400.00 on Shed.")
+    config = SimpleNamespace(get=lambda k, d=None: 30 if k == "workshop.labor_rate_per_hour" else d)
+    said = project_status.whole_cost(SimpleNamespace(budget=object(), config=config), shed)
+    assert said == "You've spent $400.00 on Shed. You've put 10 hours into it, $300.00 of your time at your $30.00 an hour."
+    from core import project_time
+
+    monkeypatch.setattr(project_time, "project_named", lambda c, w, whole=False: shed if w == "shed" else None)
+    monkeypatch.setattr(project_status, "whole_cost", lambda c, p: "whole")
+    for words in ("what has the shed cost me so far?", "how much did the shed cost us?", "what's the total cost of the shed?"):
+        assert assistant_turn._own_tool_reply(SimpleNamespace(), words) == "whole", words
+    assert assistant_turn._own_tool_reply(SimpleNamespace(), "what has the mower cost me?") != "whole"

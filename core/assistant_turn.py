@@ -1553,6 +1553,10 @@ _MONTH_VS = re.compile(r"^\s*(?:hey mia,? )?(?=.*\b(?:spend|spent|spending)\b)(?
                        r"versus|compared? (?:to|with)|against|and|to)\s+(?:i did\s+|what i spent\s+)?last month\s*[?.!]*\s*$|^\s*(?:hey mia,? )?"
                        r"(?:my )?(?P<cat2>[\w&' -]{2,30}?)(?: spending)? this month (?:vs\.?|versus|compared (?:to|with)) "
                        r"last month\s*[?.!]*\s*$", re.I)
+_PROJECT_COST = re.compile(r"^\s*(?:hey mia,? )?(?:what|how much) (?:has|have|did) (?:the |my |our )?(?P<p>[\w' -]{2,40}?) "
+                           r"(?:project |build )?cost (?:me|us)(?: so far| in all| in total| altogether)?\s*[?.!]*\s*$|"
+                           r"^\s*(?:hey mia,? )?(?:what(?:'s| is) the )?(?:whole|total|full|true) cost of (?:the |my |our )?"
+                           r"(?P<q>[\w' -]{2,40}?)(?: project| build)?(?: so far)?\s*[?.!]*\s*$", re.I)
 _PROJECT_COMING = re.compile(r"^\s*(?:hey mia,? )?(?:how(?:'s| is| are) (?:the |my |our )?(?P<a>[\w' -]{2,40}?) "
                              r"(?:coming(?: along)?|going|doing|looking|progressing)|how far along (?:is|am i (?:on|with)) "
                              r"(?:the |my |our )?(?P<b>[\w' -]{2,40}?)|where (?:am i|are we|do i stand) (?:on|with) (?:the |my "
@@ -1658,7 +1662,8 @@ def _own_tool_reply(context, prompt: str):
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation (to finish the shed)" his own reasons and one small step (core/motivation), "teach me
     something" a lesson from her own courses (core/teach_something), "did I spend more this month than last month?" the
-    months side by side (core/money_periods.compare), "how's the shed coming along?" that project's picture
+    months side by side (core/money_periods.compare), "what has the shed cost me?" its money and hours
+    (core/project_status.whole_cost), "how's the shed coming along?" that project's picture
     (core/project_status, only for a project his words name whole), "what should I be doing on the homestead this
     month?" (or "in march") that month's items and the season's usual work (core/homestead_year.this_month), "what should be in my truck's
     emergency kit?" Ready.gov's car kit against his records (core/ready_kit.say_vehicle), "what's a good side
@@ -1906,6 +1911,16 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't compare the months")
             return None
+    costing = _PROJECT_COST.match(said)
+    if costing:  # "what has the shed cost me?": its money and his hours (core/project_status.whole_cost)
+        from core import project_status, project_time
+
+        try:
+            project = project_time.project_named(context, costing.group("p") or costing.group("q"), whole=True)
+            if project is not None:  # a tool or a machine ("the mower") stays get_tool_costs'
+                return project_status.whole_cost(context, project)
+        except Exception:
+            log.exception("Couldn't say what the project cost")
     coming = _PROJECT_COMING.match(said)
     if coming:  # "how's the shed coming along?": the project's picture from his records (core/project_status)
         from core import project_status, project_time
