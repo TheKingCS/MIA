@@ -1380,8 +1380,10 @@ _DUE_MONTH = re.compile(r"^\s*(?:hey mia,? )?what(?:'s| is| bills are| bills do 
 _NEED_FOR = re.compile(r"^\s*(?:hey mia,? )?what (?:do|would) (?:i|we) (?:still )?need (?:for|to make|to cook) (?:the |my |a "
                        r"|that )?(?P<dish>[\w' -]{2,40}?)\s*[?.!]*\s*$", re.I)
 _THINKING_OF_BUILDING = re.compile(r"^\s*(?:hey mia,? )?(?:i'?m|i am|we'?re|we are) (?:thinking (?:about|of)|planning(?: on| to)?|"
-                                   r"wanting to|going to|gonna) (?:build(?:ing)?|put(?:ting)? up|mak(?:e|ing)) (?:a |an |"
-                                   r"some )?(?P<what>[\w' -]{3,40}?)\s*[.!?]*\s*$", re.I)
+                                   r"wanting to|going to|gonna) (?:build(?:ing)?|put(?:ting)? up) (?:a |an |some )?"
+                                   r"(?P<what>[\w' -]{3,40}?)\s*[.!?]*\s*$", re.I)
+_SAID_AS = {"stairs": "set of stairs", "steps": "set of steps", "shelving": "shelving unit", "shelves": "set of shelves",
+            "compost": "compost bin", "stringer": "set of stair stringers"}
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1420,7 +1422,7 @@ def _own_tool_reply(context, prompt: str):
     cancelled by its words (never all on one sentence), "good morning" back in kind with the day, and "what did I do
     yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
     (core/assistant_today_actions.due_through), "I'm thinking about building a chicken coop" what she can work
-    out for it (core/build_calcs's structures), "what do I need for the chili?" a saved recipe's missing
+    out for it (core/build_calcs's structures, only one named on its own and with no size said), "what do I need for the chili?" a saved recipe's missing
     ingredients (core/assistant_domain_actions.needs_for; anything not a recipe of his is the model's), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
@@ -1522,16 +1524,21 @@ def _own_tool_reply(context, prompt: str):
             log.exception("Couldn't answer about reminders")
             return None
     building = _THINKING_OF_BUILDING.match(said)
-    if building:  # "I'm thinking about building a chicken coop": what she can work out for it (core/build_calcs)
+    if building and not re.search(r"\d", building.group("what")):  # a size said is the material tools' to take
         from core.assistant_plan_actions import STRUCTURES
 
-        what = building.group("what").lower()
-        kind = next((names[0] for names, _calc in STRUCTURES if any(re.search(rf"\b{re.escape(n)}\b", what)
-                                                                      for n in names)), None)
-        if kind:
-            example = {"chicken coop": "a 4 by 8 chicken coop", "raised bed": "a 4 by 8 raised bed",
-                       "deck": "a 12 by 16 deck", "fence": "100 feet of privacy fence"}.get(kind, f"a {kind}")
-            return (f"Good project. I can work out a {kind}'s materials and cuts at your size, what they'd cost from "
+        what = building.group("what").lower().strip()
+        # only a structure on its own ("a chicken coop", "a new deck this spring"), never "a pitch deck", "a wall
+        # between us" or "a shelter for the homeless" (the Fable review, 2026-11-26)
+        named = next((n for names, _calc in STRUCTURES for n in names
+                      if re.fullmatch(rf"(?:(?:new|small|big|little|simple|bigger|second|another|my|our)\s+)?"
+                                      rf"{re.escape(n)}(?:\s+(?:this|next)\s+(?:weekend|week|spring|summer|fall|"
+                                      rf"winter|month|year))?", what)), None)
+        if named:
+            kind = _SAID_AS.get(named, named)
+            example = {"chicken coop": "a 4 by 8 chicken coop", "coop": "a 4 by 8 coop", "raised bed": "a 4 by 8 raised bed",
+                       "deck": "a 12 by 16 deck", "fence": "100 feet of privacy fence"}.get(named, f"a {kind}")
+            return (f"Good project. I can work out the materials and cuts for a {kind} at your size, what they'd cost from "
                     f"your prices, and what's already on hand. Say \"materials for {example}\" and I'll do it, or give "
                     f"me your size.")
     need = _NEED_FOR.match(said)

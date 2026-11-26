@@ -30,9 +30,22 @@ def test_the_follow_up_is_joined_to_his_last_question():
 
 def test_thinking_of_building_offers_what_she_can_work_out():
     said = assistant_turn._own_tool_reply(SimpleNamespace(), "I'm thinking about building a chicken coop")
-    assert said.startswith("Good project. I can work out a chicken coop's materials")
+    assert said.startswith("Good project. I can work out the materials and cuts for a chicken coop")
     assert 'Say "materials for a 4 by 8 chicken coop" and I\'ll do it' in said
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "I'm thinking about building a business") is None
+    for words in ("I'm thinking about building a pitch deck", "I'm going to build a wall between us",
+                  "we're planning to build a shelter for the homeless", "I'm going to build a 10 by 12 shed"):
+        assert assistant_turn._own_tool_reply(SimpleNamespace(), words) is None, words
+    stairs = assistant_turn._own_tool_reply(SimpleNamespace(), "I'm planning to build stairs this spring")
+    assert "a set of stairs's" not in stairs and "set of stairs" in stairs
+
+
+def test_the_size_swap_takes_the_things_size_and_until_only_for_days():
+    assert follow_through.merged("How many 2 by 4 studs do I need for a 10 by 12 shed?", "a 12 by 16") == \
+        "How many 2 by 4 studs do I need for a 12 by 16 shed?"
+    assert follow_through.merged("How much is my truck loan?", "before interest") is None
+    assert follow_through.merged("Did I pay the electric bill?", "before that") is None
+    assert follow_through.merged("How many days to Christmas?", "New Year's") == "How many days to New Year's?"
 
 
 def test_and_the_card_after_the_truck_loan_reads_his_card():

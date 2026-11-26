@@ -38,7 +38,7 @@ _THING_ASKS = (
                re.I),
     # "how many days until Christmas?" then "and until New Year's?"
     re.compile(r"^(?P<ask>\s*how (?:many|much) (?:days|weeks|time)(?: is it| are there| left| do i have)? (?:until|till|"
-               r"before) )(?P<thing>[\w' -]+?)(?P<end>\s*\??\s*)$", re.I),
+               r"til|to|before) )(?P<thing>[\w' -]+?)(?P<end>\s*\??\s*)$", re.I),
 )
 _SIZE = re.compile(r"\b\d+(?:\.\d+)?\s*(?:by|x)\s*\d+(?:\.\d+)?\b", re.I)
 
@@ -51,7 +51,8 @@ def follow_on(text: str) -> Optional[str]:
 
 def merged(prev: str, x: str) -> Optional[str]:
     """Pure logic. His last question with the follow-up's words in place: a period for its period, or a thing for
-    its thing (a debt follow-up kept a debt question), or a size for its size; None when they can't be joined or his last words weren't a
+    its thing (a debt follow-up kept a debt question; never a "before ..." or "that"), or a size for the thing's
+    own (the last) size; None when they can't be joined or his last words weren't a
     question."""
     from core.money_periods import _PERIOD_WORDS, only_period
 
@@ -67,11 +68,17 @@ def merged(prev: str, x: str) -> Optional[str]:
         return prev.rstrip(" ?.!") + f" {x}?"
     size = re.fullmatch(r"(?:an? |the )?(\d+(?:\.\d+)?\s*(?:by|x)\s*\d+(?:\.\d+)?)(?: one)?", x, re.I)
     if size and _SIZE.search(prev):  # "and a 10 by 12?" after "the square footage of a 12 by 16 shed?"
-        return _SIZE.sub(size.group(1), prev, count=1)
-    thing = re.sub(r"^(?:the|my|our|until|till|before)\s+", "", x, flags=re.I)
+        last = list(_SIZE.finditer(prev))[-1]  # the thing's size, never a lumber size before it ("2 by 4 studs")
+        return prev[:last.start()] + size.group(1) + prev[last.end():]
     for shape in _THING_ASKS:
         found = shape.match(prev)
         if found:
+            days = shape is _THING_ASKS[-1]
+            if not days and re.match(r"(?:before|after|with|without|for|in|on|at|by|until|till|that|then|it)\b", x,
+                                     re.I):
+                return None  # "and before interest?", "and before that?": not a thing to swap in
+            words = r"(?:the|my|our|until|till|til|to|before)" if days else r"(?:the|my|our)"
+            thing = re.sub(rf"^{words}\s+", "", x, flags=re.I)  # "until" only for the days-until question
             if shape is _THING_ASKS[0] and re.search(r"\b(?:loan|card|debt|balance|owe|left on)\b", prev, re.I) and \
                     not re.search(r"\b(?:loan|card|debt|balance)\b", thing, re.I):
                 return f"How much do I owe on my {thing}?"  # "and the mortgage?" after a loan: still a debt question
