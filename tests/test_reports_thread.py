@@ -33,5 +33,10 @@ def test_list_and_stop_reach_her_tools(monkeypatch):
     monkeypatch.setattr(assistant_turn, "_run_own", lambda c, n, a: ran.append((n, a)) or n)
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "what reports do you send me?") == "list_standing_reports"
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "stop the Sunday one") == "stop_standing_report"
-    assert assistant_turn._own_tool_reply(SimpleNamespace(), "stop the morning report") == "stop_standing_report"
-    assert assistant_turn._own_tool_reply(SimpleNamespace(), "stop reminding me") != "stop_standing_report"
+    assert assistant_turn._own_tool_reply(SimpleNamespace(), "stop the money report") == "stop_standing_report"
+    for words in ("stop reminding me", "stop the morning report", "stop that one", "cancel the update",
+                  "turn off updates"):
+        assert assistant_turn._own_tool_reply(SimpleNamespace(), words) != "stop_standing_report", words
+    assert assistant_turn._own_tool_reply(SimpleNamespace(), "what updates do you send me about windows") != \
+        "list_standing_reports"
+    assert standing_reports.parse("every Sunday tell me what's due today")["question"] == "What's due today?"

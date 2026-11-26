@@ -1634,12 +1634,12 @@ _OVERDUE = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| am i)|whats|is (?:t
                       r"(?:what'?s |everything )?overdue\s*[?.!]*\s*$", re.I)
 _DUE_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is)|whats|what do i have) due (?:today|for today)\s*[?.!]*\s*$|"
                         r"^\s*(?:hey mia,? )?what(?:'s| is) (?:on )?(?:my )?(?:list|plate) (?:for )?today\s*[?.!]*\s*$", re.I)
-_REPORTS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:what|which) (?:reports|updates) (?:do|will) you (?:send|give) me|what (?:are )?"
+_REPORTS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|which) (?:reports|updates) (?:do|will) you (?:send|give) me|what (?:are )?"
                            r"my (?:standing |scheduled )?reports|what do you (?:send|tell) me on a schedule|list my "
-                           r"(?:standing |scheduled )?reports\s*[?.!]*\s*$", re.I)
+                           r"(?:standing |scheduled )?reports)\s*[?.!]*\s*$", re.I)
 _REPORTS_STOP = re.compile(r"^\s*(?:hey mia,? )?(?:ok(?:ay)?,?\s+)?(?:please\s+)?(?:stop|cancel|drop|turn off) (?:the |my |that )?"
                            r"(?:(?:daily|morning|evening|weekly|monthly|monday|tuesday|wednesday|thursday|friday|saturday|"
-                           r"sunday|money|due|spending|week)\s+)*(?:one|report|update)s?(?: you send me)?\s*[.!]*\s*$", re.I)
+                           r"sunday|money|due|spending|week)\s+)+(?:one|report|update)s?(?: you send me)?\s*[.!]*\s*$", re.I)
 _PROJECT_COST = re.compile(r"^\s*(?:hey mia,? )?(?:what|how much) (?:has|have|did) (?:the |my |our )?(?P<p>[\w' -]{2,40}?) "
                            r"(?:project |build )?cost (?:me|us)(?: so far| in all| in total| altogether)?\s*[?.!]*\s*$|"
                            r"^\s*(?:hey mia,? )?(?:what(?:'s| is) the )?(?:whole|total|full|true) cost of (?:the |my |our )?"
@@ -2078,7 +2078,10 @@ def _own_tool_reply(context, prompt: str):
     if _REPORTS_LIST.match(said):  # "what reports do you send me?": her own list (core/standing_reports)
         return _run_own(context, "list_standing_reports", {})
     if _REPORTS_STOP.match(said):  # "stop the Sunday one": that report, or which one asked (core/standing_reports)
-        return _run_own(context, "stop_standing_report", {"question": said})
+        from core import morning_briefing
+
+        if not morning_briefing._OFF.search(said):  # "stop the morning report" is the briefing's own off switch
+            return _run_own(context, "stop_standing_report", {"question": said})
     if _OVERDUE.match(said):  # "what's overdue?": his whole list's overdue (core/today.overdue_said)
         from core import today as _today
 

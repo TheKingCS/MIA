@@ -149,8 +149,8 @@ _LAST = {"monthly": "last month", "weekly": "last week", "daily": "yesterday", "
 def _question(what: str, every: str) -> str:
     """Pure logic. His words as the question asked then ("how much I spent": a month's report the month just gone,
     a weekday's the week it ends, a daily one yesterday, an evening one today); one said indirectly asked directly
-    ("what my week looks like": "What does my week look like?"); a daily one of what's due is today's ("What's due
-    today?")."""
+    ("what my week looks like": "What does my week look like?"); a daily one of what's due, or one asking today's, is today's ("What's
+    due today?")."""
     what = what.strip().rstrip("?.! ")
     spent = re.fullmatch(r"how much (?:i|we) (?:spent|spend|have spent)", what, re.I)
     if spent:  # a weekday's report reads the week it ends ("this week"), a month's the month just gone
@@ -171,7 +171,7 @@ def _question(what: str, every: str) -> str:
     due = re.fullmatch(r"what(?:'s| is) due(?P<when> today| this week| this month)?|what i owe", what, re.I)
     if due:  # a daily one is today's (the automation conversation check: "every morning tell me what's due today")
         when = (due.groupdict().get("when") or "").strip().lower()
-        if every in ("daily", "evening") and when in ("", "today"):
+        if when == "today" or (every in ("daily", "evening") and not when):
             return "What's due today?"
         return "What's due this week?" if every != "monthly" else "What's due this month?"
     return what[:1].upper() + what[1:] + "?"
@@ -337,7 +337,7 @@ def _list_tool(context, arguments: dict) -> str:
 
 def _stop_tool(context, arguments: dict) -> str:
     """Tool stop_standing_report: stops the one his words name (every word in its question or schedule: "the Sunday
-    report", "the Sunday one"), or the only one when he names none; other words that fit none are asked about, never a
+    report", "the Sunday one", "the morning one" for the daily one), or the only one when he names none; other words that fit none are asked about, never a
     stop."""
     from core.actions import run_as_tool
 
@@ -346,7 +346,10 @@ def _stop_tool(context, arguments: dict) -> str:
         return "I'm not sending you anything on a schedule."
     words = {w for w in re.findall(r"[a-z]+", str(arguments.get("question") or "").lower()) if len(w) > 2} - {
         "stop", "the", "report", "reports", "sending", "send", "me", "that", "every", "about", "one", "cancel", "drop",
-        "turn", "off", "update", "you", "my"}  # "stop the Sunday one" names the Sunday report (the conversation check)
+        "turn", "off", "update", "updates", "you", "my", "ones", "please", "okay", "hey", "mia"}
+    # "stop the Sunday one" names the Sunday report (the conversation check); "the morning one" the daily one she
+    # says as "every morning" (the Fable review)
+    words = {"daily" if w == "morning" else w for w in words}
     named = [r for r in reports if words and words <= set(re.findall(r"[a-z]+", r.question.lower())) | {r.every}]
     chosen = named[0] if len(named) == 1 else (reports[0] if len(reports) == 1 and not words else None)
     if chosen is None:
