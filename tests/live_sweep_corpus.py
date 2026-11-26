@@ -71,6 +71,15 @@ CORPUS = {
         "Remind me in 2 hours to check the oven", "What's the weather tomorrow?", "Tell me a joke",
         "I'm bored", "What should I cook for dinner?", "What's something new I could learn this winter?",
     ],
+    "fresh2": [
+        "How do I build a shelter in the woods?", "What's the best way to store rice long term?",
+        "How long does canned food last?", "How do I make a fire in the rain?", "What should be in my truck's emergency kit?",
+        "How much water should I store for a month?", "How do I butcher a chicken?", "When should I collect honey?",
+        "How deep should I plant potatoes?", "How often should I clean the coop?",
+        "Turn off all reminders", "What reminders do I have?", "Cancel the oil reminder",
+        "What did I do yesterday?", "What's my plan for tomorrow?", "Good morning",
+        "Thanks MIA", "You're awesome", "I'm tired", "I need motivation",
+    ],
     "conversation": [
         ["I'm thinking about getting goats", "What breed would be good for milk?", "How much space do they need?",
          "Thanks, that's helpful"],

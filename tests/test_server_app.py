@@ -401,7 +401,8 @@ def test_voice_turn_executes_tool_calls_and_speaks_confirmation(voice_client, co
 
 def test_voice_turn_when_model_is_down_says_so(voice_client, context):
     context.llm.reply = None
-    body = voice_client.post("/api/voice/text", json={"text": "hello"}).json()
+    # a question only the model answers ("hello" is greeted in code now, model or not)
+    body = voice_client.post("/api/voice/text", json={"text": "tell me something interesting about owls"}).json()
     assert body["reply_text"] == LLM_UNAVAILABLE_REPLY
     assert body["audio_wav_base64"]
 

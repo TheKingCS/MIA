@@ -18,7 +18,9 @@ up*:
    replaced by the results themselves (`core.question_plans.invented_numbers`).
    Her offline library's results (`LIBRARY_TOOLS`) are cut much longer and
    held to their figures strictly, small ones included; said plainly, a
-   library result is its first passage and where it's from. A question only
+   library result is its first passage and where it's from. A trim that took
+   the answer's first sentence isn't kept (`kept_its_opening`), and when the
+   library had nothing (`GENERAL_GUIDANCE`) no figure is held to it. A question only
    the library's look-up was offered for, answered without it, is read from
    the library first (`_read_first`). A safety lookup whose answer is worded in code (`SAID_AS_IS`: canning
    times, a meat cure, bleach for water, heat and wind chill, solar sizing, taxes, the outage clock), or one of his
@@ -348,6 +350,17 @@ def without_figures(answer: str, wrong: set[str], keep_share: float = 0.6) -> st
     return " ".join(p.strip() for p in kept)
 
 
+GENERAL_GUIDANCE = "Answer from what you know"  # the library's words when it has nothing (core/offline_library)
+
+
+def kept_its_opening(answer: str, trimmed: str) -> bool:
+    """Pure logic. Whether a trimmed answer still has the answer's first sentence (the live sweep, 2026-11-26: "how
+    deep should I plant potatoes?" lost "Plant them about 4 inches deep" for its figure, and was left "This allows the
+    plants to grow..."); without it, the library's own text is said instead."""
+    first = re.split(r"(?<=[.!?])\s+", (answer or "").strip(), maxsplit=1)[0].strip()
+    return bool(first) and first in (trimmed or "")
+
+
 def _plain(results: list[tuple[str, str]]) -> str:
     """Every tool result's text, one after another (a library result as its first passage, said plainly)."""
     return " ".join(_library_said(text) if name in LIBRARY_TOOLS else text for name, text in results)
@@ -363,7 +376,9 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     (OUTSIDE_WHAT) is framed as information before the model reads it
     (WP-03). Only lookups offered in `tools` run,
     and a change asked for after a lookup that brought in outside text
-    is held and said back (held_after_outside_text). A question, or a problem he describes reached to mark a job
+    is held and said back (held_after_outside_text). A library answer trimmed of its own figures keeps the trim only
+    when its first sentence is still there (`kept_its_opening`); else the library's text is said. When the library
+    had nothing and said to answer from what she knows (GENERAL_GUIDANCE), no figure is held to it. A question, or a problem he describes reached to mark a job
     done (`tells_trouble`), is answered instead of changed (`_answer_instead`). A question only her
     library's look-up was offered for is read from it first
     (`_read_first`); a library answer's figures are held to its text
@@ -471,7 +486,10 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     said = (reply.content if reply is not None else "") or ""
     sources = "\n".join(text for _n, text in results)
     strict = all(name in LIBRARY_TOOLS for name, _t in results)  # a reference's figures, small ones too
-    wrong = invented_numbers(said, sources, prompt, strict) if said.strip() else set()
+    general = bool(results) and all(name in LIBRARY_TOOLS and GENERAL_GUIDANCE in text for name, text in results)
+    # the library had nothing and said to answer from what she knows (no packs yet): there's no text to hold its
+    # figures to, so none are "invented" (the live sweep, 2026-11-26: every potato depth was refused)
+    wrong = invented_numbers(said, sources, prompt, strict) if said.strip() and not general else set()
     if wrong:
         # Often general knowledge ("every 5,000 miles"), not a misread record: one more try without those
         # numbers before falling back to the bare results (2026-10-30, live).
@@ -487,6 +505,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
             return _finish(context, prompt, asked, results, again.strip())
         trimmed = without_figures(again or said, invented_numbers(again or said, sources, prompt, strict)) \
             if strict else ""
+        if trimmed and not kept_its_opening(again or said, trimmed):
+            trimmed = ""  # the answer's own first sentence went: what's left ("This allows...") answers nothing
         if trimmed:  # a library answer: only the sentences with a figure of its own go (2026-11-22, live)
             log.warning("Tool loop: a library answer stated figures the text didn't; those sentences left out.")
             from core.plain_words import strip_markdown

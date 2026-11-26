@@ -1358,6 +1358,14 @@ _SHOP_MADE = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|how much) did (?:i|we) m
 _DEBT_FIRST = re.compile(r"^\s*(?:hey mia,? )?(?:(?:should|do) i pay (?:off |down )?(?:the |my )?[\w ]{2,30}? or (?:the |my )?"
                          r"[\w ]{2,30}? first|which (?:debt|one|loan|card) (?:should|do) i pay (?:off |down )?first|what "
                          r"should i pay (?:off |down )?first|which debt first)\s*[?.!]*\s*$", re.I)
+_REMINDERS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:what (?:reminders|alarms) do i have|what are my reminders|(?:list|show)"
+                             r" (?:me )?my reminders|what am i being reminded (?:of|about)|my reminders)\s*[?.!]*\s*$", re.I)
+_REMINDER_CANCEL = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:cancel|delete|remove|stop|turn off|kill|drop)\s+(?P<what>"
+                              r"(?:all (?:of )?(?:my |the )?reminders|every reminder|(?:the |my )?[\w' -]{2,40}? "
+                              r"(?:reminder|alarm)s?))\s*[.!]*\s*$", re.I)
+_GREETING = re.compile(r"^\s*(?:good (?:morning|afternoon|evening)|morning|hi|hello|hey|howdy|yo)(?:,? (?:mia|there))?"
+                       r"\s*[.!]*\s*$", re.I)
+_YESTERDAY = re.compile(r"^\s*(?:hey mia,? )?what did (?:i|we) (?:do|get done|accomplish) yesterday\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1392,7 +1400,9 @@ def _own_tool_reply(context, prompt: str):
     (core/woodworking.next_project; "build next ... shop", the business's, stays make_next's), "how much did I
     spend last month?", "my biggest expense category this year" and "what did I make from the shop this month?"
     (core/money_periods; only when what follows is a period: "at Costco last month" is the model's), "should I pay
-    off the card or the truck first?" his own debts compared (get_debt_payoff_plan), "tell me when..." a watch from his whole sentence
+    off the card or the truck first?" his own debts compared (get_debt_payoff_plan), his reminders listed and one
+    cancelled by its words (never all on one sentence), "good morning" back in kind with the day, and "what did I do
+    yesterday?" (core/reminders_view), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
     said = prompt.replace("’", "'")
@@ -1471,6 +1481,27 @@ def _own_tool_reply(context, prompt: str):
         found = _run_own(context, "get_debt_payoff_plan", {"question": said})
         if found:
             return found
+    stopping = _REMINDER_CANCEL.match(said)
+    if stopping and re.match(r"\s*(?:hey mia,? )?(?:please )?(?:turn off|stop|kill)\b", said, re.I) and \
+            re.search(r"\balarms?\b", stopping.group("what"), re.I):
+        stopping = None  # "turn off the wake up alarm" while it rings is silencing it, never deleting it
+    if _REMINDERS_LIST.match(said) or stopping or _GREETING.match(said) or _YESTERDAY.match(said):
+        # his reminders, a greeting, yesterday (core/reminders_view)
+        from core import reminders_view
+
+        try:
+            if _REMINDERS_LIST.match(said):
+                return reminders_view.listing(context)
+            if _GREETING.match(said):
+                return reminders_view.greeting(context, said)
+            if _YESTERDAY.match(said):
+                return reminders_view.yesterday(context)
+            found = reminders_view.cancel(context, stopping.group("what"))
+            if found:
+                return found
+        except Exception:
+            log.exception("Couldn't answer about reminders")
+            return None
     if _WOOD_NEXT.match(said) and ("wood" in low or ("shop" in low and "next" not in low)):  # his next piece
         from core import woodworking
 

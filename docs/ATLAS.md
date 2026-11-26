@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1875 files, 396,759 lines; 1875 files describe themselves; 21,546 of 21,686 classes and functions are documented.
+1878 files, 397,051 lines; 1878 files describe themselves; 21,561 of 21,702 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-733 files, 207,536 lines; 10,295 of 10,374 classes and functions documented
+734 files, 207,731 lines; 10,304 of 10,383 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -525,6 +525,7 @@
 - `core/region.py`: Where a person lives (2026-10-01, accounts stage 4): MIA is built for anyone, so the safety floor's crisis lines and the money symbol follow the person's country instead of assuming the US.
 - `core/relationships_manager.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions of the same idea" as Memory Palace (core/user_memory_manager.py). One manager, two related dataclasses, same shape as core/kitchen_manager.py.
 - `core/relevance.py`: The Personal Relevance Engine (World Intelligence W2, DEC-0170; the proposal's section 4): how much a find matters to this person, worked out in code from their own records, never guessed by a model. Every point comes with a reason that names the record it came from, so "why is this here?" always ha
+- `core/reminders_view.py`: His reminders and the small everyday turns around them, in code (the live sweep, 2026-11-26):
 - `core/rent_collected.py`: "How much rent did I collect this month?" (Jarvis brainstorm, round 12; his rentals): his rental income by property from his records (core/real_estate_manager.py income_for_property), for this month, last month, this year or a month he names (`span_of`, a follow-up's own words first), with the total
 - `core/repertoire.py`: The songs he can play (the game layer, Zac 2026-11-24: "sometimes its a song unlocked on the guitar"). A song learned on an instrument is a `song_learned` life event in his own history, so it's dated, undone by "undo that" (`life_events.reversed_ids`), and never kept twice. The list (`songs`) and it
 - `core/repertoire_actions.py`: His songbook from the screen and by voice (core/repertoire.py; DEC-0125, both ways): the action `song.learned` (Music's "Can Play" tab, I Learned A Song) and the tools `learned_a_song` ("I learned Wagon Wheel on guitar") and `songs_i_can_play`. Taking one back is "undo that".
@@ -1032,7 +1033,7 @@
 
 ## tests/: the test suite: what each part must do
 
-732 files, 107,061 lines; 8,877 of 8,938 classes and functions documented
+734 files, 107,158 lines; 8,883 of 8,945 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1317,6 +1318,7 @@
 - `tests/test_job_quote.py`: A quote from a job's words (core/job_quote.py; brainstorm round 14): "write a quote for Sarah's 12 by 16 deck" reads the customer and the structure with its size, works the materials out with the calculators, prices what the workshop has prices for (never guessing the rest), and drafts the quote (qu
 - `tests/test_journal_manager.py`: Unit tests for core.journal_manager. Isolates _DATA_DIR/_ENTRIES_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths).
 - `tests/test_journal_reflection.py`: The opt-in weekly journal reflection (core/journal_reflection.py): when it's due, the content-free notice, the reflection itself, and that asking for it is a private turn.
+- `tests/test_kept_opening.py`: A library answer trimmed of figures the text didn't give keeps the trim only with its first sentence (core/tool_loop .kept_its_opening, the live sweep 2026-11-26: the potato answer was left starting "This allows...").
 - `tests/test_key_unlock.py`: MIA's data key on Linux (DEC-0126's Linux step; core/key_unlock.py, core/at_rest.py): where there's no DPAPI the data key is wrapped under an unlock secret that systemd keeps for this user on this machine. Checked here, with stand-ins for systemd so it runs on any system: the key file holds only the
 - `tests/test_kind_grants.py`: Approve Once or Approve From Now On (DEC-0215 as amended by Zac, 2026-11-17; core/kind_grants.py): only kinds that stay in his records and can be undone may be approved from now on, never paying, sending, plans or grants; Approve From Now On keeps a standing yes once the change ran; MIA's own later 
 - `tests/test_kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9): the pantry is the materials; "I Made This" takes what the batches used out of it, and what runs out goes on the grocery list.
@@ -1521,6 +1523,7 @@
 - `tests/test_relationships_module.py`: Unit tests for modules.relationships.module's pure row formatters — no Qt widget construction, same shape as tests/test_kitchen_module.py's own formatter tests.
 - `tests/test_relay_offers.py`: What the phone will offer the glasses through the relay (DEC-0064). Relay.kt holds the list; these keep it inside what the glasses may do at all.
 - `tests/test_relevance.py`: World Intelligence's relevance from the person's own records (W2, DEC-0170; core/relevance.py): a find that fits a goal, a project or the homestead plan's next step scores above one that only matched a watch, with a reason naming each record; it can fit several at once; a long record name needs two 
+- `tests/test_reminders_view.py`: His reminders and the everyday turns around them (core/reminders_view.py, the live sweep 2026-11-26): listed with the calendar's and the alarms, one cancelled by its words (never all at once), "good morning" back in kind with the day, and yesterday from his history. *(1 undocumented)*
 - `tests/test_rent_collected.py`: "How much rent did I collect this month?" (core/rent_collected.py): this month, last month, this year or a named month read from his words, rent summed by property from his records with the total, and a property that paid before but not yet this month named; no properties says how to add one. "May" 
 - `tests/test_repertoire.py`: His songbook (core/repertoire.py): a song learned is dated in his own history, never twice on the same instrument, counted toward the Songbook achievements at once and by a mission objective, and taken back by "undo that".
 - `tests/test_replayed_week.py`: Tests for LS-09, a replayed week (core/replay.py): on a frozen clock, each day's due things are said on their day, nothing twice, and a stop-everything holds her unprompted messages until it lifts.
