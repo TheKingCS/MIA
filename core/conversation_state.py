@@ -35,6 +35,8 @@ A follow-up to a tool's answer outside a plan conversation is the model's, never
 (`follows_a_tool`).
 A tool's follow-up needs a lead (`_TOOL_LEADS`) or a bare "get ready", never a pronoun alone, and its note lives in
 a context variable (`_TURN`), one per thread and turn, cleared at the turn's end.
+Open questions she asked, a first few: his bare answer to her own last question ("5 gallons" after "How much
+fuel?", his town after "I don't know your town yet") made the whole sentence her routes read (`answered_ask`).
 """
 
 from __future__ import annotations
@@ -152,6 +154,48 @@ def offered_phrase(conversation, prompt: str) -> Optional[str]:
     if len(offers) != 1 or _NEVER_ON_A_YES.search(offers[0]):
         return None
     return offers[0].strip().rstrip(".!?")
+
+
+# Her own questions that a bare answer finishes (brainstorm round 19, the live check 2026-11-26: "5 gallons" after
+# "How much fuel?" got the question echoed back, "Springfield, Illinois" after "I don't know your town yet" a made-up
+# forecast): (words in her last message, his bare answer, the whole sentence her routes read)
+_ANSWERS = (
+    ("How much fuel? Say it in gallons",
+     re.compile(r"^\s*(?:about |around |maybe |probably |like |i have |we have |i'?ve got |we'?ve got )?(?P<x>(?:\d+(?:\.\d+)?|"
+                r"half a|a half)\s*(?:gallons?|gal|lbs?|pounds?|liters?|litres?)(?: of (?:gas|gasoline|diesel|propane|"
+                r"fuel))?)\s*[.!]?\s*$", re.I),
+     "How long would the generator run on {x}?"),
+    ('like "my generator burns half a gallon an hour"',
+     re.compile(r"^\s*(?:about |around |maybe |probably |it'?s |it burns )?(?P<x>(?:\d+(?:\.\d+)?|half a|a quarter of a|a)\s*"
+                r"(?:gallons?|gal)\s*(?:an|per|a|each) hour)\s*[.!]?\s*$", re.I),
+     "My generator burns {x}"),
+    ("I don't know your town yet",
+     re.compile(r"^(?!.*\b(?:yes|no|nope|ok|okay|thanks|thank you|what|why|how|when|later|never|not|forget it|"
+                r"nevermind|never mind)\b)\s*(?:it'?s |i'?m in |i live in |we'?re in |we live in |in )?(?P<x>[A-Za-z][A-Za-z .'-]"
+                r"{1,40}?(?:,\s*[A-Za-z][A-Za-z .]{1,30}?)?)\s*[.!]?\s*$", re.I),
+     "My town is {x}"),
+)
+
+
+def answered_ask(conversation, prompt: str) -> Optional[str]:
+    """Pure logic. His bare answer to her own last question (`_ANSWERS`: the generator's fuel or burn rate, his town)
+    made the whole sentence her routes read ("5 gallons" -> "How long would the generator run on 5 gallons?"), or
+    None: only when her last message asked it, and only words that are the answer (five words at most for a town)."""
+    said = (prompt or "").strip()
+    if not said or len(said) > 80:
+        return None
+    before = [m for m in getattr(conversation, "messages", []) or []
+              if not (getattr(m, "role", "") == "user" and str(getattr(m, "content", "")) == prompt)]
+    last = before[-1] if before else None
+    if last is None or getattr(last, "role", "") != "assistant":
+        return None
+    asked = str(getattr(last, "content", "") or "")
+    for marker, answer, whole in _ANSWERS:
+        if marker in asked:
+            found = answer.match(said)
+            if found and (whole != "My town is {x}" or len(found.group("x").split()) <= 5):
+                return whole.format(x=found.group("x").strip())
+    return None
 
 
 LOOK_BACK = 8  # messages searched for the last thing named

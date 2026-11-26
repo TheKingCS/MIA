@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1907 files, 400,381 lines; 1907 files describe themselves; 21,704 of 21,850 classes and functions are documented.
+1908 files, 400,485 lines; 1908 files describe themselves; 21,709 of 21,855 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-740 files, 209,914 lines; 10,376 of 10,455 classes and functions documented
+740 files, 209,973 lines; 10,377 of 10,456 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1039,7 +1039,7 @@
 
 ## tests/: the test suite: what each part must do
 
-757 files, 108,305 lines; 8,954 of 9,021 classes and functions documented
+758 files, 108,350 lines; 8,958 of 9,025 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1065,6 +1065,7 @@
 - `tests/test_ambient.py`: MIA's ambient view for the second monitor, flowing to one monitor when the other goes (core/ambient.py, gui/ambient_screens.py, DEC-0231, Zac's Q-80).
 - `tests/test_answer_compare.py`: How MIA answers (DEC-0138): offering an answer two ways, the facts checked, the picks and the screen, and the voice tools that run the same style.* actions.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own.
+- `tests/test_answered_ask.py`: His bare answer to her own last question made whole (core/conversation_state.answered_ask, brainstorm round 19): "5 gallons" after "How much fuel?", "half a gallon an hour" after her burn-rate ask, his town after "I don't know your town yet"; never when she didn't ask it, never a no or a question.
 - `tests/test_app_ecosystem.py`: MIA's understanding of her own apps (migration phase M2, DEC-0178; core/app_ecosystem.py, core/assistant_app_registry_actions.py): the inventory, one app's parts, which app does something, and the check (health, overlaps, gaps) are answered from the manifests and the runtime; a failing job is pinned
 - `tests/test_app_registry.py`: The Application Registry (DEC-0175, DEC-0178, migration phase M1; core/app_registry.py, apps/*/manifest.json): every MIA-native app has one manifest that matches the published schema; together the manifests claim every tool, action kind, store, job and daily check in the code exactly once, and name 
 - `tests/test_app_scaffold.py`: MIA Forge's scaffold (phase M7, core/app_scaffold.py, tools/new_app.py): from one short description it writes a manifest the Application Registry accepts, a screen on the shared frame, a first test, and the two code edits that list the app; it refuses a bad id, a taken id, an unknown area and a file

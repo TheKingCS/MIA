@@ -140,7 +140,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     The morning briefing too (`_morning_briefing_reply`).
     A quote from a job's words too (`_job_quote_reply`).
     A daily reminder too (`_daily_reminder_reply`).
-    Two logs in one sentence too (`_two_things_reply`: "$40 on screws and 2 hours on the shed")."""
+    Two logs in one sentence too (`_two_things_reply`: "$40 on screws and 2 hours on the shed"), and a bare answer to
+    her own last question made whole first (core/conversation_state.answered_ask)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -158,7 +159,9 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         return None
     from core.conversation_state import offered_phrase
 
-    prompt = offered_phrase(conversation, prompt) or prompt  # "ok, start it" to her offer, as in a turn
+    from core.conversation_state import answered_ask
+
+    prompt = offered_phrase(conversation, prompt) or answered_ask(conversation, prompt) or prompt  # as in a turn
     prompt = reshaped(prompt)  # a greeting before a question, the weekday first, as in a turn
     from core.trade_actions import reply as job_reply
 
@@ -1398,6 +1401,13 @@ _OWN_TOOLS = (
                                   r"wood(?= for (?:the |this )?winter))(?: for (?:the |this )?winter)?|how much firewood do "
                                   r"(?:i|we) have(?: left)?|is (?:my|our|the) (?:firewood|woodpile) enough|will (?:my|our|the) "
                                   r"(?:firewood|woodpile) last(?: the winter)?)\s*[?.!]*\s*$", re.I), False),
+    # "is it a good day to work outside?": her forecast's own words (or her ask for his town, which a bare town answers:
+    # core/conversation_state.answered_ask), never the model's "can you tell me your city or zip code?"
+    ("work_outside_wind_chill_heat_index", re.compile(
+        r"^(?!.*\bif\b)\s*(?:hey mia,? )?(?:is (?:it|today|tomorrow) (?:a )?good (?:day|time|weather) (?:to|for) "
+        r"(?:work(?:ing)? outside|outside work)|(?:can|should) i work outside|is it (?:too hot|too cold|safe) to work "
+        r"outside|will (?:it|tomorrow) be (?:a )?good (?:day )?(?:to|for) work(?:ing)? outside)(?: today| tomorrow)?"
+        r"\s*[?.!]*\s*$", re.I), True),
     ("list_grants", re.compile(r"^\s*what (?:can|may|do|will) you do (?:on your own|by yourself|without (?:asking(?: me)?|"
                                r"me asking))\s*\??\s*$|^\s*what are you allowed to do (?:on your own|by yourself)\s*\??\s*$",
                                re.I), False),
@@ -2454,6 +2464,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     question set aside, "every Saturday morning remind me to ..." as "remind me every Saturday to ... at 8am").
     A reply is taken for a tool call only when it names one of her tools. The model's "the fact sheet" is never said
     aloud (response_composer.without_sheet_words, on the model's words only).
+    His bare answer to her own last question ("5 gallons" after "How much fuel?") is made whole first
+    (core/conversation_state.answered_ask).
     Two logs in one sentence ("I spent $40 on screws and 2 hours on the shed") are each kept by their own code
     (`_two_things_reply`), before a single expense could take the whole sentence.
     """
@@ -2472,7 +2484,10 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     prepared = pre_turn(context, conversation, prompt)
     from core.conversation_state import offered_phrase
 
-    offered = offered_phrase(conversation, prompt)  # "ok, start it" to her 'Say "..." and I'll ...': those words
+    from core.conversation_state import answered_ask
+
+    # "ok, start it" to her 'Say "..." and I'll ...': those words; "5 gallons" to her "How much fuel?": the whole question
+    offered = offered_phrase(conversation, prompt) or answered_ask(conversation, prompt)
     add_message(conversation, "user", prompt)
     if offered and prepared.fixed_reply is None:
         prompt = offered
