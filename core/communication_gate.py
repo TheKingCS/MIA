@@ -98,7 +98,8 @@ DROP = "drop"
 
 _BUSY_DEFER = timedelta(minutes=30)
 # Never paused by dismissals: the two reports his standing yes rests on (her own merged changes, her own repairs).
-NEVER_PAUSED = frozenset({"self_changes", "self_repair"})
+NEVER_PAUSED = frozenset({"self_changes", "self_repair",
+                          "condition_watch"})  # what he asked her to watch ("tell me when...", core/condition_watch)
 _BUSY_WINDOW = timedelta(minutes=30)
 _KEEP_LOG_DAYS = 30
 

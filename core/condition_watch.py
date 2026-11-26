@@ -16,7 +16,9 @@ code every day and said through the communication gate when it comes true. World
 
 **How it's read** (`parse`): his words, in code, never the model; what can't be read is said back with an example
 ("I can watch the weather, a pantry item, the feed or your water, food and fuel"), and a pantry item he doesn't have
-is said as such. **Once or every time**: a watch says itself once and is done (`told`), unless he said "whenever",
+is said as such. A reminder, something stopping ("when it stops raining"), a bill or a price is never a watch, and
+the weather only when it's the weather doing it ("if it freezes", never "the freezer"; the Fable review,
+2026-11-25). **Once or every time**: a watch says itself once and is done (`told`), unless he said "whenever",
 "every time" or "each time": then once a day while it's true. A watch for "tonight" or "tomorrow" ends after that
 day (`until`).
 
@@ -24,7 +26,8 @@ day (`until`).
 atomic_write_text so "undo that" restores it): adding and stopping a watch are the actions `condition_watch.add` / `condition_watch.remove`
 (his own words, so act_within_grant: he asked, and undo takes it back). Marking one told is her bookkeeping on her
 own watch, the way the gate logs what it said. The daily check `condition_watch` (`offer`) offers each one that's
-true; the weather ones TIMELY, the rest AMBIENT.
+true, TIMELY (held for an opening, never dropped, and never paused for dismissals: core/communication_gate's
+NEVER_PAUSED), the weather's ending the next morning.
 """
 
 from __future__ import annotations
@@ -174,54 +177,91 @@ def _until(text: str, today: date) -> str:
     return ""
 
 
+_NOT_A_WATCH = re.compile(r"\bremind me\b|\bstops? (?:rain|freez|snow)\w*|\b(?:bill|bills|dollars?|bucks|price|cost)\b|"
+                          r"\$\d", re.I)
+_FREEZE = re.compile(r"\b(?:it|we)(?:'s| is| are| will| gonna| going to)*\s*(?:going to |gonna |will )?"
+                     r"(?:freez(?:e|es|ing)|frost(?:s|ing)?|get (?:a )?(?:hard )?(?:frost|freeze))\b|"
+                     r"\b(?:a |any |hard )?(?:frost|freeze)\b (?:tonight|tomorrow)|\bbelow freezing\b", re.I)
+_RAIN = re.compile(r"\bit(?:'s| is| will)?\s*(?:going to |gonna |will )?rain(?:s|ing)?\b|\brain (?:tonight|tomorrow)\b",
+                   re.I)
+_PRONOUNS = {"it", "that", "this", "they", "them", "he", "she", "you", "temperature", "temp", "the temperature"}
+_SUBJECT = r"(?:^|\b(?:our|my|the|we're|we are|i'm|i am|on|of|out of|low on|running low on|run out of)\s)"
+
+
+def _clean_name(name: str) -> str:
+    """Pure logic. An item's name without "the", "my" or a closing "please"."""
+    name = re.sub(r"^(?:the|my|our|some)\s+", "", name.strip())
+    return re.sub(r"[ ,]*(?:please|thanks|thank you|mia|left)\s*$", "", name).strip()
+
+
 def parse(words: str, today: Optional[date] = None, celsius: bool = False) -> Optional[dict]:
     """Pure logic. {kind, about, value, standing, until} from his words, or None when it isn't something she can
-    watch. An item's name is his words for it (matched to the pantry when it's checked)."""
+    watch. A reminder ("remind me if it rains to bring in the laundry"), something stopping ("when it stops
+    raining"), a bill or a price isn't a watch; the weather only when it's the weather doing it ("if it freezes",
+    "frost tonight", never "the freezer" or "the rain gauge"); a supply or the feed only as its own subject ("our
+    water", "low on gas", never "the dog food"). An item's name is his words for it (matched to the pantry when it's
+    checked)."""
     today = today or date.today()
     text = _numbers(" ".join(str(words or "").lower().replace("’", "'").split()))
+    text = re.sub(r"\bbelow zero\b", "below 0 degrees", text)
+    if _NOT_A_WATCH.search(text):
+        return None
     base = {"standing": bool(_STANDING.search(text)), "until": _until(text, today), "about": ""}
-    cold = re.search(rf"\b(?:below|under|down to|colder than|drops? (?:below|under|to)) {_NUMBER} ?(?:degrees|°)", text)
+    cold = re.search(rf"\b(?:below|under|down to|colder than|drops? (?:below|under|to)|gets? (?:below|under|down to)) "
+                     rf"(-?{_NUMBER[1:-1]}) ?(?:degrees|°)", text)
     if cold:
         return {**base, "kind": "freeze", "value": float(cold.group(1))}
-    if re.search(r"\b(?:freez\w*|frost\w*)\b", text):
+    if _FREEZE.search(text):
         return {**base, "kind": "freeze", "value": 0.0 if celsius else 32.0}
-    if re.search(r"\brain\w*\b", text):
+    if _RAIN.search(text):
         return {**base, "kind": "rain", "value": float(RAIN_CHANCE)}
     days = re.search(rf"\b{_NUMBER} days?\b", text)
-    if re.search(r"\b(?:feed|chicken feed|layer feed)\b", text):
-        return {**base, "kind": "feed", "about": "feed", "value": float(days.group(1)) if days else float(FEED_DAYS)}
-    supply = re.search(r"\b(water|food|fuel|gas|generator)\b", text)
-    if supply and (days or re.search(r"\b(?:low|run(?:ning)? (?:low|out))\b", text)):
-        about = {"gas": "fuel", "generator": "fuel"}.get(supply.group(1), supply.group(1))
-        return {**base, "kind": "supply", "about": about, "value": float(days.group(1)) if days else float(SUPPLY_DAYS)}
+    if re.search(rf"{_SUBJECT}(?:chicken |layer |the flock'?s? |the chickens'? )?feed\b", text) and \
+            not re.search(r"\b(?:dog|cat|horse|goat|pig|cattle|rabbit)s?'? feed\b", text):
+        out = bool(re.search(r"\bout of (?:\w+ )?feed\b", text))
+        return {**base, "kind": "feed", "about": "feed",
+                "value": 0.0 if out else (float(days.group(1)) if days else float(FEED_DAYS))}
+    supply = re.search(rf"{_SUBJECT}(water|food|fuel|gas|gasoline|generator fuel)\b", text)
+    if supply and not re.search(r"\b(?:dog|cat|pet|horse|goat|bird|fish|chicken)s?'? (?:water|food)\b", text) and \
+            (days or re.search(r"\b(?:low|run(?:ning|s)? (?:low|out)|out of)\b", text)):
+        about = {"gas": "fuel", "gasoline": "fuel", "generator fuel": "fuel"}.get(supply.group(1), supply.group(1))
+        out = bool(re.search(r"\bout of\b", text)) and not days
+        return {**base, "kind": "supply", "about": about,
+                "value": 0.0 if out else (float(days.group(1)) if days else float(SUPPLY_DAYS))}
+    asked = re.sub(r"^(?:please |hey mia,? )?(?:(?:tell|let|warn|alert|ping) me(?: know)?) (?:when(?:ever)?|if|once|"
+                   r"every time|each time) (?:it'?s |we'?re |i'?m |we are |i am |we have |we've got |there'?s |there "
+                   r"are )?", "", text)
+    asked = re.sub(r"[ ,]*(?:please|thanks|thank you|mia)\s*[?.!]*\s*$", "", asked)
     item = re.search(rf"\b(?:down to|below|under|less than|drops? (?:below|under|to)|gets? (?:below|under|down to)) "
-                     rf"{_NUMBER}(?: \w+)?(?: of)?(?: (?:the|my|our))? ([a-z][a-z' -]*?)\s*(?:left)?\s*[?.!]*$", text)
-    if item:
-        return {**base, "kind": "item", "about": item.group(2).strip(), "value": float(item.group(1))}
-    asked = re.sub(r"^(?:please )?(?:(?:tell|let|warn|alert|ping) me(?: know)?|remind me) (?:when(?:ever)?|if|once) "
-                   r"(?:it'?s |we'?re |i'?m |we are |i am )?", "", text)
-    item = re.match(rf"(?:the |my |our )?([a-z][a-z' -]*?) (?:gets?|drops?|goes|is|are) (?:below|under|down to) "
-                    rf"{_NUMBER}\b", asked)
-    if item:
-        return {**base, "kind": "item", "about": item.group(1).strip(), "value": float(item.group(2))}
-    low = re.search(r"\b(?:low on|running low on|run(?:ning)? out of|out of)(?: (?:the|my|our))? ([a-z][a-z' -]*?)\s*[?.!]*$",
-                    text)
-    if low:
-        out = bool(re.search(r"\b(?:out of)\b", text)) and not re.search(r"\blow\b", text)
-        return {**base, "kind": "item", "about": low.group(1).strip(), "value": 0.0 if out else 1.0}
+                     rf"{_NUMBER}(?: \w+)?(?: of)? ([a-z][a-z' -]*?)\s*[?.!]*$", asked)
+    if item and _clean_name(item.group(2)) not in _PRONOUNS | {""}:
+        return {**base, "kind": "item", "about": _clean_name(item.group(2)), "value": float(item.group(1))}
+    item = re.match(rf"([a-z][a-z' -]*?) (?:gets?|drops?|goes|is|are) (?:below|under|down to) {_NUMBER}\b", asked)
+    if item and _clean_name(item.group(1)) not in _PRONOUNS | {""}:
+        return {**base, "kind": "item", "about": _clean_name(item.group(1)), "value": float(item.group(2))}
+    low = re.search(r"\b(?:low on|running low on|run(?:ning)? out of|out of)\s+([a-z][a-z' -]*?)\s*[?.!]*$", asked)
+    if low and _clean_name(low.group(1)) not in _PRONOUNS | {""}:
+        out = bool(re.search(r"\bout of\b", asked)) and not re.search(r"\blow\b", asked)
+        return {**base, "kind": "item", "about": _clean_name(low.group(1)), "value": 0.0 if out else 1.0}
     return None
 
 
 def describe(watch: Watch, unit: str = "°F") -> str:
-    """Pure logic. A watch in words: "if tonight's low reaches 32°F (tonight only)"."""
+    """Pure logic. A watch in words: "if tonight's low gets down to 32°F (tonight only)"; a watch for tomorrow night
+    or tomorrow's rain says its day."""
     v = f"{watch.value:g}"
-    said = {"freeze": f"if tonight's low gets down to {v}{unit}",
-            "rain": "if tomorrow's chance of rain is half or more",
+    made = (watch.created_at or "")[:10]
+    later = bool(watch.until) and watch.until != made
+    night = "tomorrow night's low" if later else "tonight's low"
+    rainy = "today" if watch.until and not later else "tomorrow"
+    said = {"freeze": f"if {night} gets down to {v}{unit}",
+            "rain": f"if the chance of rain {rainy} is half or more",
             "item": f"when the pantry's {watch.about} gets down to {v}",
-            "feed": f"when the flock's feed is down to {v} days",
-            "supply": f"when your {watch.about} is down to {v} days"}.get(watch.kind, watch.words)
-    if watch.until:
-        said += " (tonight only)" if watch.until == (watch.created_at or "")[:10] else f" (until {watch.until})"
+            "feed": "when the flock's feed runs out" if watch.value == 0 else f"when the flock's feed is down to {v} days",
+            "supply": f"when you're out of {watch.about}" if watch.value == 0 else f"when your {watch.about} is down to {v} days"
+            }.get(watch.kind, watch.words)
+    if watch.until and watch.kind == "freeze":
+        said += " (that night only)" if later else " (tonight only)"
     return said + (", every time" if watch.standing else "")
 
 
@@ -253,18 +293,27 @@ def check(context, watch: Watch, today: date, forecast: Optional[dict] = None) -
             return None
         tomorrow = forecast.get("tomorrow") or {}
         if watch.kind == "freeze":
+            if watch.until and today.isoformat() < watch.until:
+                return None  # "tomorrow night": tonight's low isn't the one he asked about
             low = tomorrow.get("low", forecast.get("low"))
             if low is not None and low <= watch.value:
                 return (f"You asked me to tell you: tonight's low is {low:g}{forecast.get('unit', '')}, at or under "
                         f"{watch.value:g}. Cover the tender plants, check the birds' water and the pipes.")
             return None
-        chance = tomorrow.get("rain")
+        if watch.until and today.isoformat() == watch.until:  # the day he named is today: today's chance
+            day = next((d for d in forecast.get("days") or [] if str(d.get("date", ""))[:10] == watch.until), {})
+            chance, when = day.get("rain"), "today"
+        else:
+            chance, when = tomorrow.get("rain"), "tomorrow"
         if chance is not None and chance >= watch.value:
-            return f"You asked me to tell you: tomorrow has a {chance}% chance of rain."
+            return f"You asked me to tell you: {when} has a {chance}% chance of rain."
         return None
     if watch.kind == "item":
         item = _pantry_item(context, watch.about)
-        if item is not None and float(item.quantity or 0) <= watch.value:
+        have = float(item.quantity or 0) if item is not None else 0.0
+        if item is not None and str(item.unit or "").lower().startswith("dozen"):
+            have *= 12  # his "2 dozen eggs" was read as 24 eggs
+        if item is not None and have <= watch.value:
             unit = f" {item.unit}" if item.unit else ""
             return f"You asked me to tell you: {item.name} is down to {float(item.quantity or 0):g}{unit}."
         return None
@@ -289,9 +338,11 @@ def check(context, watch: Watch, today: date, forecast: Optional[dict] = None) -
 
 
 def offer(context, now: datetime) -> list:
-    """The daily check: each live watch whose condition is true, through the gate (the weather TIMELY, the rest
-    AMBIENT), once for a once-watch (then marked told) and once a day for a standing one."""
-    from core.communication_gate import AMBIENT, TIMELY, Candidate
+    """The daily check: each live watch whose condition is true, through the gate as TIMELY (he asked for it, so it
+    waits for an opening rather than being dropped; the topic is never paused for dismissals, NEVER_PAUSED), once for
+    a once-watch (then marked told) and once a day for a standing one. The weather's expires the next morning, the
+    rest after two days (the Fable review, 2026-11-25)."""
+    from core.communication_gate import TIMELY, Candidate
 
     today = now.date()
     watches = book(context)
@@ -306,9 +357,11 @@ def offer(context, now: datetime) -> list:
             continue
         if not said:
             continue
+        weather = watch.kind in ("freeze", "rain")
+        ends = datetime.combine(today, datetime.min.time()) + (timedelta(days=1, hours=9) if weather else timedelta(days=2))
         out.append(Candidate(topic="condition_watch", title="Something you asked me to watch", message=said,
-                             urgency=TIMELY if watch.kind in ("freeze", "rain") else AMBIENT, source="system",
-                             fingerprint=f"watch-{watch.watch_id}-{today.isoformat()}"))
+                             urgency=TIMELY, source="system", fingerprint=f"watch-{watch.watch_id}-{today.isoformat()}",
+                             expires=ends.isoformat(timespec="seconds")))
         watches.mark_told(watch.watch_id, today)
     return out
 
@@ -407,11 +460,13 @@ def _stop_tool(context, arguments: dict) -> str:
     if not live:
         return "I'm not watching anything for you."
     words = set(re.findall(r"[a-z]+", str(arguments.get("question") or arguments.get("watch") or "").lower()))
+    cold = any(w.startswith(("freez", "frost", "cold")) for w in words)
+    rainy = any(w.startswith("rain") for w in words)
     named = [w for w in live if w.about and set(re.findall(r"[a-z]+", w.about)) & words
-             or w.kind in words or (w.kind == "freeze" and words & {"freeze", "freezing", "frost", "cold"})]
+             or (w.kind == "freeze" and cold) or (w.kind == "rain" and rainy)]
     if len(named) > 1:
         return "Which one? " + "; ".join(describe(w, _unit(context)) for w in named) + "."
-    chosen = named[0] if named else (live[-1] if len(live) == 1 or words & {"that", "it"} else None)
+    chosen = named[0] if named else (live[-1] if len(live) == 1 or "that" in words else None)
     if chosen is None:
         return "Which one? I'm watching " + "; ".join(describe(w, _unit(context)) for w in live) + "."
     return _run(context, "condition_watch.remove", {"watch_id": chosen.watch_id})

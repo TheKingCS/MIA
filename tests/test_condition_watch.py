@@ -32,6 +32,20 @@ def test_his_words_are_read_into_watches():
     assert (water["kind"], water["about"], water["value"]) == ("supply", "water", 3.0)
     assert cw.parse("tell me whenever it freezes", TODAY)["standing"] is True
     assert cw.parse("tell me a joke", TODAY) is None
+    assert cw.parse("tell me when we're out of gas", TODAY) == {"kind": "supply", "about": "fuel", "value": 0.0,
+                                                                "standing": False, "until": "", "about": "fuel"}
+    assert cw.parse("let me know when the chickens are out of feed", TODAY)["value"] == 0.0
+    assert cw.parse("tell me if it gets below -5 degrees", TODAY)["value"] == -5.0
+    assert cw.parse("tell me when we're down to a dozen eggs please", TODAY)["about"] == "eggs"
+
+
+def test_what_isnt_a_watch_is_left_alone():
+    for words in ("tell me when it stops raining", "let me know if the rain gauge breaks",
+                  "tell me when the freezer is fixed", "tell me when the frosting is done",
+                  "remind me if it rains tomorrow to bring in the laundry", "let me know if the dog food is low",
+                  "remind me to water the plants in 3 days", "tell me when it gets under 20",
+                  "tell me when the water bill is under 50 dollars", "let me know if you need anything"):
+        assert cw.parse(words, TODAY) is None, words
 
 
 def _pantry(*items):
@@ -49,6 +63,13 @@ def test_a_pantry_item_is_said_when_it_runs_low_then_done(tmp_path):
     assert cw.WatchList(context, data_dir=tmp_path).get("w1").told == "2026-11-25"
 
 
+def test_a_dozen_in_the_pantry_counts_as_twelve(tmp_path):
+    context = SimpleNamespace(kitchen=_pantry(("Eggs", 3, "dozen")))
+    context.condition_watches = cw.WatchList(context, data_dir=tmp_path)
+    watch = cw.Watch("w4", "item", about="eggs", value=24.0)
+    assert cw.check(context, watch, TODAY) is None, "3 dozen is 36 eggs, over the 24 he said"
+
+
 def test_a_standing_freeze_watch_says_each_night_it_freezes(monkeypatch, tmp_path):
     context = SimpleNamespace()
     watches = cw.WatchList(context, data_dir=tmp_path)
@@ -61,6 +82,7 @@ def test_a_standing_freeze_watch_says_each_night_it_freezes(monkeypatch, tmp_pat
     first = cw.offer(context, datetime(2026, 11, 25, 17))
     assert len(first) == 1 and "tonight's low is 28°F" in first[0].message and first[0].urgency == "timely"
     assert cw.offer(context, datetime(2026, 11, 25, 18)) == [], "once a day"
+    assert first[0].expires.startswith("2026-11-26T09")
     assert len(cw.offer(context, datetime(2026, 11, 26, 17))) == 1
 
 
@@ -69,6 +91,16 @@ def test_a_watch_for_tonight_ends_after_tonight(tmp_path):
     watches.add(cw.Watch("w3", "freeze", value=32.0, until="2026-11-25"))
     assert [w.watch_id for w in watches.live(date(2026, 11, 25))] == ["w3"]
     assert watches.live(date(2026, 11, 26)) == []
+
+
+def test_tomorrow_nights_freeze_waits_for_tomorrow(monkeypatch):
+    from core import weather
+
+    monkeypatch.setattr(weather, "card", lambda c, fetch=None: {"text": "x", "low": 40, "tomorrow": {"low": 20}})
+    watch = cw.Watch("w5", "freeze", value=32.0, until="2026-11-26", created_at="2026-11-25T18:00:00")
+    assert cw.check(None, watch, date(2026, 11, 25)) is None
+    assert "20" in cw.check(None, watch, date(2026, 11, 26))
+    assert cw.describe(watch) == "if tomorrow night's low gets down to 32°F (that night only)"
 
 
 def test_his_whole_sentence_reaches_the_watch(monkeypatch):
@@ -100,5 +132,7 @@ def test_the_tools_keep_list_and_stop_watches(monkeypatch, tmp_path):
     refused = cw._watch_tool(context, {"question": "tell me when we're out of saffron"})
     assert "I don't see saffron in your pantry" in refused
     assert "couldn't tell what to watch for" in cw._watch_tool(context, {"question": "tell me a story"})
-    assert cw._stop_tool(context, {"question": "stop watching the flour"}).startswith("Stopped")
+    context.condition_watches.add(cw.Watch("w9", "freeze", value=32.0))
+    assert "flour" in cw._stop_tool(context, {"question": "stop watching the flour"})
+    assert "low" in cw._stop_tool(context, {"question": "stop telling me when it freezes"})
     assert cw._list_tool(context, {}).startswith("I'm not watching anything for you yet")
