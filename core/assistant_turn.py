@@ -885,7 +885,7 @@ def _upkeep_reply(context, prompt: str):
     """His upkeep in code (the live sweep, 2026-11-25): "when is my truck due for an oil change?" is that task's line
     from his own maintenance (the model had asked for the truck's make and model, or added a task); "the truck needs
     new brakes" adds the task for that asset (it had tried to mark one complete), only when the asset is one of his
-    ("the mower" is his Riding Mower when no other asset has those words).
+    ("the mower" is his Riding Mower: the said words the end of only one asset's name, never a modifier).
     None otherwise.
     The line is that asset's own (`_task_line`); a need already listed is said, never added twice, and a remark, a
     repeat, a date or a non-task (`_NOT_A_TASK`) is the model's.
@@ -905,9 +905,10 @@ def _upkeep_reply(context, prompt: str):
         return f"{line}.{tail}"
     found = _NEEDS.match(said)
     if found and found.group("asset").lower() not in assets:
-        # "the mower" is his Riding Mower when it's the only one with those words (the vehicle conversation check)
-        said_words = set(re.findall(r"[a-z]+", found.group("asset").lower()))
-        fits = [a for a in assets if said_words and said_words <= set(re.findall(r"[a-z]+", a))]
+        # "the mower" is his Riding Mower: the said words the end of one asset's name, never a modifier ("the house"
+        # is never the House Generator, "the f-150" never the Ford F-250: the Fable review)
+        said_words = found.group("asset").lower().split()
+        fits = [a for a in assets if said_words and a.split()[-len(said_words):] == said_words]
         if len(fits) == 1:
             said = said[:found.start("asset")] + fits[0] + said[found.end("asset"):]
             found = _NEEDS.match(said)
@@ -2151,7 +2152,7 @@ def _own_tool_reply(context, prompt: str):
             if project is not None and project.name.lower() not in _assets(context):
                 return project_status.whole_cost(context, project)  # a machine of the same name stays get_tool_costs'
             named = re.sub(r"^(?:the|my|our)\s+", "", (costing.group("p") or costing.group("q") or "").lower()).strip()
-            fits = [a for a in _assets(context) if named and set(named.split()) <= set(a.split())]
+            fits = [a for a in _assets(context) if named and a.split()[-len(named.split()):] == named.split()]
             if project is None and len(fits) == 1:  # "what has the truck cost me?": the machine's own costs
                 return _run_own(context, "get_tool_costs", {"tool": fits[0]})
         except Exception:

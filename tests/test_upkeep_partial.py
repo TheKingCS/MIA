@@ -21,6 +21,9 @@ def test_a_partial_name_finds_the_one_asset(monkeypatch):
     assert ran == [("add_maintenance_task", {"asset_name": "riding mower", "title": "Blades"})]
     monkeypatch.setattr(assistant_turn, "_assets", lambda c: ["riding mower", "push mower"])
     assert assistant_turn._upkeep_reply(context, "the mower needs new blades") is None
+    monkeypatch.setattr(assistant_turn, "_assets", lambda c: ["house generator", "ford f-250", "2020 truck"])
+    for said in ("the house needs a new roof", "the f-150 needs new brakes", "the 2019 truck needs new brakes"):
+        assert assistant_turn._upkeep_reply(context, said) is None, said
 
 
 def test_what_a_machine_has_cost(monkeypatch):
@@ -32,3 +35,6 @@ def test_what_a_machine_has_cost(monkeypatch):
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "what has the truck cost me?") == "get_tool_costs[truck]"
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "what has the mower cost me so far?") == \
         "get_tool_costs[riding mower]"
+    monkeypatch.setattr(assistant_turn, "_assets", lambda c: ["house generator"])
+    assert assistant_turn._own_tool_reply(SimpleNamespace(), "what has the house cost me?") != \
+        "get_tool_costs[house generator]"
