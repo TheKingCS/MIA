@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1904 files, 399,963 lines; 1904 files describe themselves; 21,689 of 21,835 classes and functions are documented.
+1905 files, 400,041 lines; 1905 files describe themselves; 21,692 of 21,838 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-740 files, 209,654 lines; 10,369 of 10,448 classes and functions documented
+740 files, 209,697 lines; 10,370 of 10,449 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1039,7 +1039,7 @@
 
 ## tests/: the test suite: what each part must do
 
-754 files, 108,147 lines; 8,946 of 9,013 classes and functions documented
+755 files, 108,182 lines; 8,948 of 9,015 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1243,6 +1243,7 @@
 - `tests/test_finance_summary.py`: Finance #4, money on the phone: core/finance_summary.py's numbers, the /api/finance/summary endpoint, and the phone's money.js drawing the real Python output (under Node, skipped without it).
 - `tests/test_findings.py`: Findings (DEC-0052 step 3, core/findings.py): what MIA notices by putting apps together, with the records it came from, why it matters, a next step, and only Zac's chosen kinds unprompted.
 - `tests/test_firewood.py`: Firewood for the winter (core/firewood.py): cords read from his inventory (full cords, face cords and ricks at about a third), against his own winter figure (set with set_preparedness), what's short said; without his figure the usual range said as only that and his number asked for; a pile with no m
+- `tests/test_firewood_ask.py`: "About 4" answering her own "How many cords does a winter take you?" is kept as his winter's figure (core/firewood.answer_to_ask, brainstorm round 19), and "do I have enough firewood?" is her check's own words.
 - `tests/test_first_aid_drills.py`: The first-aid drills (core/drills.py: a deep cut, choking at dinner), written in the emergency floor's words (core/first_aid_floor.py) so a drill never teaches what the floor wouldn't say; asking for one never trips the floor, and anything that says it's real still does, even with "practice" or "dri
 - `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of speech goes on as usual. The corpus lists both what must trigger (th
 - `tests/test_first_aid_floor_never_misses.py`: Every real emergency phrasing the reviews found (2026-11-25, the sixth to ninth) reaches the emergency floor (core/first_aid_floor.detect). Narrowing its words to quiet a false alarm had twice silenced real ones ("grandma fell off the horse and isn't breathing", "dad has collapsed", "she choked at s

@@ -1392,6 +1392,11 @@ _OWN_TOOLS = (
                                      r"(?:my )?(?:builds|jobs|the shop|the workshop)|how much do i (?:really )?make (?:an|per) "
                                      r"hour (?:on|from) (?:my )?(?:builds|jobs|the shop|the workshop))\s*[?.!]*\s*$", re.I),
      True),
+    # "do I have enough firewood?": her own check's words, never rephrased into a question (brainstorm round 19)
+    ("firewood_check", re.compile(r"^(?!.*\b(?:if|neighbou?r'?s?)\b)\s*(?:hey mia,? )?(?:do (?:i|we) have enough (?:fire)?wood"
+                                  r"(?: for (?:the |this )?winter)?|how much (?:fire)?wood do (?:i|we) have(?: left)?|is (?:my|our|"
+                                  r"the) (?:fire)?wood(?:pile)? enough|will (?:my|our|the) (?:fire)?wood(?:pile)? last(?: the "
+                                  r"winter)?)\s*[?.!]*\s*$", re.I), False),
     ("list_grants", re.compile(r"^\s*what (?:can|may|do|will) you do (?:on your own|by yourself|without (?:asking(?: me)?|"
                                r"me asking))\s*\??\s*$|^\s*what are you allowed to do (?:on your own|by yourself)\s*\??\s*$",
                                re.I), False),
@@ -2033,10 +2038,24 @@ def _follow_through_reply(context, conversation, prompt: str):
     "what about this month?" after last month's spending, "and the card?" after the truck loan): his last question
     with the new words in place (the last one that wasn't itself a follow-up, each follow-up since folded in:
     core/follow_through.thread, so "and groceries?" after "what about this month?" is groceries this month), answered by the same code answers (`_records_reply`,
-    `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_everyday_reply`). None when it isn't one, can't be joined, or no code answer takes the joined question (the
+    `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_everyday_reply`). A bare number answering her
+    own question for one ("about 4" after "How many cords does a winter take you?") is kept first
+    (core/firewood.answer_to_ask). None when it isn't one, can't be joined, or no code answer takes the joined question (the
     model has it)."""
     from core import follow_through
 
+    if conversation is not None:  # a bare number answering her own question for one (core/firewood.answer_to_ask)
+        said = [str(getattr(m, "content", "") or "") for m in getattr(conversation, "messages", []) or []
+                if getattr(m, "role", "") == "assistant"]
+        if said:
+            try:
+                from core import firewood
+
+                kept = firewood.answer_to_ask(context, said[-1], prompt)
+                if kept:
+                    return kept
+            except Exception:
+                log.exception("Couldn't keep his answer to her question")
     x = follow_through.follow_on(prompt)
     if x is None or conversation is None:
         return None

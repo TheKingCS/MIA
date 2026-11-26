@@ -10,7 +10,9 @@ How: `cords_on_hand(items)` (pure) reads inventory records named as firewood (or
 never bungee or extension cords), in "cords" (full cords, 128 cubic feet) or "face cords"/"ricks" (the piece length
 over 48 inches of a cord: a third for 16-inch pieces), with fractions and words ("1 1/2 cords", "half cord"); a record
 whose amount it can't read is named, never guessed. `say(context)` compares and says what's short.
-"I burn about 4 cords a winter" is kept in code (`reply`, from core/quick_commands.py).
+"I burn about 4 cords a winter" is kept in code (`reply`, from core/quick_commands.py), and so is a bare number
+answering her own question for it ("about 4", "maybe 5 cords" after "How many cords does a winter take you?":
+`answer_to_ask`, brainstorm round 19; the model had taken "about 4 cords" for wood stored, and kept nothing).
 """
 
 from __future__ import annotations
@@ -115,9 +117,31 @@ def reply(context, text: str) -> Optional[str]:
     return kept + " " + say(context)
 
 
+ASK = "How many cords does a winter take you?"
+_BARE = re.compile(r"^\s*(?:oh,?\s+)?(?:about|around|roughly|maybe|probably|like|usually|close to|i'?d say)?\s*"
+                   r"(\d+(?:\.\d+)?)\s*(face\s+)?(?:cords?)?(?:\s+(?:a|per|each)\s+(?:winter|year))?\s*[.!]?\s*$", re.I)
+
+
+def answer_to_ask(context, last_reply: str, text: str) -> Optional[str]:
+    """A bare number answering her own question (`ASK`, in her last reply) kept as his winter's figure, then the
+    firewood check against it; None when her last reply didn't ask, or the words aren't a number of cords (1 to 30)."""
+    if ASK not in (last_reply or ""):
+        return None
+    found = _BARE.match(text or "")
+    if not found:
+        return None
+    cords = float(found.group(1)) * (1 / 3 if found.group(2) else 1)
+    if not 0 < cords <= 30:
+        return None
+    from core.assistant_today_actions import _action_set_preparedness
+
+    kept = _action_set_preparedness(context, {"firewood_cords": round(cords, 2)})
+    return kept + " " + say(context)
+
+
 def say(context) -> str:
     """For "do I have enough firewood?": cords on hand against his winter's figure, what's short; without his figure,
-    the usual range said as only that and his number asked for."""
+    the usual range said as only that and his number asked for (`ASK`, which `answer_to_ask` hears answered)."""
     inventory = getattr(context, "inventory", None)
     have, unread = cords_on_hand(inventory.all_items() if inventory is not None else [])
     need = _setting(context, "prepared.firewood_cords")
@@ -129,7 +153,7 @@ def say(context) -> str:
         else:
             parts.append(f"You burn about {need:g} cords a winter, so you're {round(need - have, 2):g} short.")
     else:
-        parts.append("How many cords does a winter take you? A wood stove as the main heat often burns 3 to 6, a "
+        parts.append(ASK + " A wood stove as the main heat often burns 3 to 6, a "
                      "few as backup heat; tell me yours (\"I burn 4 cords a winter\") and I'll keep count.")
     if unread:
         parts.append("I couldn't read how much is in " + ", ".join(unread[:3]) + " (give it in cords or face cords).")

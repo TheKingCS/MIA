@@ -358,7 +358,7 @@ don't have last month's spending", and a bare "why?" said "you mentioned a fact 
   the frost date behind a planting day), never a fact sheet's words.
 - **A job's whole cost** (no decision): "what has the shed cost me?" joining his expenses, its build's materials and
   his hours at his own rate.
-- **When she doesn't know** (no decision): an answer that needs one number of his ("how much firewood a winter?")
+- **When she doesn't know** (firewood built, core/firewood.answer_to_ask; the other asks next): an answer that needs one number of his ("how much firewood a winter?")
   asks for it once and keeps it, through the setting the code reads.
 
 ## Round 18 (2026-11-26, after a day of sweeps): from answering to keeping up a conversation
