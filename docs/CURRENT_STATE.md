@@ -74,7 +74,13 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   into the other's record, a question never writes); a conversation's thread (core/follow_through.thread: "gas last
   month?", "what about this month?", "and groceries?" is groceries this month; "same for the card"); and what she
   noticed today in the evening wrap (core/evening_wrap.noticed_today: the first unusual thing that reached him today).
-  Round 18's ideas needing no decision are all built; Q-0018 and Q-0019 wait on Zac. 8780 passing.
+  Round 18's ideas needing no decision are all built; Q-0018 and Q-0019 wait on Zac.
+- Brainstorm round 19 (from his records to his whole picture), built and Fable-reviewed: "how's the garage rewire
+  coming along?" (core/project_status: status, due date, tasks, hours, its own needs; a project named whole), "did I
+  spend more this month than last month?" (core/money_periods.compare: to the same day, last month whole, what moved
+  most; never time or hours), "the fact sheet" kept out of the model's words, and firewood asked once and kept ("about
+  5 cords" after her question: core/firewood.answer_to_ask). Next from round 19: "why?" after a code answer (the
+  numbers behind it), a job's whole cost, more asks kept the firewood way. 8787 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through

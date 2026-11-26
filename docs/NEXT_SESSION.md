@@ -12,7 +12,9 @@ question, "and the card?", "every Sunday tell me what's due this week", "can I a
 "what's a good side hustle for me?", and from round 18: "teach me something", "what should I be doing on the
 homestead this month?", "I spent $40 on screws and 2 hours on the shed" (both kept, said together). Also built: a
 conversation's thread across turns ("and groceries?" after "what about this month?") and "Something I flagged today"
-in the evening wrap; round 18's no-decision ideas are done, so next is a round 19 brainstorm. Waiting on
+in the evening wrap. Round 19 too: "how's the garage rewire coming along?", "did I spend more this month than
+last month?", "do I have enough firewood?" then "about 5 cords". Next (no decision): "why?" after a code answer, a
+job's whole cost ("what has the shed cost me?"), more of her questions kept when answered. Waiting on
 Zac: Q-0018 (the writing shortcuts), Q-0019 (a fire how-to through the emergency floor).
 
 **2026-11-25, late: brainstorm round 16** (docs/future/JARVIS_BRAINSTORM.md). Built: the homestead's health line
