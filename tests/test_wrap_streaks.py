@@ -36,3 +36,13 @@ def test_a_streak_practised_today_is_named(monkeypatch):
     not_today = _book(range(1, 5))
     not_today.best, not_today.passed = book.best, book.passed
     assert evening_wrap.streaks(SimpleNamespace(paths=not_today), TODAY) == ""
+
+
+def test_a_streak_alone_is_still_said_and_never_a_quiet_day(monkeypatch):
+    from datetime import datetime
+
+    monkeypatch.setattr(evening_wrap, "done_today", lambda c, t: "")
+    monkeypatch.setattr(evening_wrap, "first_tomorrow", lambda c, t: "")
+    monkeypatch.setattr(evening_wrap, "weather_tomorrow", lambda c: "")
+    monkeypatch.setattr(evening_wrap, "streaks", lambda c, t: "Guitar: 4 days in a row.")
+    assert evening_wrap.wrap(None, datetime(2026, 11, 25, 20)) == "Guitar: 4 days in a row."

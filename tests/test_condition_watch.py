@@ -63,7 +63,10 @@ def test_a_pantry_item_is_said_when_it_runs_low_then_done(tmp_path):
     assert cw.WatchList(context, data_dir=tmp_path).get("w1").told == "2026-11-25"
 
 
-def test_a_pantry_watch_offers_the_grocery_list_as_a_card():
+def test_a_pantry_watch_offers_the_grocery_list(monkeypatch):
+    from core import actions as engine
+
+    monkeypatch.setattr(engine, "_granted_ahead", lambda c, kind: False)
     proposed = []
     kitchen = SimpleNamespace(all_pantry_items=lambda: [SimpleNamespace(name="Coffee", quantity=1, unit="lb")],
                               all_grocery_items=lambda: [])
@@ -71,9 +74,14 @@ def test_a_pantry_watch_offers_the_grocery_list_as_a_card():
                               proposed.append((kind, params, proposed_by)) or SimpleNamespace(status="proposed"))
     context = SimpleNamespace(kitchen=kitchen, actions=actions)
     watch = cw.Watch("w6", "item", about="coffee", value=1.0)
-    assert cw.restock(context, watch) == " Want Coffee on the grocery list? It's on a card for your yes."
+    assert cw.restock(context, watch) == ' Say "add coffee to my grocery list" and I will.'
+    assert proposed == [], "no card no screen shows"
+    monkeypatch.setattr(engine, "_granted_ahead", lambda c, kind: True)
+    actions.propose = lambda c, kind, params, proposed_by="person": (proposed.append((kind, params, proposed_by))
+                                                                     or SimpleNamespace(status="executed"))
+    assert cw.restock(context, watch) == " I added Coffee to your grocery list (undo it if you don't want it)."
     assert proposed == [("grocery.add", {"name": "Coffee"}, "mia")]
-    kitchen.all_grocery_items = lambda: [SimpleNamespace(name="coffee", checked=False)]
+    kitchen.all_grocery_items = lambda: [SimpleNamespace(name="coffee beans", checked=False)]
     assert cw.restock(context, watch) == " Coffee is already on your grocery list."
     assert len(proposed) == 1
     assert cw.restock(context, cw.Watch("w7", "freeze", value=32.0)) == ""

@@ -101,7 +101,8 @@ def streaks(context, today: date) -> str:
 
 def wrap(context, now: datetime) -> str:
     """The two sentences, with any course on a streak practised today between them; "" when there's nothing done,
-    nothing tomorrow and no weather."""
+    nothing tomorrow, no weather and no streak
+    (a day of only practice says the streak, never "a quiet day")."""
     today = now.date()
     parts = []
     for read, name in ((lambda: done_today(context, today), "done"),
@@ -113,16 +114,16 @@ def wrap(context, now: datetime) -> str:
             log.exception("Evening wrap: %s couldn't be read", name)
             parts.append("")
     done, first, sky = parts
-    if not (done or first or sky):
-        return ""
-    head = f"Today: {done}." if done else "A quiet day today."
     try:
         streak = streaks(context, today)
     except Exception:  # noqa: BLE001 - the wrap goes without it
         log.exception("Evening wrap: the streaks couldn't be read")
         streak = ""
+    if not (done or first or sky or streak):
+        return ""
+    head = f"Today: {done}." if done else "" if streak else "A quiet day today."  # practice is a day's doing too
     if streak:
-        head += f" {streak}"
+        head = f"{head} {streak}".strip()
     tail = []
     if first:
         tail.append(f"first up, {first}")

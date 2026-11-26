@@ -66,7 +66,8 @@ def behind(context, category: str, today: date, count: int = 2) -> list:
     rows = [e for e in budget.all_expenses() if e.category == category and not e.entity_id
             and start <= str(e.date or "")[:10] <= today.isoformat()]
     rows.sort(key=lambda e: -float(e.amount or 0))
-    return [{"description": (e.description or e.payee or "an expense").strip(), "amount": float(e.amount or 0),
+    return [{"description": (e.description or "").strip() or (e.payee or "").strip() or "an expense",
+             "amount": float(e.amount or 0),
              "date": str(e.date)[:10]} for e in rows[:count]]
 
 
