@@ -23,7 +23,11 @@ def test_out_of_milk_goes_to_the_grocery_list():
     context = SimpleNamespace(assistant_actions=_actions(ran))
     assert assistant_turn._own_tool_reply(context, "We're out of milk") == "done"
     assert ran[-1] == ("add_grocery_item", {"items": "milk", "question": "We're out of milk"})
-    for words in ("I'm out of time", "we're out of gas", "I'm all out of ideas"):
+    for words in ("we're out of milk, eggs and bread", "hey mia, we're almost out of coffee"):
+        ran.clear()
+        assert assistant_turn._own_tool_reply(context, words) == "done", words
+    for words in ("I'm out of time", "we're out of gas", "I'm all out of ideas", "we're out of the woods",
+                  "I'm out of hope", "we're out of chicken feed", "we're out of diesel", "I'm out of touch"):
         ran.clear()
         assistant_turn._own_tool_reply(context, words)
         assert not ran or ran[-1][0] != "add_grocery_item", words
@@ -42,6 +46,9 @@ def test_a_problem_described_is_never_a_job_done():
     assert tool_loop.tells_trouble("My truck has been making a squealing noise when I brake", marked)
     assert tool_loop.tells_trouble("the furnace won't start", marked)
     assert not tool_loop.tells_trouble("I changed the brakes, they were squealing", marked)
+    assert not tool_loop.tells_trouble("mark the leaky faucet job done", marked)
+    assert not tool_loop.tells_trouble("the bill looks wrong but I paid it",
+                                       ChatReply(content="", tool_calls=[ToolCall(name="mark_bill_paid", arguments={})]))
     added = ChatReply(content="", tool_calls=[ToolCall(name="add_maintenance_task", arguments={})])
     assert not tool_loop.tells_trouble("My truck has been making a squealing noise", added)
 
@@ -50,3 +57,5 @@ def test_a_written_out_lookup_keeps_only_the_answer():
     said = response_composer.polish('Tool call: "What is the best breed of goat for milk?"\n\nResponse: "Nubians and '
                                     'Nigerian Dwarfs are the usual milk breeds."')
     assert said == "Nubians and Nigerian Dwarfs are the usual milk breeds."
+    kept = "Search: the seed catalog first, then ask a neighbor. Their response: usually quick."
+    assert response_composer.polish(kept).startswith("Search: the seed catalog first")

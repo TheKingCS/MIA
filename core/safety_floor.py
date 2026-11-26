@@ -52,6 +52,11 @@ _DANGER = re.compile(
     r"suicid(?:e|al)|"
     r"(?:hurt|harm|cut)(?:ing)? myself|self[- ]harm|"
     r"no reason (?:to|for me to) (?:live|keep going)|"
+    # out of hope, out of reasons to live (the Fable review, 2026-11-26: these had reached the grocery list)
+    r"(?:out of|run out of|ran out of|lost (?:all|my)|no more|have no|got no) (?:reasons?|will) (?:to|for me to) "
+    r"(?:live|keep going|go on|be here|stay alive)|"
+    r"(?:i'?m|i am|i'?ve|i have|i feel|feeling|i'?m feeling)(?: so| completely| totally| all)? (?:out of hope|"
+    r"run out of hope|lost all hope|no hope left|hopeless)|"
     r"don'?t want to (?:live|be alive|wake up)|"
     r"overdos(?:e|ing)|"
     r"(?:going|want|gonna) to (?:hurt|kill) (?:someone|somebody|him|her|them)|"

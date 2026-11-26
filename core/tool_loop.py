@@ -242,10 +242,12 @@ _DONE_IT = re.compile(r"\b(?:i|we) (?:just )?(?:changed|replaced|fixed|did|finis
 
 def tells_trouble(prompt: str, reply: ChatReply) -> bool:
     """Pure logic. He describes a problem ("my truck makes a squealing noise when I brake") and the model reached to
-    mark a job done (a complete_ or mark_ tool): a question to answer, never a job done (the live sweep, 2026-11-26:
-    "I don't have a maintenance task called 'it'")."""
-    done_calls = [c for c in reply.tool_calls if c.name.startswith(("complete_", "mark_"))]
-    return bool(done_calls) and bool(_TROUBLE.search(prompt or "")) and not _DONE_IT.search(prompt or "")
+    mark a job done (complete_maintenance_task, mark_task_done): a question to answer, never a job done (the live
+    sweep, 2026-11-26: "I don't have a maintenance task called 'it'"). Never when he asks for it ("mark the leaky
+    faucet job done", "it's fixed")."""
+    done_calls = [c for c in reply.tool_calls if c.name in ("complete_maintenance_task", "mark_task_done")]
+    asked = re.search(r"\b(?:mark|check (?:it )?off|complete|done|fixed|sorted|finished|paid)\b", prompt or "", re.I)
+    return bool(done_calls) and bool(_TROUBLE.search(prompt or "")) and not _DONE_IT.search(prompt or "") and not asked
 
 
 def _wants_change(context, reply: ChatReply) -> bool:

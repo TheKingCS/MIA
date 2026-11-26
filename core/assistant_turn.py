@@ -1291,10 +1291,39 @@ _TRIP_EVE = re.compile(r"^\s*(?:hey mia,? )?(?:what (?:do i need|should i (?:pac
                        r"(?: tomorrow)?)?|am i (?:ready|packed) for (?:my |the |tomorrow'?s )?(?:\w+ )?trip(?: tomorrow)?|"
                        r"am i packed|before i go|what(?:'s| is) left to pack(?: for (?:my |the )?(?:\w+ )?trip)?)"
                        r"\s*[?.!]*\s*$", re.I)
-_OUT_OF = re.compile(r"^\s*(?:we'?re|i'?m|we are|i am|we|i)\s+(?:all |completely |totally )?(?:out of|ran out of|have run "
-                     r"out of|are out of)\s+([a-z][a-z' -]{1,30}?)\s*(?:again|now)?\s*[.!]*\s*$", re.I)
-_NOT_GROCERIES = re.compile(r"^(?:town|time|here|luck|it|breath|money|cash|options|ideas|patience|work|gas|fuel|"
-                            r"propane|the house|range|order|control|shape|my mind|space|room|battery)$", re.I)
+_OUT_OF = re.compile(r"^\s*(?:hey mia,?\s+)?(?:(?:looks like|so|well|ugh),?\s+)?(?:we'?re|i'?m|we are|i am|we|i)\s+"
+                     r"(?:all |completely |totally |almost |nearly )?(?:out of|ran out of|have run out of|are out of|"
+                     r"are almost out of|almost ran out of)\s+([a-z][a-z' ,-]{1,40}?)\s*(?:again|now)?\s*[.!]*\s*$", re.I)
+# The foods "we're out of ..." takes for the grocery list without asking (the Fable review: a deny-list let "out of
+# the woods", "out of hope" and "out of diesel" through); anything else is the model's, unless it's already in his
+# pantry or on his list.
+_GROCERY_WORDS = frozenset(
+    "milk eggs egg bread butter coffee tea sugar flour salt pepper rice pasta noodles cheese yogurt cereal oats oatmeal "
+    "bacon sausage ham chicken beef pork turkey fish tuna beans lentils potatoes potato onions onion garlic carrots "
+    "lettuce tomatoes tomato apples apple bananas banana oranges lemons limes berries grapes juice soda water cream "
+    "creamer honey syrup jam jelly peanut ketchup mustard mayo mayonnaise ranch dressing oil vinegar spices cinnamon "
+    "vanilla yeast baking soda powder chips crackers cookies snacks popcorn tortillas buns bagels muffins broth "
+    "soup sauce salsa pickles olives corn peas spinach broccoli cabbage celery peppers mushrooms avocados avocado "
+    "toilet paper towels napkins dish soap detergent foil wrap bags trash diapers wipes shampoo toothpaste".split())
+_NOT_GROCERIES = re.compile(r"^(?:the |a |an |my |our |here\b|this\b|that\b)|\b(?:feed|hope|reasons?|patience|time|"
+                            r"options|ideas|energy|luck|money|cash|gas|fuel|diesel|propane|oil for|firewood|hay)\b", re.I)
+
+
+def _groceries(context, said: str) -> bool:
+    """Whether "out of" names groceries: every item a food or household word (`_GROCERY_WORDS`), or already in his
+    pantry or on his grocery list; never an idiom or a supply that isn't bought at the store."""
+    if _NOT_GROCERIES.search(said):
+        return False
+    items = [i.strip() for i in re.split(r",|\band\b", said) if i.strip()]
+    kitchen = getattr(context, "kitchen", None)
+    known = set()
+    if kitchen is not None:
+        try:
+            known = {p.name.lower() for p in kitchen.all_pantry_items()} | \
+                {g.name.lower() for g in kitchen.all_grocery_items()}
+        except Exception:  # noqa: BLE001 - the food words alone then
+            known = set()
+    return bool(items) and all(i.lower() in known or set(i.lower().split()) <= _GROCERY_WORDS for i in items)
 _REMEMBER_TALK = re.compile(r"^\s*(?:hey mia,? )?(?:do you |can you |did you )?remember what (?:i|we) (?:told you|said|"
                             r"talked about)(?: (?:yesterday|last night|last time|earlier|the other day))?\s*[?.!]*\s*$|"
                             r"^\s*what did (?:we talk about|i tell you)(?: (?:yesterday|last night|last time|earlier))?"
@@ -1326,7 +1355,8 @@ def _own_tool_reply(context, prompt: str):
     money this week?" its pulse (core/money_pulse), "what did you learn this week?" the week's learning
     (core/learned_week), "how are my hobbies going?" this month across them (core/hobby_progress), "what does
     my week look like?" the week with its look-ahead (get_week), "we're out of milk" the grocery list
-    (add_grocery_item, never the pantry; "out of time" or "out of gas" aren't groceries), "do you remember what I told
+    (add_grocery_item, never the pantry; only for groceries: food and household words, or what's in
+    his pantry or on his list, never "out of the woods", "out of hope" or "out of diesel": `_groceries`), "do you remember what I told
     you yesterday?" her record of it (list_past_conversations), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
@@ -1381,7 +1411,7 @@ def _own_tool_reply(context, prompt: str):
             log.exception("Couldn't say the trip's list")
             return None
     out = _OUT_OF.match(said)
-    if out and not _NOT_GROCERIES.match(out.group(1).strip()):  # "we're out of milk": the grocery list, never the pantry
+    if out and _groceries(context, out.group(1).strip()):  # "we're out of milk": the grocery list, never the pantry
         return _run_own(context, "add_grocery_item", {"items": out.group(1).strip(), "question": said})
     if _REMEMBER_TALK.match(said):  # "do you remember what I told you yesterday?": her own record of it
         return _run_own(context, "list_past_conversations", {"question": said})

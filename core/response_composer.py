@@ -144,7 +144,7 @@ def polish(text: str, prompt: str = "") -> str:
     text = without_repeats(text) or text  # never the same paragraph or sentence twice
     # 'Tool call: "What is the best goat for milk?"  Response: "The best..."' (the live sweep, 2026-11-26): the model
     # wrote out its own lookup; only the answer stays
-    framed = re.match(r'^\s*(?:tool call|function call|query|search)\s*:\s*"?[^"\n]*"?\s*(?:\n\s*)*response\s*:\s*(.+)$',
+    framed = re.match(r'^\s*(?:tool call|function call)\s*:\s*(?:"[^"\n]*"\s*|[^\n]*\n\s*)(?:\n\s*)*response\s*:\s*(.+)$',
                       text, re.I | re.S)
     if framed and framed.group(1).strip():
         text = framed.group(1).strip()
