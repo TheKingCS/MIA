@@ -352,7 +352,7 @@ don't have last month's spending", and a bare "why?" said "you mentioned a fact 
 
 - **How a project is coming** (built, core/project_status): its status and due date, its tasks done and next, his
   hours on it, what it still needs.
-- **This month against last** (no decision): "did I spend more this month than last?", "groceries this month vs last
+- **This month against last** (built, core/money_periods.compare): "did I spend more this month than last?", "groceries this month vs last
   month", at the same point in the month, the categories that moved most, in code (core/money_periods).
 - **"Why?" after a code answer** (no decision): the numbers behind it (the bills and pay "can I afford it" counted,
   the frost date behind a planting day), never a fact sheet's words.

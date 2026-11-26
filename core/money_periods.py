@@ -10,6 +10,9 @@ sheet's words). From his own records:
   categories;
 - `biggest`: the biggest category in the period (this year when none is said);
 - `shop_made`: the workshop ledger's revenue, expenses and profit in the period (core/ledger_manager).
+- `compare`: this month so far against last month at the same day, and last month whole, with the categories
+  that moved most, or one category's (brainstorm round 19: "did I spend more this month than last month?" got "I
+  don't have last month's spending").
 - `afford`: a purchase once against this month's logged income, spending and what's still due (never a bank
   balance: none is linked).
 
@@ -135,6 +138,49 @@ def shop_made(context, words: str, today: Optional[date] = None) -> str:
     net = revenue - expenses
     return (f"The shop {label}: {_money(revenue)} in sales, {_money(expenses)} in costs, "
             + (f"{_money(net)} profit." if net >= 0 else f"{_money(-net)} behind."))
+
+
+def compare(context, category: str = "", today: Optional[date] = None) -> str:
+    """This month so far against last month to the same day (a month half gone never against a whole one), with last
+    month's whole said beside it; for every category, the two that moved most; for one (`category`, a budget
+    category's name), only its own. From his household's expenses."""
+    today = today or date.today()
+    budget = getattr(context, "budget", None)
+    if budget is None:
+        return "Your budget isn't on this MIA."
+    start = today.replace(day=1)
+    last_end = start - timedelta(days=1)
+    last_start = last_end.replace(day=1)
+    same_day = last_start.replace(day=min(today.day, last_end.day))
+
+    def by(a: date, b: date) -> dict:
+        """Spending per category from a to b."""
+        found = budget.total_expenses_by_category(a.isoformat(), b.isoformat(), entity_id="")
+        return {c: v for c, v in found.items() if not category or c == category}
+
+    now, then, whole = by(start, today), by(last_start, same_day), by(last_start, last_end)
+    what = f"on {category} " if category else ""
+    a, b, w = sum(now.values()), sum(then.values()), sum(whole.values())
+    if not a and not w:
+        return f"Nothing logged as spent {what}this month or last, so there's nothing to compare yet."
+    if not w:
+        return f"You've spent {_money(a)} {what}this month; nothing's logged {what}for {last_start:%B} to compare."
+    day = f"{last_start:%B} {same_day.day}"
+    if abs(a - b) < 0.005:
+        head = f"About the same: {_money(a)} {what}this month so far, and {_money(b)} by {day}."
+    else:
+        word = "more" if a > b else "less"
+        head = (f"{_money(abs(a - b))} {word}: {_money(a)} {what}this month so far, against {_money(b)} by {day}.")
+    head += f" All of {last_start:%B} came to {_money(w)}."
+    if category:
+        return head
+    moved = sorted(set(now) | set(then), key=lambda c: -abs(now.get(c, 0) - then.get(c, 0)))
+    moved = [c for c in moved if abs(now.get(c, 0) - then.get(c, 0)) >= 1][:2]
+    if moved:
+        head += " Moved most: " + ", ".join(
+            f"{c} ({'up' if now.get(c, 0) > then.get(c, 0) else 'down'} {_money(abs(now.get(c, 0) - then.get(c, 0)))})"
+            for c in moved) + "."
+    return head
 
 
 def afford(context, amount: float, today: Optional[date] = None) -> str:

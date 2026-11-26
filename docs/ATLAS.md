@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1902 files, 399,786 lines; 1902 files describe themselves; 21,683 of 21,829 classes and functions are documented.
+1903 files, 399,906 lines; 1903 files describe themselves; 21,687 of 21,833 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-740 files, 209,558 lines; 10,367 of 10,446 classes and functions documented
+740 files, 209,629 lines; 10,368 of 10,447 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1039,7 +1039,7 @@
 
 ## tests/: the test suite: what each part must do
 
-752 files, 108,066 lines; 8,942 of 9,009 classes and functions documented
+753 files, 108,115 lines; 8,945 of 9,012 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1419,6 +1419,7 @@
 - `tests/test_money_ahead.py`: The next 13 weeks of money (core/money_ahead.py, brainstorm 6.1): bills, income and debt minimums by week from his budget, the tight weeks worst first, every overdue and late one said now, a debt never counted twice (paid this month, or already a bill), never a bank balance it can't know. *(2 undocumented)*
 - `tests/test_money_periods.py`: Money over a period in code (core/money_periods.py, the live sweep 2026-11-26): spending in a period with its top categories, the biggest category, the shop's month; and plan answers never say "the fact sheet". *(1 undocumented)*
 - `tests/test_money_pulse.py`: The money pulse (core/money_pulse.py, 2026-11-25): the category drifting furthest over its usual pace, what's due in the next seven days and the tightest week ahead, from his own budget; said on Sundays once a week through the gate, and on "how's my money this week?". *(5 undocumented)*
+- `tests/test_month_vs.py`: This month against last (core/money_periods.compare, brainstorm round 19): to the same day, last month's whole beside it, the categories that moved most, or one category's own.
 - `tests/test_morning_briefing.py`: The morning briefing he asks for (core/morning_briefing.py; brainstorm round 14): off until he asks, his words set its hour (7 unless he says a morning hour), turn it off, or are asked again for an evening hour; the words are today's weather and his day from his records; the daily check offers it fr
 - `tests/test_motivation.py`: "I need motivation" (core/motivation.py, the full sweep 2026-11-26): his own reasons said back and one small thing from today, never a guess about how he feels.
 - `tests/test_move_rehearsal.py`: FW-07b: the move to MIA OS rehearsed on synthetic data (os/poc/vm/move_rehearsal.py), here as in the VM: a real backup of stores laid out as on Windows, restored by MIA's own code into a fresh folder, matches store for store; a record changed afterwards is named.

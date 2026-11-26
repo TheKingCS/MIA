@@ -1540,6 +1540,12 @@ _VEHICLE_KIT = re.compile(r"\b(?:truck|car|vehicle|jeep|suv|van)(?:'s)? (?:emerg
 _TEACH_SOMETHING = re.compile(r"^\s*(?:hey mia,? )?(?:teach me something(?: new| today| useful)?|(?:tell|show) me something "
                               r"(?:new|useful) to learn|what can i learn today|give me a lesson|teach me a skill)\s*[.!?]*\s*$",
                               re.I)
+_MONTH_VS = re.compile(r"^\s*(?:hey mia,? )?(?=.*\b(?:spend|spent|spending)\b)(?!.*\b(?:income|earn\w*|made|make|saved?|"
+                       r"save)\b)(?:did i|have i been|am i|was i|how does|how's|how is|compare|is|what's|my)\b.{0,60}?"
+                       r"(?:\bon (?P<cat>[\w&' -]{2,30}?)\s+)?(?:(?:so far )?this month\s+)?(?:than|vs\.?|versus|"
+                       r"compared? (?:to|with)|against|and)\s+(?:i did\s+|what i spent\s+)?last month\s*[?.!]*\s*$|^\s*(?:hey mia,? )?"
+                       r"(?:my )?(?P<cat2>[\w&' -]{2,30}?)(?: spending)? this month (?:vs\.?|versus|compared (?:to|with)) "
+                       r"last month\s*[?.!]*\s*$", re.I)
 _PROJECT_COMING = re.compile(r"^\s*(?:hey mia,? )?(?:how(?:'s| is| are) (?:the |my |our )?(?P<a>[\w' -]{2,40}?) "
                              r"(?:coming(?: along)?|going|doing|looking|progressing)|how far along (?:is|am i (?:on|with)) "
                              r"(?:the |my |our )?(?P<b>[\w' -]{2,40}?)|where (?:am i|are we|do i stand) (?:on|with) (?:the |my "
@@ -1644,7 +1650,8 @@ def _own_tool_reply(context, prompt: str):
     "when I get paid remind me", rent reminded as a bill only when said monthly), a report on a schedule kept only
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation (to finish the shed)" his own reasons and one small step (core/motivation), "teach me
-    something" a lesson from her own courses (core/teach_something), "how's the shed coming along?" that project's picture
+    something" a lesson from her own courses (core/teach_something), "did I spend more this month than last month?" the
+    months side by side (core/money_periods.compare), "how's the shed coming along?" that project's picture
     (core/project_status, only for a project of his), "what should I be doing on the homestead this
     month?" (or "in march") that month's items and the season's usual work (core/homestead_year.this_month), "what should be in my truck's
     emergency kit?" Ready.gov's car kit against his records (core/ready_kit.say_vehicle), "what's a good side
@@ -1871,6 +1878,24 @@ def _own_tool_reply(context, prompt: str):
             return ready_kit.say_vehicle(context)
         except Exception:
             log.exception("Couldn't check the vehicle kit")
+            return None
+    versus = _MONTH_VS.match(said)
+    if versus:  # "did I spend more this month than last month?" (core/money_periods.compare)
+        from core import money_periods
+        from core.budget_manager import EXPENSE_CATEGORIES
+
+        category = ""
+        if versus.group("cat") or versus.group("cat2"):
+            what = (versus.group("cat") or versus.group("cat2")).strip()
+            category = next((c for c in EXPENSE_CATEGORIES if c.lower() == what.lower()), None) or next(
+                (c for c, words in _SPENT_ON if re.search(words, what, re.I)), None)
+            if category is None and not (versus.group("cat2") and what.lower() in ("spending", "money")):
+                return None  # a thing it can't put in a category: the model's
+            category = category or ""
+        try:
+            return money_periods.compare(context, category)
+        except Exception:
+            log.exception("Couldn't compare the months")
             return None
     coming = _PROJECT_COMING.match(said)
     if coming:  # "how's the shed coming along?": the project's picture from his records (core/project_status)
