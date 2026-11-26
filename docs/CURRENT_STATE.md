@@ -124,7 +124,10 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   (core/storm_ready.ready_for), "what am I missing?" after it his emergency kit's gaps (it had listed MIA's own
   software), an outage still the outage plan's. Fable-reviewed.
 - "Where can I cut back?" from his records (core/money_periods.cut_back: what he chooses this month against his usual
-  by now, then his recurring bills; never rent, insurance, taxes or debt payments). Fable-reviewed. 8824 passing.
+  by now, then his recurring bills; never rent, insurance, taxes or debt payments). Fable-reviewed.
+- Also: "and on 12 volts?" worked out in code, "cancel the dentist appointment" (careful: asks unless clear, never a
+  series), "what should I work out tomorrow?" from his training. Zac asked for a dashboard of the recent work: a build
+  dashboard and an engine map were made as private claude.ai pages (not in the repo). 8828 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
