@@ -990,9 +990,15 @@ def _garden_kit_reply(context, prompt: str):
     Never "when should I start selling tomatoes?" (a verb after start), and the kit only when what's in it is asked.
     Spring and string are crops' words, never a verb ("start spring peas").
     "What should I plant in the spring?" is what's due to plant from his frost (core/planting_now.say_now,
-    `_PLANT_NOW`); "when should I plant garlic?" is fall's, from his first frost (planting_now.say_garlic)."""
+    `_PLANT_NOW`); "when should I plant garlic?" is fall's, from his first frost (planting_now.say_garlic); "my last
+    frost is April 20" is kept as his frost date (planting_now.keep_frost)."""
     found = _PLANT_WHEN.match(prompt)
     try:
+        from core import planting_now as _planting
+
+        kept = _planting.keep_frost(context, prompt)  # "my last frost is April 20": kept, then what's due from it
+        if kept is not None:
+            return kept
         if _PLANT_NOW.match(prompt):  # "what should I plant in the spring?": what's due from his frost (the live sweep)
             from core import planting_now
 
@@ -2233,7 +2239,8 @@ def _follow_through_reply(context, conversation, prompt: str):
     "what about this month?" after last month's spending, "and the card?" after the truck loan): his last question
     with the new words in place (the last one that wasn't itself a follow-up, each follow-up since folded in:
     core/follow_through.thread, so "and groceries?" after "what about this month?" is groceries this month), answered by the same code answers (`_records_reply`,
-    `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_everyday_reply`). His bare answer to her own
+    `_own_tool_reply`, `_spent_on_reply`, `_water_on_hand_reply`, `_garden_kit_reply`: a crop's dates,
+    `_everyday_reply`). His bare answer to her own
     last question ("about 4" after her firewood ask, "5 gallons" after "How much fuel?", his town, a build's size) is
     kept first (core/her_asks, given her last three replies so "add it to my projects" still finds the build). None when it isn't one, can't be joined, or no code answer takes the joined question (the
     model has it)."""
@@ -2264,7 +2271,7 @@ def _follow_through_reply(context, conversation, prompt: str):
     if not whole:
         return None
     return (_records_reply(context, whole) or _own_tool_reply(context, whole) or _spent_on_reply(context, whole)
-            or _water_on_hand_reply(context, whole) or _everyday_reply(context, whole))
+            or _water_on_hand_reply(context, whole) or _garden_kit_reply(context, whole) or _everyday_reply(context, whole))
 
 
 def _records_reply(context, prompt: str):

@@ -12,7 +12,8 @@ coming up (with its date), or past its spring window. `now(last_frost, today)` l
 the next DUE_DAYS days or the last LATE_DAYS (still fine). A crop is named by whole words (`crop_named`: "sweet
 potatoes" are never potatoes, "peanuts" never peas); a crop sown again and again is still sowable through the summer,
 until its days to harvest before his first frost (`garden.first_frost`). `say_now` and `say_crop` read his frost date and put it in
-words; `say_garlic` is fall's garlic, from his first frost. Read-only.
+words; `say_garlic` is fall's garlic, from his first frost. `keep_frost` keeps a frost date from his words ("my last
+frost is April 20"); everything else is read-only.
 """
 
 from __future__ import annotations
@@ -124,6 +125,45 @@ def _when(days: int, on: date) -> str:
     if days == 0:
         return "today"
     return f"in {days} day{'s' if days != 1 else ''} ({on:%b} {on.day})"
+
+
+_MONTH_DAY = (r"(?P<day>(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?|"
+              r"\d{1,2}/\d{1,2})")
+_KEEP_FROST = re.compile(r"^\s*(?:hey mia,? )?(?:ok(?:ay)?,?\s+)?(?:my|our|the)\s+(?:average\s+)?(?P<which>last|first)\s+(?:spring\s+|"
+                         r"fall\s+|autumn\s+)?frost(?:\s+date)?\s+(?:is|'s|was|falls on|is on|is around|is about|is usually)"
+                         r"\s+(?:around\s+|about\s+|usually\s+|on\s+)?" + _MONTH_DAY + r"\s*[.!]?\s*$", re.I)
+_BARE_DAY = re.compile(r"^\s*(?:it'?s\s+|around\s+|about\s+|usually\s+)*" + _MONTH_DAY + r"\s*[.!]?\s*$", re.I)
+
+
+def keep_frost(context, said: str, which: str = "") -> Optional[str]:
+    """"My last frost is April 20" (or "my first frost is October 15"), kept as his frost date (`garden.last_frost` /
+    `garden.first_frost`, the household's, saved so "undo that" restores it), then what's due to plant from it: the
+    garden conversation check (2026-11-26) found her own suggested words kept nothing. `which` given ("last") reads a
+    bare date ("April 20", after her ask). None when the words aren't that."""
+    from core.garden_plans import parse_day
+
+    found = _KEEP_FROST.match(said or "") if not which else _BARE_DAY.match(said or "")
+    config = getattr(context, "config", None)
+    if not found or config is None:
+        return None
+    which = which or found.group("which").lower()
+    day_words = re.sub(r"(\d)(?:st|nd|rd|th)\b", r"\1", found.group("day").replace(".", ""))
+    if "/" in day_words:
+        month, day = day_words.split("/")
+        day_words = f"{int(month):02d}-{int(day):02d}"
+    on = parse_day(day_words, date.today().year)
+    if on is None:
+        return None
+    key = "garden.last_frost" if which == "last" else "garden.first_frost"
+    config.set(key, on.strftime("%m-%d"))
+    try:
+        config.save()
+    except Exception:  # noqa: BLE001 - kept in memory either way
+        pass
+    said_back = f"Kept: your {which} {'spring' if which == 'last' else 'fall'} frost is {on:%B} {on.day}."
+    if which == "last":
+        return said_back + " " + say_now(context)
+    return said_back
 
 
 _ASK = ("When's your last spring frost? Tell me (\"my last frost is April 20\") and I'll work it out; your local "

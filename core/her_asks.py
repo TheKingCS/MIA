@@ -22,6 +22,7 @@ yet" a made-up forecast). Each ask is known by its own words in her last message
 - after a catch she logged ("... fish logged in all"), "when's the best time to go back?" is the fishing times
   (best_time_to_fish).
 
+- after her ask for his last spring frost, a bare date ("April 20") is kept as it (core/planting_now.keep_frost);
 - after her own money reply (a bill marked paid, income or an expense recorded), "how much is left (after that)?"
   is the month's money after what's due.
 
@@ -89,7 +90,8 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
     to my projects" after its materials list still means the shed, but only when every reply since was the build's
     own thread; a board's size ("a 2 by 4") is never the build's, a fence takes its feet, and a project of that name
     already kept is said so, never added twice (the Fable review). After a catch she logged, "when's the best time to
-    go back?" is the fishing times; after her money reply, "how much is left?" is the month's money."""
+    go back?" is the fishing times; after her money reply, "how much is left?" is the month's money; after her frost ask, a bare
+    date is his last frost."""
     asked, said = str(last_reply or ""), str(prompt or "").strip()
     if not asked or not said or len(said) > 60:
         return None
@@ -119,6 +121,12 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
 
             kept = f"{kept} {generator_runtime(context, fuel.group(1))}"
         return kept
+    if "When's your last spring frost?" in asked or "I need your last spring frost" in asked:
+        from core import planting_now
+
+        kept = planting_now.keep_frost(context, said, "last")  # "April 20" after her frost ask
+        if kept is not None:
+            return kept
     if _AFTER_MONEY.search(asked) and _BARE_LEFT.match(said):
         from core import money_periods
 
