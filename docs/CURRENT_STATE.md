@@ -80,7 +80,12 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   spend more this month than last month?" (core/money_periods.compare: to the same day, last month whole, what moved
   most; never time or hours), "the fact sheet" kept out of the model's words, and firewood asked once and kept ("about
   5 cords" after her question: core/firewood.answer_to_ask). Next from round 19: "why?" after a code answer (the
-  numbers behind it), a job's whole cost, more asks kept the firewood way. 8787 passing.
+  numbers behind it), more asks kept the firewood way.
+- Then a job's whole cost ("what has the shed cost me?": core/project_status.whole_cost, its money and his hours at
+  his shop rate) and the "picture" live sweep's fixes: "what's overdue?" is his whole list (core/today.overdue_said;
+  it had gone to the tax deadlines and said "That's for a grown-up."), "what do I need from the hardware store?" his
+  projects' open needs (the model had invented lawn supplies), "what's my best-selling product?" by units sold
+  (core/money_periods.best_sellers, never stock). Each Fable-reviewed. 8793 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
