@@ -127,7 +127,9 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   by now, then his recurring bills; never rent, insurance, taxes or debt payments). Fable-reviewed.
 - Also: "and on 12 volts?" worked out in code, "cancel the dentist appointment" (careful: asks unless clear, never a
   series), "what should I work out tomorrow?" from his training. Zac asked for a dashboard of the recent work: a build
-  dashboard and an engine map were made as private claude.ai pages (not in the repo). 8828 passing.
+  dashboard and an engine map were made as private claude.ai pages (not in the repo).
+- Rentals: "the tenant paid $1800 today" records rent on his rental in code (never his own rent, never twice).
+  Fable-reviewed. 8830 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through

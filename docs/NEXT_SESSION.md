@@ -25,7 +25,7 @@ undoable. Guitar: practice logged to his course, "what's next?" after it.
 Vehicles: "the mower needs new blades" on the Riding Mower, "what has the truck cost me?" its own costs.
 Preparedness: a winter storm's checklist from his records, "what am I missing?" his kit's gaps.
 Money stress: "where can I cut back?" from his records. Calendar: cancel an event safely. Fitness: tomorrow's
-workout. A build dashboard and engine map exist as private claude.ai pages (ask Zac for the links; their numbers
+workout. Rentals: "the tenant paid $1800" recorded in code. A build dashboard and engine map exist as private claude.ai pages (ask Zac for the links; their numbers
 are a snapshot of Nov 26 and could be refreshed from git by a scheduled task if he wants).
 Open (needs a design): adding the bait to a catch after it's logged ("it was biting on a green pumpkin worm"): catches
 are life events, never rewritten, so it would be an amending event of its own.
