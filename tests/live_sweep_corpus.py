@@ -61,6 +61,16 @@ CORPUS = {
         "Tell me if it freezes tonight", "Let me know when we're low on coffee",
         "Tell me when the feed gets under 4 days", "What are you watching for me?",
     ],
+    "fresh": [
+        "How much did I spend last month?", "What's my biggest expense category this year?",
+        "How much do I have saved for emergencies?", "Should I pay off the card or the truck first?",
+        "What did I make from the shop this month?", "Who are my best customers?",
+        "How do I purify water in an emergency?", "What should I do if I get lost in the woods?",
+        "How do I treat a deep cut?", "What can I plant in December?", "How many hens do I need for a dozen eggs a week?",
+        "How do I keep my pipes from freezing?", "When did I last change the oil?", "What's due this month?",
+        "Remind me in 2 hours to check the oven", "What's the weather tomorrow?", "Tell me a joke",
+        "I'm bored", "What should I cook for dinner?", "What's something new I could learn this winter?",
+    ],
     "conversation": [
         ["I'm thinking about getting goats", "What breed would be good for milk?", "How much space do they need?",
          "Thanks, that's helpful"],

@@ -19,6 +19,7 @@
   "tests/test_left_off.py": 2,
   "tests/test_market_eve.py": 2,
   "tests/test_money_ahead.py": 2,
+  "tests/test_money_periods.py": 1,
   "tests/test_money_pulse.py": 5,
   "tests/test_needs_now.py": 1,
   "tests/test_picture_of_you.py": 1,

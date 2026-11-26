@@ -1860,7 +1860,8 @@ def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
     sheet in plain words (never a number MIA didn't look up), noted for the
     answers.numbers loop; and the sheet in plain words when everything on it
     is missing (nothing to word). Either way
-    without a stock opener or closer (core.response_composer.polish).
+    without a stock opener or closer (core.response_composer.polish) and without "the fact sheet" said aloud
+    (`without_sheet_words`).
     A source label the answer begins with is taken off first."""
     from core.plain_words import strip_markdown
 
@@ -1887,8 +1888,21 @@ def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
     from core import calibration
     from core.response_composer import polish
 
-    said = polish(said)  # no "Sure!" first, no "let me know" last
+    said = polish(without_sheet_words(said))  # no "Sure!" first, no "let me know" last, no "the fact sheet says"
     calibration.note(context, sheet.plan, sureness(sheet)[0], said)
+    return said
+
+
+def without_sheet_words(said: str) -> str:
+    """Pure logic. The answer without her own working said aloud ("the fact sheet says", "the sheet doesn't mention":
+    the live sweep, 2026-11-26): a sheet she was given is his records to him."""
+    said = re.sub(r"\b(?:the |my )?fact sheet (?:says|shows|lists|suggests) (?:to |that )?", "", said, flags=re.I)
+    said = re.sub(r"\b(?:the |my )?(?:fact )?sheet (?:doesn'?t|does not) (?:mention|say|show|have|include|list)\b",
+                  "I don't have", said, flags=re.I)
+    said = re.sub(r"\bit only (?:talks about|mentions|shows|has)\b", "I only have", said, flags=re.I)
+    said = re.sub(r"\b(?:on|in|from) the (?:fact )?sheet\b", "in your records", said, flags=re.I)
+    said = re.sub(r"\bthe fact sheet\b", "your records", said, flags=re.I)
+    said = re.sub(r"(^|[.!?]\s+)([a-z])", lambda m: m.group(1) + m.group(2).upper(), said)
     return said
 
 
