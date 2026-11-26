@@ -139,42 +139,64 @@ def shop_made(context, words: str, today: Optional[date] = None) -> str:
 
 def afford(context, amount: float, today: Optional[date] = None) -> str:
     """For "can I afford a $500 purchase this month?" (the live sweep, 2026-11-26: "you can afford it ... you have the
-    full $0.00 available"): this month's logged income less its spending and the bills still due by its end, against
-    the amount, a bill not marked paid counted once (never every missed month); with no income logged, that it can't
-    be told (no bank balance is linked), and what's still due. A purchase once; a monthly cost is the afford plan's
-    (the freedom date)."""
+    full $0.00 available"): this month's household income (logged, plus what's expected by its end) less its
+    household spending and what's still due by its end (a bill already paid this month never twice, a debt's
+    minimum not paid this month counted, a bill not marked paid counted once, never every missed month), against the
+    amount; with no income logged or expected, that it can't be told (no bank balance is linked), and what's still
+    due. A purchase once; a monthly cost is the afford plan's (the freedom date). The Fable review (2026-11-26) found
+    an early-paid bill counted twice, a passed minimum dropped, business income counted and an overrun said as $0."""
     from core import money_ahead
 
     today = today or date.today()
     budget = getattr(context, "budget", None)
     if budget is None:
         return "Your budget isn't on this MIA."
+    month = today.strftime("%Y-%m")
     first = today.replace(day=1).isoformat()
-    income = budget.total_income(first, today.isoformat())
+    income = budget.total_income(first, today.isoformat(), entity_id="")
     spent = sum(budget.total_expenses_by_category(first, today.isoformat(), entity_id="").values())
     end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
-    bills, incomes, debts = money_ahead._records(context)
-    bills = [b for b in bills if not getattr(b, "entity_id", "")]
-    moves = money_ahead.flows(bills, [], [d for d in debts if not getattr(d, "entity_id", "")], today, 6)
-    due = [m for m in moves if m["amount"] < 0 and m["day"] <= end and m["note"] != "overdue"]
+    bills, incomes, debts = (_household(r) for r in money_ahead._records(context))
+    paid_now = {b.name for b in bills if str(getattr(b, "last_paid_date", "") or "").startswith(month)}
+    moves = money_ahead.flows(bills, incomes, debts, today, 6)
+    due = [m for m in moves if m["amount"] < 0 and m["day"] <= end and m["note"] != "overdue"
+           and m["what"] not in paid_now]  # paid ahead of its day this month: already in what's spent
+    for d in debts:  # a minimum whose day has passed this month, not paid: flows has only next month's
+        name = f"{d.name} minimum"
+        if float(d.minimum_payment or 0) > 0 and float(d.balance or 0) > 0 and \
+                not str(d.last_payment_date or "").startswith(month) and all(m["what"] != name for m in due) and \
+                not any(d.name.lower() in b.name.lower() or b.name.lower() in d.name.lower() for b in bills):
+            due.append({"day": today, "amount": -float(d.minimum_payment), "what": name, "note": ""})
+    expected = [m for m in moves if m["amount"] > 0 and today < m["day"] <= end and m["note"] != "late"]
+    coming = sum(m["amount"] for m in expected)
     late_amounts = {}
     for m in moves:
         if m["note"] == "overdue":
             late_amounts.setdefault(m["what"], -m["amount"])  # each counted once, never every missed month
-    late = list(late_amounts)
     owed = sum(-m["amount"] for m in due) + sum(late_amounts.values())
     names = ", ".join(dict.fromkeys(m["what"] for m in due))
     nth = "st" if end.day == 31 else "th"  # a month ends on the 28th, 29th, 30th or 31st
-    still = f" Still due by the {end.day}{nth}: {_money(owed)} ({names})." if due else ""
-    if late:
-        still += " Not marked paid yet: " + ", ".join(late) + " (each counted once)."
-    if not income:
+    still = f" Still due by the {end.day}{nth}: {_money(sum(-m['amount'] for m in due))} ({names})." if due else ""
+    if late_amounts:
+        still += (f" Not marked paid yet: {', '.join(late_amounts)}, {_money(sum(late_amounts.values()))} "
+                  f"(each counted once).")
+    if not income and not coming:
         return (f"I can't tell from your records: no income is logged this month, and no bank balance is linked, so I "
                 f"don't know what you have.{still} Log your pay as it comes in (\"I got paid $1,200\") and I'll work it "
                 f"out.")
-    left = income - spent - owed
-    verdict = (f"From what's logged, {_money(amount)} fits: {_money(left)} is left after what's due." if left >= amount
-               else f"From what's logged, it doesn't fit: {_money(max(left, 0))} is left after what's due, "
-                    f"{_money(amount - max(left, 0))} short.")
-    return (f"{verdict} This month: {_money(income)} in, {_money(spent)} spent.{still} That's from your records, not "
-            f"a bank balance.")
+    left = income + coming - spent - owed
+    if left >= amount:
+        verdict = f"From what's logged, {_money(amount)} fits: {_money(left)} is left after what's due."
+    elif left >= 0:
+        verdict = f"From what's logged, it doesn't fit: {_money(left)} is left after what's due, {_money(amount - left)} short."
+    else:
+        verdict = f"From what's logged, it doesn't fit: you're already {_money(-left)} over before it."
+    expect = (f" That counts {_money(coming)} still expected ({', '.join(dict.fromkeys(m['what'] for m in expected))})."
+              if coming else "")
+    return (f"{verdict} This month: {_money(income)} in, {_money(spent)} spent.{expect}{still} That's from your "
+            f"records, not a bank balance.")
+
+
+def _household(records: list) -> list:
+    """Only the household's own records (entity_id ""): a business's bills, income and debts are its own."""
+    return [r for r in records if not getattr(r, "entity_id", "")]

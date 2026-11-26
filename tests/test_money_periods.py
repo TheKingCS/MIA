@@ -80,12 +80,15 @@ def test_affording_a_purchase_from_this_months_records(monkeypatch):
     monkeypatch.setattr(money_ahead, "_records", lambda c: ([], [], []))
     monkeypatch.setattr(money_ahead, "flows", lambda *a, **k: [{"amount": -120.0, "what": "Electric", "day": TODAY,
                                                                "note": "overdue"}])
-    broke = SimpleNamespace(budget=SimpleNamespace(total_income=lambda s, e: 0.0,
+    broke = SimpleNamespace(budget=SimpleNamespace(total_income=lambda s, e, entity_id=None: 0.0,
                                                    total_expenses_by_category=lambda s, e, entity_id=None: {}))
     said = money_periods.afford(broke, 500.0, TODAY)
     assert said.startswith("I can't tell from your records: no income is logged this month")
-    assert "Not marked paid yet: Electric (each counted once)." in said, "an overdue bill named once"
-    paid = SimpleNamespace(budget=SimpleNamespace(total_income=lambda s, e: 2000.0,
+    assert "Not marked paid yet: Electric, $120.00 (each counted once)." in said, "an overdue bill named once"
+    paid = SimpleNamespace(budget=SimpleNamespace(total_income=lambda s, e, entity_id=None: 2000.0,
                                                   total_expenses_by_category=lambda s, e, entity_id=None: {"Food": 600.0}))
     assert money_periods.afford(paid, 500.0, TODAY).startswith("From what's logged, $500.00 fits: $1,280.00 is left")
+    over = SimpleNamespace(budget=SimpleNamespace(total_income=lambda s, e, entity_id=None: 100.0,
+                                                  total_expenses_by_category=lambda s, e, entity_id=None: {"Food": 600.0}))
+    assert "you're already $620.00 over before it" in money_periods.afford(over, 500.0, TODAY)
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "Can I afford a $500 purchase this month?") is not None

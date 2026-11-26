@@ -1391,11 +1391,11 @@ _THINKING_OF_BUILDING = re.compile(r"^\s*(?:hey mia,? )?(?:i'?m|i am|we'?re|we a
                                    r"(?P<what>[\w' -]{3,40}?)\s*[.!?]*\s*$", re.I)
 _SAID_AS = {"stairs": "set of stairs", "steps": "set of steps", "shelving": "shelving unit", "shelves": "set of shelves",
             "compost": "compost bin", "stringer": "set of stair stringers"}
-_AFFORD_ONCE = re.compile(r"^\s*(?:hey mia,? )?can (?:i|we) afford (?:a |an |to (?:spend|buy|pay) )?\$\s?(?P<amount>\d[\d,]*"
+_AFFORD_ONCE = re.compile(r"^\s*(?:hey mia,? )?can (?:i|we) afford (?:a |an |to (?:spend|buy) )?\$\s?(?P<amount>\d[\d,]*"
                           r"(?:\.\d{1,2})?)(?:\s+(?:purchase|thing|item|buy))?(?:\s+(?:this month|right now|now|today))?"
                           r"\s*[?.!]*\s*$", re.I)
 _SIDE_HUSTLE = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| would be) a good side (?:hustle|business|gig|income)(?: for "
-                          r"me)?|how (?:can|could) i (?:make|earn) (?:some )?(?:extra|more|side) (?:money|income|cash)|"
+                          r"me)?|how (?:can|could) i (?:make|earn) (?:some )?(?:extra|side) (?:money|income|cash)|"
                           r"what (?:side hustle|side business) (?:should|could) i (?:do|start|try))\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"

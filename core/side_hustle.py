@@ -12,7 +12,7 @@ overdue bill), answered from what he already has and does, each idea with the on
 - **what he's learning**: a course he's on (core/paths) that leads to work people pay for (woodworking, carpentry,
   small engines, soldering);
 - **his equipment**: a tool or machine of his (core/maintenance_manager's assets) others hire out (a log splitter, a
-  trailer, a mower, a chainsaw).
+  trailer, a mower, a chainsaw), with a word to check insurance first for work on others' property.
 
 Read only; nothing is guessed: with nothing in his records, it says what it would look at.
 """
@@ -25,16 +25,21 @@ from typing import Optional
 
 SHOWN = 4
 SERVICE_COURSES = {"woodworking": "custom pieces and repairs", "carpentry": "small carpentry jobs (decks, sheds, "
-                   "fences)", "soldering": "fixing electronics and making sensors", "small_engines": "small engine "
-                   "repair (mowers, chainsaws)"}
-HIRE_OUT = (("log splitter", "splitting and selling firewood"), ("splitter", "splitting and selling firewood"),
-            ("trailer", "hauling and dump runs"), ("mower", "mowing in your area"), ("tractor", "brush hogging and "
-            "plowing for neighbours"), ("chainsaw", "tree cleanup and firewood"), ("pressure washer",
-            "pressure washing decks and siding"), ("welder", "welding repairs"))
+                   "fences)", "soldering": "fixing electronics and making sensors"}
+CHECK_FIRST = " Check your insurance (and any licence your state wants) before you take money for it."
+# (words in an asset's name, the work, whether it needs the insurance word): never a camper's "travel trailer"
+HIRE_OUT = ((r"log splitter|splitter", "splitting and selling firewood", False),
+            (r"(?<!travel )(?<!camper )(?:utility |dump |flatbed )?trailer", "hauling and dump runs", True),
+            (r"(?:lawn ?|riding |push |zero[- ]turn )?mower|lawnmower", "mowing in your area", True),
+            (r"tractor", "brush hogging and plowing for neighbours", True),
+            (r"chainsaw", "cutting and selling firewood (leave felling near houses to an insured arborist)", True),
+            (r"pressure washer", "pressure washing decks and siding", True),
+            (r"welder", "welding repairs", True))
 
 
 def ideas(context, today: Optional[date] = None) -> list[str]:
-    """The ideas his own records support, each in a sentence with its next step; [] with none."""
+    """The ideas his own records support, each in a sentence with its next step (work on others' property with a
+    word to check insurance first); [] with none."""
     from core.region import money
 
     today = today or date.today()
@@ -48,8 +53,8 @@ def ideas(context, today: Optional[date] = None) -> list[str]:
             if r.product_id in names and str(r.date or "") >= since:
                 earned[r.product_id] = earned.get(r.product_id, 0.0) + float(r.amount or 0)
         for pid, total in sorted(earned.items(), key=lambda kv: -kv[1])[:2]:
-            out.append(f"More {names[pid]}s: they've brought in {money(total)} this past year. Ask \"should I raise "
-                       f"my prices?\" to check they pay for your time.")
+            out.append(f"More of your {names[pid]}: it's brought in {money(total)} this past year. Ask \"should I raise "
+                       f"my prices?\" to check it pays for your time.")
     flock = getattr(context, "flock", None)
     if flock is not None and any(max(0, getattr(f, "hens", 0) or 0) for f in getattr(flock, "flocks", []) or []):
         out.append("Eggs from your hens: ask \"how much should I charge per dozen eggs?\" and I'll price them from "
@@ -65,10 +70,10 @@ def ideas(context, today: Optional[date] = None) -> list[str]:
         seen = set()
         for asset in maintenance.all_assets():
             name = (asset.name or "").lower()
-            for word, work in HIRE_OUT:
-                if re.search(rf"\b{re.escape(word)}\b", name) and work not in seen:
+            for words, work, insure in HIRE_OUT:
+                if re.search(rf"\b(?:{words})\b", name) and work not in seen:
                     seen.add(work)
-                    out.append(f"{work[:1].upper() + work[1:]}, with your {asset.name}.")
+                    out.append(f"{work[:1].upper() + work[1:]}, with your {asset.name}." + (CHECK_FIRST if insure else ""))
     return out[:SHOWN]
 
 

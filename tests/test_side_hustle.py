@@ -22,9 +22,16 @@ def test_ideas_come_from_his_records():
         paths=SimpleNamespace(started=lambda: ["woodworking"]),
         maintenance=SimpleNamespace(all_assets=lambda: [SimpleNamespace(name="Log Splitter")]))
     said = side_hustle.say(context, TODAY)
-    assert said.startswith("From what you already have: 1. More Cutting Boards: they've brought in $240.00")
+    assert said.startswith("From what you already have: 1. More of your Cutting Board: it's brought in $240.00")
     assert "Eggs from your hens" in said and "custom pieces and repairs" in said.lower()
     assert "Splitting and selling firewood, with your Log Splitter." in said
+
+
+def test_a_camper_is_never_hauling_and_mowing_says_check_first():
+    context = SimpleNamespace(maintenance=SimpleNamespace(all_assets=lambda: [SimpleNamespace(name="Travel Trailer"),
+                                                                              SimpleNamespace(name="Lawnmower")]))
+    said = side_hustle.say(context, TODAY)
+    assert "hauling" not in said and "Mowing in your area, with your Lawnmower. Check your insurance" in said
 
 
 def test_nothing_in_his_records_says_so():
