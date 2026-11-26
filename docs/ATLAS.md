@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1857 files, 393,898 lines; 1857 files describe themselves; 21,391 of 21,522 classes and functions are documented.
+1859 files, 394,059 lines; 1859 files describe themselves; 21,398 of 21,529 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-726 files, 205,583 lines; 10,202 of 10,281 classes and functions documented
+727 files, 205,702 lines; 10,205 of 10,284 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -306,6 +306,7 @@
 - `core/health_manager.py`: Health and Fitness's records (DEC-0129, Zac 2026-11-08: "sleep, doctor and dentist visits, medications and supplements, health records... are good"). One personal store, `health.json` in the person's own folder, sealed at rest (core/at_rest.SEALED, DEC-0126), never on a shared screen and never sent 
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it:
 - `core/hen_laying.py`: "Why did my hens stop laying?" (Jarvis brainstorm, round 12; asked for, so no unprompted message: the daily check's egg drop is core/unusual.py's): the likely causes for his flock, worked out from his own records and the sun for his town, the most likely first, never one his records rule out.
+- `core/hobby_progress.py`: His hobbies' progress in one answer (brainstorm round 16, 2026-11-25): this month so far, across everything he does for himself: each learning path's practice (core/paths: minutes, days and the stage he's on), the fish he caught and his best (core/catch_log), his workouts (the workout store) and the
 - `core/holidays.py`: When a holiday falls (the live sweep, 2026-11-25: "What day is Thanksgiving this year?" got "I don't have that information"), worked out in code: the ones on a fixed date (Christmas, the Fourth of July, Halloween...), the ones on a weekday of a month (Thanksgiving, the fourth Thursday of November in
 - `core/home_link.py`: Supercharged online (DEC-0022, level 2): when the phone can reach MIA on the home computer (same Wi-Fi, or anywhere through Tailscale), Talk uses the computer's bigger model; when it can't, mid-conversation or not, the phone's own model answers. MIA always says which one did (`level`).
 - `core/home_trouble.py`: The house's trouble that can't wait but isn't a call to the emergency number (brainstorm round 15, 2026-11-25): a burst or frozen pipe and a flooded basement, answered in fixed words, the first thing first, the same idea as the emergency floor (core/first_aid_floor.py, which has a fire, a gas leak a
@@ -1025,7 +1026,7 @@
 
 ## tests/: the test suite: what each part must do
 
-721 files, 106,184 lines; 8,815 of 8,867 classes and functions documented
+722 files, 106,226 lines; 8,819 of 8,871 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1269,6 +1270,7 @@
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
 - `tests/test_hobby_lessons.py`: His hobbies' courses answer their own how-tos (core/lesson_answer.py, the live sweep 2026-11-25): tuning, a chord progression, barre and power chords, the pentatonic, string bends, wood joints and finishes, progressive overload; never a car's finish or an oil change.
 - `tests/test_hobby_programs.py`: His hobbies' learning programs (DEC-0289): woodworking, gardening and homesteading, fitness, survival and bushcraft, on core/paths.py's method like guitar and carpentry; a recorded check counts from the day its stage opened. Each one's skill is a real skill, every recorded check reads a record MIA k *(1 undocumented)*
+- `tests/test_hobby_progress.py`: His hobbies' progress (core/hobby_progress.py, 2026-11-25): this month's practice on each course, the fish caught and the best, the workouts and the project hours, in one answer; "how are my hobbies going?" reaches it.
 - `tests/test_home_dashboard.py`: Unit tests for gui.home_dashboard's pure formatting helpers. The reactive widget/QTimer behavior itself is verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior), not pytest — see gui/character_panel.py's own test file for the same split.
 - `tests/test_home_link.py`: Supercharged online (DEC-0022 level 2, core/home_link.py): a phone links to MIA on the home computer with the person's own sign-in, Talk uses the computer's model, and the phone's own model answers whenever the computer can't (and MIA says which one did).
 - `tests/test_home_trouble.py`: The house's trouble in fixed words (core/home_trouble.py, 2026-11-25): a burst pipe starts with the main shutoff, a frozen one with the faucet open and never a flame, a flooded basement with the power; a question about the topic, or a pipe that isn't his house's, is never one. And when to fish, from

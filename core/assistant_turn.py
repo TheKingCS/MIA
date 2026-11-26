@@ -1276,6 +1276,9 @@ _HOMESTEAD_HEALTH = re.compile(r"^\s*(?:how(?:'s| is) (?:the |my |our )?homestea
                                r"\s*[?.!]*\s*$", re.I)
 _LEARNED_WEEK = re.compile(r"^\s*what(?: did you| have you|'ve you|'d you) learn(?:ed|t)? (?:(?:from|about) me )?"
                            r"(?:this|the) (?:past |last )?week(?: (?:from|about) me)?(?:,? mia)?\s*[?.!]*\s*$", re.I)
+_HOBBIES = re.compile(r"^\s*(?:how(?:'s| is| are) (?:my |the )?hobbies(?: going| coming along| doing)?(?: this month)?|"
+                      r"(?:my |the )?hobbies(?:'|') progress|(?:my )?hobby progress|(?:my )?hobbies this month|"
+                      r"what have i done for (?:fun|myself|my hobbies) this month)\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1289,7 +1292,8 @@ def _own_tool_reply(context, prompt: str):
     why_hens_not_laying, should_i_water, get_eggs (its feed runway) and canning_time; and what she may do on her own,
     her grants (list_grants). "How's the homestead?" is its days in one line (core/homestead_health), "how's my
     money this week?" its pulse (core/money_pulse), "what did you learn this week?" the week's learning
-    (core/learned_week). None otherwise."""
+    (core/learned_week), "how are my hobbies going?" this month across them (core/hobby_progress). None
+    otherwise."""
     said = prompt.replace("’", "'")
     if _HOMESTEAD_HEALTH.match(said):  # "how's the homestead?": its days in one line (core/homestead_health)
         from core import homestead_health
@@ -1306,6 +1310,14 @@ def _own_tool_reply(context, prompt: str):
             return learned_week.say(context)
         except Exception:
             log.exception("Couldn't say what she learned this week")
+            return None
+    if _HOBBIES.match(said):  # "how are my hobbies going?": this month across them (core/hobby_progress)
+        from core import hobby_progress
+
+        try:
+            return hobby_progress.say(context)
+        except Exception:
+            log.exception("Couldn't say the hobbies' progress")
             return None
     if _MONEY_PULSE.match(said):  # "how's my money this week?": its pulse in a line (core/money_pulse)
         from core import money_pulse
