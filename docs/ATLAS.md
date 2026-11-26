@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1898 files, 399,512 lines; 1898 files describe themselves; 21,671 of 21,817 classes and functions are documented.
+1899 files, 399,576 lines; 1899 files describe themselves; 21,675 of 21,821 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-739 files, 209,398 lines; 10,363 of 10,442 classes and functions documented
+739 files, 209,424 lines; 10,364 of 10,443 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1038,7 +1038,7 @@
 
 ## tests/: the test suite: what each part must do
 
-749 files, 107,952 lines; 8,934 of 9,001 classes and functions documented
+750 files, 107,990 lines; 8,937 of 9,004 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1221,6 +1221,7 @@
 - `tests/test_esp32_lab.py`: The ESP32 lab bench (core/esp32_lab.py): a lab's PlatformIO project written (its libraries, its sketch, a Wi-Fi secrets file with placeholders he fills in himself), never flashed with the placeholders still there or without PlatformIO or a board; a flash runs pio's upload on the board's port; the bo
 - `tests/test_esp32_path.py`: Build With ESP32 (core/esp32_path.py): the course has a sound shape, every lab its parts and a sketch that prints the marker its check reads, the check passes from what the board said (seen, a mark, a spread, a range), a pass is kept as an attempt on his path, and "I want to learn ESP32" finds it. A
 - `tests/test_esp32_sim.py`: The ESP32 lab simulator (core/esp32_sim.py): a circuit judged the way it would behave (an LED backwards, with no resistor, or with the resistor on its other side; a short; 5 V on the pot; a sensor on the wrong pin; an input-only pin asked to drive), the build along with MIA (steps ticked, a resistor
+- `tests/test_evening_noticed.py`: What she noticed today in the evening wrap (core/evening_wrap.noticed_today, brainstorm round 18): the first unusual finding the gate sent today, named once, from the gate's own log; never one held back.
 - `tests/test_evening_wrap.py`: The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two sentences, from his hour on, once a day through the gate; nothing when there's nothing to say; an alarm is never tomorrow's first thing, and one of a thing is said singular. *(1 undocumented)*
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends.

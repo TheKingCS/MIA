@@ -355,7 +355,7 @@ schedule) and where the next step is. Each idea says what it needs:
   the shed" logs both, each through its own code and said back together; one half never swallows the other.
 - **A conversation's thread** (no decision): "and that one?", "the other one", "same for the truck" across three or
   four turns, not only the last question (core/follow_through holds one step back).
-- **What she noticed today** (no decision): one line in the evening wrap of the thing in his records most off its
+- **What she noticed today** (built, core/evening_wrap.noticed_today): one line in the evening wrap of the thing in his records most off its
   usual (core/unusual already finds them), said once.
 - **A season's homestead list** (built, core/homestead_year.this_month): "what should I be doing on the homestead this month?" from his frost
   dates, his flock, his garden plans and his upkeep, December's different from May's.

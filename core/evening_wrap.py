@@ -11,7 +11,9 @@ once a day.
 
 `wrap(context, now)` is the words ("" when there's nothing at all to say); `offer(context, now)` the daily check's
 message. A course practised today on a streak of three days or more is named after the day ("Guitar: 4 days in a
-row.", `streaks`, brainstorm round 17).
+row.", `streaks`, brainstorm round 17). What she noticed today (`noticed_today`, brainstorm round 18): the first thing
+off his usual (core/unusual) she told him today, named again in one line ("What I noticed today: Feed: more than
+usual."), from the gate's own log, so it's only ever what was said today.
 """
 
 from __future__ import annotations
@@ -99,9 +101,26 @@ def streaks(context, today: date) -> str:
     return ("; ".join(said) + ".") if said else ""
 
 
+def noticed_today(context, today: date) -> str:
+    """What she noticed today: the title of the first unusual finding (core/unusual's topic) the gate sent him today,
+    and how many more; "" when none went out (one held back or dropped is never said here: it may still come, or he
+    heard it days ago)."""
+    from core.communication_gate import ACT
+
+    gate = getattr(context, "communication", None)
+    if gate is None:
+        return ""
+    sent = [e for e in gate.entries_for_day(today.isoformat())
+            if e.get("topic") == "unusual" and e.get("action") == ACT and e.get("title")]
+    if not sent:
+        return ""
+    more = len(sent) - 1
+    return f"What I noticed today: {sent[0]['title']}" + (f", and {more} more" if more else "") + "."
+
+
 def wrap(context, now: datetime) -> str:
-    """The two sentences, with any course on a streak practised today between them; "" when there's nothing done,
-    nothing tomorrow, no weather and no streak
+    """The two sentences, with any course on a streak practised today and what she noticed today (`noticed_today`)
+    between them; "" when there's nothing done, nothing tomorrow, no weather, no streak and nothing noticed
     (a day of only practice says the streak, never "a quiet day")."""
     today = now.date()
     parts = []
@@ -119,11 +138,18 @@ def wrap(context, now: datetime) -> str:
     except Exception:  # noqa: BLE001 - the wrap goes without it
         log.exception("Evening wrap: the streaks couldn't be read")
         streak = ""
-    if not (done or first or sky or streak):
+    try:
+        noticed = noticed_today(context, today)
+    except Exception:  # noqa: BLE001 - the wrap goes without it
+        log.exception("Evening wrap: what she noticed couldn't be read")
+        noticed = ""
+    if not (done or first or sky or streak or noticed):
         return ""
     head = f"Today: {done}." if done else "" if streak else "A quiet day today."  # practice is a day's doing too
     if streak:
         head = f"{head} {streak}".strip()
+    if noticed:
+        head = f"{head} {noticed}".strip()
     tail = []
     if first:
         tail.append(f"first up, {first}")
