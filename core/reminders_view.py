@@ -335,25 +335,39 @@ def in_a_while(context, amount: str, unit: str, what: str, now: Optional[datetim
 
 # what "when did I last ..." asks of his history, beyond the maintenance tasks: (his words, the history's kinds)
 HISTORY_ASKS = (
-    (r"work(?:ed)? out|workout|lift(?:ed)?|train(?:ed)?|exercis(?:e|ed)|(?:go|went) to the gym", ("workout_logged",), "worked out"),
+    (r"work(?:ed)? out|workout|lift(?:ed)?|train(?:ed)?|exercis(?:e|ed)|(?:go|went) to the gym",
+     ("workout_logged", "training_done"), "worked out"),
     (r"(?:collect(?:ed)?|g[eo]t|gather(?:ed)?) (?:the |any )?eggs", ("eggs_collected",), "collected eggs"),
     (r"(?:catch|caught) (?:a |any )?fish|(?:go|went) fishing", ("fish_caught",), "caught a fish"),
     (r"pa(?:y|id) (?:a |any |the |my )?bills?$", ("bill_paid",), "paid a bill"),
     (r"harvest(?:ed)?", ("harvest",), "harvested"),
     (r"plant(?:ed)? (?:anything|something|seeds)", ("batch_planted",), "planted"),
     (r"cook(?:ed)?|ma(?:k|d)e dinner", ("meal_logged",), "cooked"),
-    (r"finish(?:ed)? a (?:build|project)", ("build_finished", "project_completed"), "finished a build"),
+    (r"finish(?:ed)? a (?:build|project)", ("build_finished", "project_completed"), "finished a build or project"),
 )
 
 
 def last_in_history(context, words: str, today: Optional[date] = None) -> Optional[str]:
     """For "when did I last work out?" / "... collect eggs" / "... catch a fish" / "... pay a bill" (the model had
-    guessed): the latest of that kind in his history (core/life_events, never one taken back), its day and what it
-    was; that none is logged when there's none; None when his words aren't one of HISTORY_ASKS."""
+    guessed): the latest of that kind in his history (core/life_events, never one taken back), on the day it happened
+    (a backdated log's own date) and what it was; "pay the electric bill" from that bill's own record; that none is
+    logged when there's none; None when his words aren't one of HISTORY_ASKS."""
     from core import life_events
 
     today = today or date.today()
     said = " ".join((words or "").lower().split())
+    bill = re.fullmatch(r"pa(?:y|id) (?:the |my )?(?P<name>[\w' -]+?) bill", said)
+    if bill:  # "when did I last pay the electric bill?": the bill's own record
+        budget = getattr(context, "budget", None)
+        want = _stems(bill.group("name"))
+        hits = [b for b in (budget.all_bills() if budget is not None else []) if want and want <= _stems(b.name)]
+        if len(hits) == 1:
+            paid = hits[0].last_paid_date
+            if not paid:
+                return f"{hits[0].name} isn't marked paid yet."
+            when = date.fromisoformat(str(paid)[:10])
+            return f"You last paid {hits[0].name} on {when:%A, %B} {when.day}."
+        return None
     for pattern, types, did in HISTORY_ASKS:
         if not re.fullmatch(rf"(?:{pattern})(?: today| yesterday)?", said):
             continue
@@ -363,15 +377,23 @@ def last_in_history(context, words: str, today: Optional[date] = None) -> Option
             log.exception("Couldn't read the history for %s", did)
             return None
         taken_back = life_events.reversed_ids(events)
-        kept = sorted((e for e in events if e.type in types and e.event_id not in taken_back), key=lambda e: e.at)
+        def day(e) -> str:
+            """The day it happened (a backdated log's own date), never only when it was written down."""
+            return str((e.payload or {}).get("date") or e.at)[:10]
+
+        kept = sorted((e for e in events if e.type in types and e.event_id not in taken_back), key=day)
         if not kept:
             return f"I don't have a time you {did} logged yet. Tell me when you do, and I'll keep it."
         last = kept[-1]
-        when = date.fromisoformat(str(last.at)[:10])
+        when = date.fromisoformat(day(last))
         ago = (today - when).days
         since = "" if ago < 0 else " (today)" if ago == 0 else " (yesterday)" if ago == 1 else f" ({ago} days ago)"
         said_it = (last.summary or "").rstrip(".")
-        same = said_it.lower().startswith(did.split()[0]) or said_it.lower().endswith("a session")
-        what = f": {said_it}" if said_it and not same else ""  # never "worked out: Worked out: a session"
+        if ":" in said_it:  # "Worked out: Push day, 40 min" is "Push day, 40 min"
+            said_it = said_it.split(":", 1)[1].strip()
+        elif said_it.lower().split(" ", 1)[0] == did.split()[0]:  # "Caught a bass" is "a bass"
+            said_it = said_it.split(" ", 1)[1] if " " in said_it else ""
+        empty = not said_it or said_it.lower() in ("a session", "a meal", "logged a meal")
+        what = "" if empty else f": {said_it}"
         return f"You last {did} on {when:%A, %B} {when.day}{since}{what}."
     return None

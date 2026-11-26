@@ -19,7 +19,8 @@ log = get_logger(__name__)
 
 
 def say(context, today: Optional[date] = None) -> str:
-    """His reasons, then one thing to start on now."""
+    """His reasons, then one thing to start on now: a task or upkeep due today or overdue (never a bill, a birthday or
+    something coming soon), else the smallest step toward it."""
     today = today or date.today()
     parts = []
     try:
@@ -42,7 +43,10 @@ def say(context, today: Optional[date] = None) -> str:
     try:
         from core.today import is_alarm, today_items
 
-        items = [i for i in today_items(context, today) if not is_alarm(i.as_dict())]
+        # a task or upkeep due now, never a bill, a birthday, an event or something coming soon (the Fable review)
+        items = [i for i in today_items(context, today) if not is_alarm(i.as_dict())
+                 and getattr(i, "module_id", "") in ("toolbox", "maintenance") and getattr(i, "when", "") in
+                 ("overdue", "today")]
     except Exception:  # noqa: BLE001
         items = []
     if items:

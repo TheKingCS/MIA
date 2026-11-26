@@ -62,13 +62,15 @@ def test_the_words_reach_them(monkeypatch):
 def test_when_he_last_worked_out_from_his_history(monkeypatch):
     from core import life_events
 
-    events = [SimpleNamespace(event_id="e1", type="workout_logged", at="2026-11-20T08:00:00", summary="Back squat 3x10"),
-              SimpleNamespace(event_id="e2", type="workout_logged", at="2026-11-24T08:00:00", summary="Bench 3x8"),
-              SimpleNamespace(event_id="u1", type="undone", at="2026-11-24T09:00:00", summary="")]
+    events = [SimpleNamespace(event_id="e1", type="workout_logged", at="2026-11-25T08:00:00",
+                              summary="Worked out: Back squat 3x10", payload={"date": "2026-11-20"}),
+              SimpleNamespace(event_id="e2", type="workout_logged", at="2026-11-24T08:00:00", summary="Bench 3x8",
+                              payload={}),
+              SimpleNamespace(event_id="u1", type="undone", at="2026-11-24T09:00:00", summary="", payload={})]
     monkeypatch.setattr(life_events, "events_for", lambda c, types=None, **k: events)
     monkeypatch.setattr(life_events, "reversed_ids", lambda evs: {"e2"})
     said = reminders_view.last_in_history(None, "work out", date(2026, 11, 26))
-    assert said == "You last worked out on Friday, November 20 (6 days ago): Back squat 3x10."
+    assert said == "You last worked out on Friday, November 20 (6 days ago): Back squat 3x10.", "its own day"
     monkeypatch.setattr(life_events, "events_for", lambda c, types=None, **k: [])
     assert reminders_view.last_in_history(None, "collect eggs", date(2026, 11, 26)).startswith("I don't have a time")
     assert reminders_view.last_in_history(None, "see my mom", date(2026, 11, 26)) is None
