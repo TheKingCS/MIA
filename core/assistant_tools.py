@@ -27,6 +27,8 @@ plainly where there's no window.
 
 from __future__ import annotations
 
+import re
+
 from datetime import date, datetime
 from typing import Optional
 import urllib.error
@@ -2851,8 +2853,8 @@ class AssistantTools:
     def _action_get_sun_moon_info(context: AppContext, arguments: dict) -> str:
         """Assistant tool `get_sun_moon_info`: today's sunrise, sunset and moon phase (the Navigation module's
         summary) with the moon tonight (core/sun_moon.moon_tonight: days to the full or new moon, moonrise and
-        moonset), at a named waypoint, else his town (core/weather.place; his town's own name given as a waypoint is
-        his town). Returns the reply in words (an unknown waypoint, or no town yet, says so; nothing changes).
+        moonset), at a named waypoint, else his town (core/weather.place; his town's own exact name given as a
+        waypoint is his town, a saved waypoint's name always the waypoint), with the daylight left when his words ask. Returns the reply in words (an unknown waypoint, or no town yet, says so; nothing changes).
         One reading of the moon: the summary's four-bucket phase line is left out, so the reply never says Full Moon
         beside 6 days past it."""
         from datetime import date as _date
@@ -2863,8 +2865,9 @@ class AssistantTools:
         name = str(arguments.get("waypoint_name", "") or "").strip().lower()
         town_now = weather.place(context)
         town_words = str((town_now or {}).get("name") or "").lower()
-        if name and town_words and (name in town_words or town_words.split(",")[0].strip() in name):
-            name = ""  # his town given as a "waypoint" (the weather conversation check: "no waypoint called Springfield")
+        saved = any(w.name.lower() == name for w in context.waypoints.all_waypoints()) if name else False
+        if name and not saved and town_words and name in (town_words, town_words.split(",")[0].strip()):
+            name = ""  # his town given as a "waypoint" (the weather conversation check), never a saved one's name
         if name and name not in ("my town", "home", "here", "town", "null", "none", "unknown", "n/a"):
             match = next((w for w in context.waypoints.all_waypoints() if w.name.lower() == name), None)
             if match is None:
@@ -2879,7 +2882,19 @@ class AssistantTools:
         today = _date.today()
         sun_lines = [line for line in format_sun_moon_summary(lat, lon, today).splitlines()
                      if not line.startswith("Moon phase:")]  # one reading of the moon: moon_tonight's (review 2026-11-24)
-        return f"For {label}: " + "\n".join(sun_lines + [moon_tonight(lat, lon, today)])
+        said = f"For {label}: " + "\n".join(sun_lines + [moon_tonight(lat, lon, today)])
+        if re.search(r"\b(?:light|daylight)\b.{0,20}\bleft\b", str(arguments.get("question") or ""), re.I):
+            sunset = next((line.split(":", 1)[1].strip() for line in sun_lines if line.lower().startswith("sunset")), "")
+            try:
+                from datetime import datetime as _dt
+
+                hour, minute = (int(x) for x in sunset.split(":")[:2])
+                left = (_dt.now().replace(hour=hour, minute=minute, second=0, microsecond=0) - _dt.now()).total_seconds()
+                said = (f"About {int(left // 3600)} h {int(left % 3600 // 60)} min of daylight left. " if left > 0 else
+                        "The sun has already set. ") + said
+            except (ValueError, TypeError):
+                pass
+        return said
 
     @staticmethod
     def _action_get_system_health(context: AppContext, arguments: dict) -> str:

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1927 files, 402,243 lines; 1927 files describe themselves; 21,764 of 21,911 classes and functions are documented.
+1927 files, 402,273 lines; 1927 files describe themselves; 21,765 of 21,912 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,954 lines; 10,390 of 10,469 classes and functions documented
+741 files, 210,969 lines; 10,390 of 10,469 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-776 files, 109,127 lines; 9,000 of 9,068 classes and functions documented
+776 files, 109,142 lines; 9,001 of 9,069 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1662,7 +1662,7 @@
 - `tests/test_storm_thread.py`: The preparedness conversation check's fixes (2026-11-26): "how prepared am I for a winter storm?" is the checklist from his records, "what am I missing?" after it his kit's gaps (it had listed MIA's own software), and her setup's "what am I missing" only when it says her setup; a winter kind says th *(1 undocumented)*
 - `tests/test_subnet_calculator.py`: Unit tests for core.subnet_calculator — real stdlib `ipaddress` calls, not mocked (there's nothing external to fake; this is pure computation against known-correct real values).
 - `tests/test_subscriptions.py`: The "still using it?" mark on subscriptions (core/subscriptions.py, DEC-0054): which bills are subscriptions, the quiet finding for ones not checked in three months (never unprompted), Money's Still Using as bill.still_using, and the same by voice.
-- `tests/test_sunset.py`: "What time is sunset?" is her sun and moon for his town (get_sun_moon_info, the weather conversation check 2026-11-26: the model had passed his town as a waypoint and got "I don't have a waypoint called ...").
+- `tests/test_sunset.py`: "What time is sunset?" is her sun and moon for his town (get_sun_moon_info, the weather conversation check 2026-11-26: the model had passed his town as a waypoint and got "I don't have a waypoint called ..."); a saved waypoint's name is always the waypoint.
 - `tests/test_support_choice.py`: MIA asks which kind of support when it isn't clear (core/support_choice.py, wired through core/talk_it_out.pre_turn).
 - `tests/test_sweep_11.py`: The fifth live sweep's fixes (2026-11-25, hobbies and the truck): "I caught 3 bass" logs three catches; "when is my truck due for an oil change?" is that task's line from his own maintenance, and "the truck needs new brakes" adds the task, only for an asset of his (never "the garden needs water"); "
 - `tests/test_sweep_12.py`: The sixth live sweep's fixes (2026-11-25): "remind me tomorrow at 9 to call the vet" goes on his calendar like "remind me to call the vet tomorrow at 9"; a tool call written out with a doubled quote before its key is caught; what he spent on a category and "am I over budget?" are from his own record

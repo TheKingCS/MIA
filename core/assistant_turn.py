@@ -1442,10 +1442,10 @@ _OWN_TOOLS = (
         r"\s*[?.!]*\s*$", re.I), True),
     # "what time is sunset?": her sun and moon for his town, never a waypoint search (the weather conversation check)
     ("get_sun_moon_info", re.compile(r"^\s*(?:hey mia,? )?(?:what time is|when is|when's|what time's) (?:the )?(?:sunset|sunrise|sun ?up|"
-                                     r"sun ?down)(?: today| tonight| tomorrow)?\s*[?.!]*\s*$|^\s*(?:hey mia,? )?(?:when|what "
+                                     r"sun ?down)(?: today| tonight)?\s*[?.!]*\s*$|^\s*(?:hey mia,? )?(?:when|what "
                                      r"time) (?:does|will) the sun (?:set|rise|go down|come up)(?: today| tonight)?\s*[?.!]*\s*$|"
                                      r"^\s*(?:hey mia,? )?how much (?:day)?light (?:is |do i have )?left(?: today)?\s*[?.!]*\s*$",
-                                     re.I), False),
+                                     re.I), True),
     ("list_grants", re.compile(r"^\s*what (?:can|may|do|will) you do (?:on your own|by yourself|without (?:asking(?: me)?|"
                                r"me asking))\s*\??\s*$|^\s*what are you allowed to do (?:on your own|by yourself)\s*\??\s*$",
                                re.I), False),
