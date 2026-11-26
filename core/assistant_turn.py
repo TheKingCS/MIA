@@ -2314,11 +2314,16 @@ def _spent_on_reply(context, prompt: str):
 
 
 _GENERIC = {"gear", "stuff", "things", "supplies", "equipment", "items", "the", "my", "our", "a", "some", "new"}
+# his hobbies' and the homestead's words, said as nothing logged when no expense names them; anything else is the model's
+_HOBBY_WORDS = {"fishing", "hunting", "guitar", "woodworking", "camping", "garden", "gardening", "tool", "chicken",
+                "fitness", "gym", "archery", "ammo", "bait", "tackle", "lumber", "seed", "soldering", "electronic",
+                "arduino", "printer", "filament"}
 
 
 def _spent_by_words(book, what: str, when: str, today):
     """His household's expenses in the period whose description names the thing ("fishing" for "fishing gear": the
-    generic words left out), said with how many; None when the thing has no word to look for."""
+    generic words left out, each a word's start, never inside another word), said with how many; None when the thing
+    has no word to look for, or nothing names it and it isn't one of his hobbies' words (`_HOBBY_WORDS`)."""
     from core.money_periods import period
     from core.region import money
 
@@ -2329,15 +2334,19 @@ def _spent_by_words(book, what: str, when: str, today):
         start, end, said = None, today, "so far"
     else:
         start, end, said = period(when, today) or (today.replace(month=1, day=1), today, "this year")
-    stems = [w[:-1] if w.endswith("s") and len(w) > 4 else w for w in words]
+    stems = [w[:-1] if w.endswith("s") and len(w) > 3 else w for w in words]
     hits = [e for e in book.all_expenses() if not getattr(e, "entity_id", "")
             and (start is None or start.isoformat() <= str(e.date)[:10]) and str(e.date)[:10] <= end.isoformat()
-            and all(s in str(e.description or "").lower() for s in stems)]
+            and all(re.search(r"\b" + re.escape(s), str(e.description or ""), re.I) for s in stems)]
+    when_said = said if said.split()[0].lower() in ("this", "last", "today", "yesterday", "so") else f"in {said}"
     if not hits:
-        return (f"Nothing logged {said} with \"{' '.join(words)}\" in what it was for, and no budget category is "
-                f"{what}. Tell me as you buy (\"I spent $30 on a fishing reel\") and I'll keep count.")
+        if not any(s in _HOBBY_WORDS for s in stems):
+            return None  # "the shed", "Sarah", "everything": the model's, as before (the Fable review)
+        return (f"Nothing logged {when_said} with \"{' '.join(words)}\" in what it was for, and no budget category "
+                f"is {what}. Tell me as you buy (\"I spent $30 on a fishing reel\") and I'll keep count.")
     total = sum(e.amount for e in hits)
-    return f"{money(total)} {said} on {what}, from {len(hits)} expense{'s' if len(hits) != 1 else ''} that name it."
+    one = len(hits) == 1
+    return f"{money(total)} {when_said} on {what}, from {len(hits)} expense{'' if one else 's'} that name{'s' if one else ''} it."
 
 
 def _materials_reply(context, prompt: str):

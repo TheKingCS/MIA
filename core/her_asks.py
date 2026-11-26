@@ -49,7 +49,7 @@ _BUILD_COST = re.compile(r"^\s*(?:and\s+|so\s+)?(?:how much\s+(?:would|will|does
 _BUILD_ADD = re.compile(r"^\s*(?:ok(?:ay)?,?\s+|great,?\s+|yes,?\s+)?(?:please\s+)?(?:(?:add|put)\s+(?:it|that|this)\s+"
                         r"(?:to|in|on)\s+(?:my|the)\s+(?:projects?|project list)|make\s+(?:it|that|this)\s+(?:a|into a)\s+"
                         r"project)(?:\s+please)?\s*[.!]*\s*$", re.I)
-_AFTER_CATCH = re.compile(r"\b\d+ fish logged in all\b|\bLogged an? [\w' -]+? (?:at|in) |\bLogged \d+ [\w' -]+?\.", re.I)
+_AFTER_CATCH = re.compile(r"\b\d+ fish logged in all\b", re.I)  # her catch replies' own words, never hours or eggs
 _GO_BACK = re.compile(r"^\s*(?:so\s+|and\s+)?(?:when(?:'s| is) (?:the )?best (?:time|day) to go (?:back|again|fishing)|when "
                       r"should (?:i|we) go (?:back|again|fishing)|when (?:can|could) (?:i|we) go back)(?: out)?(?: there)?\s*"
                       r"[?.!]*\s*$", re.I)

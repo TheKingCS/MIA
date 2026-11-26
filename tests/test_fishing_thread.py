@@ -20,7 +20,9 @@ def test_a_catch_as_said():
         "species": "largemouth bass", "count": 1, "length": 18.0, "bait": "green pumpkin worm"}
     assert catch_actions.parse("I caught three crappie at the lake") == {"species": "crappie", "count": 3,
                                                                           "where": "lake"}
-    for said in ("I caught a cold", "did I catch a bass?", "I caught a 3 pound bass yesterday", "two 3 pound bass"):
+    for said in ("I caught a cold", "did I catch a bass?", "I caught a 3 pound bass yesterday", "two 3 pound bass",
+                 "I got a cat from the shelter", "I got two catfish at the store", "I caught a bass at the pond yesterday",
+                 "caught a bass on a hike", "I caught 0 bass", "landed a cat"):
         assert catch_actions.parse(said) is None, said
 
 
@@ -31,6 +33,7 @@ def test_going_back_after_a_catch():
         == "times"
     assert ran == ["best_time_to_fish"]
     assert her_asks.reply(context, "Done.", "when's the best time to go back?") is None
+    assert her_asks.reply(context, "Logged 3 hours on Shed.", "when should I go back?") is None
 
 
 def test_spending_on_a_thing_by_its_description():
@@ -41,5 +44,11 @@ def test_spending_on_a_thing_by_its_description():
     book = SimpleNamespace(all_expenses=lambda: rows)
     said = assistant_turn._spent_by_words(book, "fishing gear", "this year", date(2026, 11, 26))
     assert said == "$72.50 this year on fishing gear, from 2 expenses that name it."
-    none = assistant_turn._spent_by_words(book, "golf gear", "this year", date(2026, 11, 26))
-    assert none.startswith("Nothing logged this year with \"golf\"")
+    assert assistant_turn._spent_by_words(book, "golf gear", "this year", date(2026, 11, 26)) is None
+    none = assistant_turn._spent_by_words(book, "hunting gear", "this year", date(2026, 11, 26))
+    assert none.startswith("Nothing logged this year with \"hunting\"")
+    rows.append(SimpleNamespace(entity_id="", date="2026-06-02", description="Truck parts", amount=90.0))
+    assert assistant_turn._spent_by_words(book, "art supplies", "this year", date(2026, 11, 26)) is None
+    rows.append(SimpleNamespace(entity_id="", date="2026-06-03", description="Fishing rod", amount=45.0))
+    assert assistant_turn._spent_by_words(book, "rods", "in June", date(2026, 11, 26)) == \
+        "$45.00 in June on rods, from 1 expense that names it."

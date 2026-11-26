@@ -23,23 +23,34 @@ _COUNTS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5
            "nine": 9, "ten": 10}
 _SPECIES = (r"(?:(?:largemouth|smallmouth|spotted|striped|white|rock|rainbow|brown|brook|lake|channel|flathead|blue|"
             r"yellow|black|white)\s+)?(?:bass|trout|catfish|bluegill|crappie|pike|perch|walleye|salmon|carp|muskie|musky|"
-            r"sunfish|bream|panfish|cat|gill)")
-_CATCH = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:caught|landed|reeled in|got)\s+(?P<count>an?|one|two|three|four|five|six|seven|"
+            r"sunfish|bream|panfish)")  # never a bare "cat" or "gill" (a pet, the Fable review)
+_CATCH = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:caught|landed|reeled in)\s+(?P<count>an?|one|two|three|four|five|six|seven|"
                     r"eight|nine|ten|\d{1,2})\s+(?:(?P<size>\d+(?:\.\d+)?)\s*(?:-\s*)?(?P<unit>pounds?|lbs?|pound|inch(?:es)?|"
-                    r"in|\")\s+)?(?P<species>" + _SPECIES + r")(?:es|s)?(?:\s+(?:at|in|on|from|off)\s+(?:the\s+|my\s+)"
+                    r"in|\")\s+)?(?P<species>" + _SPECIES + r")(?:es|s)?(?:\s+(?:at|in|from|off)\s+(?:the\s+|my\s+)"
                     r"(?P<where>[\w' -]{2,30}?))?(?:\s+(?:on|with)\s+an?\s+(?P<bait>[\w' -]{2,30}?))?(?:\s+(?:this "
                     r"(?:morning|afternoon|evening)|tonight|today|just now|earlier))?\s*[.!]*\s*$", re.I)
 
 
+_NOT_PLACE = re.compile(r"\b(?:yesterday|today|tonight|morning|afternoon|evening|night|monday|tuesday|wednesday|thursday|"
+                        r"friday|saturday|sunday|weekend|week|ago|last|dream|hike|walk|trip|vacation|rod|reel|line)\b",
+                        re.I)
+
+
 def parse(text: str):
     """Pure logic. A catch said whole as the log_catch tool's arguments ({species, count, length or weight, where,
-    bait}), or None: never a day gone ("yesterday" isn't kept as one), a question, or a size that isn't the fish's."""
+    bait}), or None: never a day gone ("yesterday" isn't kept as one, nor a day or a hike in the place), a question,
+    a size that isn't the fish's, none caught, or something got rather than caught ("I got a cat from the shelter")."""
     found = _CATCH.match(str(text or "").replace("\u2019", "'"))
     if not found or "?" in text:
         return None
     count = found.group("count").lower()
     args = {"species": " ".join(found.group("species").lower().split()),
             "count": _COUNTS.get(count) or int(count)}
+    if args["count"] < 1:
+        return None  # "I caught 0 bass" logs nothing
+    said_also = " ".join(found.group(g) or "" for g in ("where", "bait"))
+    if _NOT_PLACE.search(said_also):
+        return None  # "at the pond yesterday", "on a hike", "in my dream": a day, or no place or bait
     if found.group("size"):
         size = float(found.group("size"))
         if args["count"] != 1:
