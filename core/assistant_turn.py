@@ -1540,6 +1540,10 @@ _REMINDERS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:what (?:reminders|alarms) d
 _REMINDER_CANCEL = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:cancel|delete|remove|stop|turn off|kill|drop)\s+(?P<what>"
                               r"(?:all (?:of )?(?:my |the )?reminders|every reminder|(?:the |my )?[\w' -]{2,40}? "
                               r"(?:reminder|alarm)s?))\s*[.!]*\s*$", re.I)
+# "cancel the dentist (appointment)": a calendar event of his whose title holds every word (the calendar conversation
+# check, 2026-11-26: the model had said "That isn't available on this MIA"); only cancel, delete or remove
+_EVENT_CANCEL = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:cancel|delete|remove)\s+(?:the |my |that )?(?P<what>[\w' -]{2,40}?)"
+                           r"(?:\s+(?:appointment|appt|event|meeting|visit))?(?:\s+(?:on|for)\s+\w+(?:day)?)?\s*[.!]*\s*$", re.I)
 _GREETING = re.compile(r"^\s*(?:good (?:morning|afternoon|evening)|morning|hi|hello|hey|howdy|yo)(?:,? (?:mia|there))?"
                        r"\s*[.!]*\s*$", re.I)
 _YESTERDAY = re.compile(r"^\s*(?:hey mia,? )?what did (?:i|we) (?:do|get done|accomplish) yesterday\s*[?.!]*\s*$", re.I)
@@ -1785,7 +1789,8 @@ def _own_tool_reply(context, prompt: str):
     bill" is what's due and how to mark it, since she pays nothing),
     "where can I cut back?" his chosen spending against
     his usual and his recurring bills (core/money_periods.cut_back), "how prepared am I for a winter storm?" the checklist
-    from his records (core/storm_ready.ready_for), "I practiced for 30 minutes today" a session on his
+    from his records (core/storm_ready.ready_for), "cancel the dentist" that event of his (core/reminders_view.cancel), "I practiced for 30 minutes today" a session on
+    his
     course (log_practice: the course named whole, never "guitar hero"; unnamed only as "practiced", never a day or a
     game), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
     me?" and "stop the Sunday one" her standing reports (core/standing_reports), "what's overdue?" everything
@@ -1958,6 +1963,17 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't answer about reminders")
             return None
+    cancelling = _EVENT_CANCEL.match(said) if stopping is None else None
+    if cancelling and not re.search(r"\b(?:reminders?|alarms?|subscriptions?|orders?|plans?|projects?|reports?)\b",
+                                    cancelling.group("what"), re.I):
+        from core import reminders_view
+
+        try:
+            found = reminders_view.cancel(context, cancelling.group("what"))  # None when no event of his fits
+            if found:
+                return found
+        except Exception:
+            log.exception("Couldn't cancel the event")
     building = _THINKING_OF_BUILDING.match(said)
     if building and not re.search(r"\d", building.group("what")):  # a size said is the material tools' to take
         from core.assistant_plan_actions import STRUCTURES
