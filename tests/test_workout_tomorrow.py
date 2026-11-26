@@ -3,7 +3,8 @@ tests.test_workout_tomorrow
 =============================
 
 "What should I work out tomorrow?" from his own training (core/workout_today.say with tomorrow, the fitness
-conversation check 2026-11-26: it had gone to the model), "last trained" still said from today.
+conversation check 2026-11-26: it had gone to the model), "last trained" still said from today; never "14 days ago" for
+a group never trained, and today's undone plan day said before tomorrow's.
 """
 
 from datetime import date
@@ -26,3 +27,17 @@ def test_tomorrow_is_worked_out_for_tomorrow(monkeypatch):
     monkeypatch.setattr(workout_today, "say", lambda c, t=None, tomorrow=False: f"tomorrow={tomorrow}")
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "what should I work out tomorrow?") == "tomorrow=True"
     assert assistant_turn._own_tool_reply(SimpleNamespace(), "what should I work out today?") == "tomorrow=False"
+
+
+def test_never_trained_and_an_undone_plan_day(monkeypatch):
+    monkeypatch.setattr(workout_today, "suggest", lambda c, day=None: {
+        "group": "Core", "rested_days": workout_today.LOOKBACK_DAYS + 1, "exercises": [], "template": ""})
+    said = workout_today.say(SimpleNamespace(workout=object()), date(2026, 11, 26), tomorrow=True)
+    assert "not in the last two weeks" in said
+    rotation = [{"name": "Day A"}, {"name": "Day B"}]
+    plan = {"name": "Day A", "index": 0, "done": False}
+    monkeypatch.setattr(workout_today, "suggest", lambda c, day=None: {"plan": dict(plan), "exercises": []})
+    monkeypatch.setattr(workout_today, "_plan_day", lambda c, d: dict(plan))
+    context = SimpleNamespace(workout=object(), fitness=SimpleNamespace(plan={"training": {"rotation": rotation}}))
+    said = workout_today.say(context, date(2026, 11, 26), tomorrow=True)
+    assert said == "Today's Day A is still to do; once it's done, tomorrow in your plan is Day B."

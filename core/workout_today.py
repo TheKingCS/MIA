@@ -173,7 +173,7 @@ def suggest(context, today: Optional[date] = None) -> dict:
 def say(context, today: Optional[date] = None, tomorrow: bool = False) -> str:
     """For "what's a good workout for today?" (or "tomorrow?", the fitness conversation check 2026-11-26: it had gone
     to the model): his plan's day, or his own next workout, or a starter; tomorrow's is worked out for tomorrow, with
-    "last trained" still said from today."""
+    "last trained" still said from today, and a plan day still undone today said as that before tomorrow's."""
     if getattr(context, "workout", None) is None:
         return "Workouts aren't on this MIA."
     from datetime import timedelta
@@ -189,6 +189,13 @@ def say(context, today: Optional[date] = None, tomorrow: bool = False) -> str:
         if plan.get("rest"):
             return " ".join(parts + [f"{label}'s a rest day in your plan: a walk or a stretch, and back at it next time."])
         said = f"{label} in your plan: {plan.get('name') or 'your training day'}" + (" (done already)." if plan.get("done") else ".")
+        now = _plan_day(context, today or date.today()) if tomorrow else None
+        if now and not now.get("rest") and not now.get("done") and now.get("index") == plan.get("index"):
+            # today's day still undone: the rotation moves on only once it's done (the Fable review)
+            rotation = (context.fitness.plan.get("training") or {}).get("rotation") or []
+            after = rotation[(plan["index"] + 1) % len(rotation)].get("name") if rotation else ""
+            said = (f"Today's {now.get('name') or 'training'} is still to do; once it's done, tomorrow in your plan is "
+                    f"{after or 'the next day'}.")
         parts.append(said)
         if found["exercises"]:
             parts.append("; ".join(f"{e['name']} ({e['last']})" for e in found["exercises"]) + ".")
@@ -198,8 +205,9 @@ def say(context, today: Optional[date] = None, tomorrow: bool = False) -> str:
             return " ".join(parts + ["Nothing in the last two weeks I can sort into push, pull, legs or core, so: "
                                      + STARTER])
         return "With nothing logged yet, " + STARTER
+    unrested = found["rested_days"] > LOOKBACK_DAYS  # never trained in the window: never "14 days ago"
     rested = found["rested_days"] - (1 if tomorrow else 0)  # said from today, whichever day it's for
-    since = ("not in the last two weeks" if rested > LOOKBACK_DAYS else
+    since = ("not in the last two weeks" if unrested else
              "yesterday" if rested == 1 else ("today" if tomorrow else "today already") if rested <= 0 else
              f"{rested} days ago")
     parts.append(f"{found['group']} is the one rested longest (last trained {since}).")
