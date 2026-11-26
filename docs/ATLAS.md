@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1925 files, 402,141 lines; 1925 files describe themselves; 21,761 of 21,908 classes and functions are documented.
+1926 files, 402,180 lines; 1926 files describe themselves; 21,762 of 21,909 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,909 lines; 10,390 of 10,469 classes and functions documented
+741 files, 210,924 lines; 10,390 of 10,469 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-774 files, 109,070 lines; 8,997 of 9,065 classes and functions documented
+775 files, 109,094 lines; 8,998 of 9,066 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1530,6 +1530,7 @@
 - `tests/test_project_tool.py`: Unit tests for modules.toolbox.tools.project_tool's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 - `tests/test_property_module.py`: Unit tests for modules.property.module's pure functions — same style and, deliberately, near-identical cases to tests/test_garage_module.py, since the two modules share the same logic shape and differ only in which Maintenance categories they filter to.
 - `tests/test_property_photo.py`: A property's photo (Q-0014, 2026-11-07): kept in the household's own folder, linked with a name that changes with the file, and never served from outside that folder.
+- `tests/test_property_summary.py`: A property's summary over the last 12 months, with the months of rent logged and the year's pace said as an estimate (core/assistant_tools get_property_summary, the rentals conversation check 2026-11-26: one month's rent had been read as a 0.64% cap rate "doing well").
 - `tests/test_protected_list.py`: What MIA can never change about herself, in words, kept true to the lab's own list (core/protected_list.py, DEC-0225, R-56).
 - `tests/test_push_subscription_manager.py`: Unit tests for core.push_subscription_manager — same isolation pattern as tests/test_notification_manager.py (monkeypatch _DATA_DIR/_*_FILE into tmp_path, a minimal fake config since these tests never touch it).
 - `tests/test_question_plans.py`: Question plans (DEC-0052 step 2a, core/question_plans.py): the right plan for a question, lookups gathered by code onto a marked sheet, and an answer that never states a number MIA didn't look up; and the weekend's plan with each day's forecast, reached only by a weekend ahead; and the winter plan w

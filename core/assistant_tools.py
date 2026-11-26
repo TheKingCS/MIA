@@ -4344,20 +4344,35 @@ class AssistantTools:
 
     @staticmethod
     def _action_get_property_summary(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `get_property_summary`: a property's net operating income and cap rate. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `get_property_summary`: a property's net operating income and cap rate over the last 12
+        months, with how many months of rent are logged, and the pace over a full year said as an estimate when there
+        are fewer (the rentals conversation check: one month's rent had been said as a 0.64% cap rate "doing well").
+        Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         property_name = str(arguments.get("property_name", "")).strip()
         if not property_name:
             return "I need a property name."
         prop, error = AssistantTools._resolve_property(context, property_name)
         if error:
             return error
-        noi = context.real_estate.net_operating_income(prop.property_id)
-        cap_rate = context.real_estate.cap_rate(prop.property_id)
-        cap_rate_text = f"{cap_rate * 100:.2f}%" if cap_rate is not None else "n/a (no current value set)"
-        return (
-            f"'{prop.name}': equity {money(property_equity(prop), ',.2f')}, "
-            f"net operating income {money(noi, ',.2f')}, cap rate {cap_rate_text}."
-        )
+        from datetime import date as _date, timedelta as _td
+
+        today = _date.today()
+        start = (today - _td(days=365)).isoformat()
+        estate = context.real_estate
+        noi = estate.net_operating_income(prop.property_id, start, today.isoformat())
+        months = len({str(i.date)[:7] for i in estate.income_for_property(prop.property_id, start, today.isoformat())})
+        head = f"'{prop.name}': equity {money(property_equity(prop), ',.2f')}"
+        if prop.current_value <= 0:
+            return head + f", net operating income {money(noi, ',.2f')} over the last 12 months; no current value set, so no cap rate."
+        if months == 0:
+            return head + ". No rent logged in the last 12 months, so there's no income or cap rate to say yet."
+        rate = noi / prop.current_value * 100
+        said = (head + f", net operating income {money(noi, ',.2f')} over the last 12 months from {months} month"
+                f"{'' if months == 1 else 's'} of rent logged, a cap rate of {rate:.2f}% so far")
+        if months < 12:  # a year's cap rate needs a year's rent: the pace said as an estimate, never as the rate
+            said += (f"; at that pace a full year would be about {noi / months * 12 / prop.current_value * 100:.1f}% "
+                     f"(an estimate until a full year of rent is logged)")
+        return said + "."
 
     @staticmethod
     def _action_play_track(context: AppContext, arguments: dict) -> str:
