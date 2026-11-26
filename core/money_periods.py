@@ -12,7 +12,8 @@ sheet's words). From his own records:
 - `shop_made`: the workshop ledger's revenue, expenses and profit in the period (core/ledger_manager).
 
 `period(words, today)` reads "today", "yesterday", "this week", "last week", "this month", "last month", "this year",
-"last year" and a month by name ("in October": the latest one not after today); (start, end, label) or None.
+"last year" and a month by name ("in October": the latest one not after today; "in March 2025" that year, said in
+the label); (start, end, label) or None. `only_period` keeps the routes to asks whose rest is only a period.
 Read only.
 """
 
@@ -27,7 +28,8 @@ MONTHS = {m.lower(): i for i, m in enumerate(calendar.month_name) if m}
 
 
 def period(words: str, today: date) -> Optional[tuple[date, date, str]]:
-    """Pure logic. (start, end, label) for the period his words name, or None."""
+    """Pure logic. (start, end, label) for the period his words name, or None; a month with its year when he says
+    one, and the year in the label when it isn't this one."""
     said = (words or "").lower()
     if re.search(r"\btoday\b", said):
         return today, today, "today"
@@ -48,13 +50,30 @@ def period(words: str, today: date) -> Optional[tuple[date, date, str]]:
         return today.replace(month=1, day=1), today, "this year"
     if re.search(r"\blast year\b", said):
         return date(today.year - 1, 1, 1), date(today.year - 1, 12, 31), f"last year ({today.year - 1})"
-    named = re.search(r"\b(?:in|for|during) (" + "|".join(MONTHS) + r")\b", said)
+    named = re.search(r"\b(?:in|for|during) (" + "|".join(MONTHS) + r")(?:,? (\d{4}))?\b", said)
     if named:
         month = MONTHS[named.group(1)]
-        year = today.year if month <= today.month else today.year - 1
+        year = int(named.group(2)) if named.group(2) else (today.year if month <= today.month else today.year - 1)
         last = calendar.monthrange(year, month)[1]
-        return date(year, month, 1), min(date(year, month, last), today), f"{calendar.month_name[month]}"
+        label = calendar.month_name[month] + (f" {year}" if year != today.year else "")
+        return date(year, month, 1), min(date(year, month, last), today), label
     return None
+
+
+_PERIOD_WORDS = re.compile(r"\b(?:so far )?(?:today|yesterday|this week|last week|this month|last month|this year|"
+                           r"last year|ytd|so far this year)\b|\b(?:in|for|during) (?:" + "|".join(MONTHS) +
+                           r")(?:,? \d{4})?\b", re.I)
+_FILLER = re.compile(r"\b(?:in total|in all|total|overall|altogether|so far|all|money|of my money|of our money|then|"
+                     r"exactly|roughly|about|again|please|mia)\b|[,.!?]", re.I)
+
+
+def only_period(rest: str) -> bool:
+    """Pure logic. Whether what follows the question is a period and filler only ("last month", "so far this year"),
+    never a place, a thing or a comparison ("at Costco last month", "this month vs last month": the Fable review)."""
+    if re.search(r"\b(?:vs\.?|versus|compared|than|and)\b", rest or "", re.I):
+        return False
+    left = _FILLER.sub(" ", _PERIOD_WORDS.sub(" ", rest or ""))
+    return not left.strip()
 
 
 def _money(amount: float) -> str:

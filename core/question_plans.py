@@ -1894,15 +1894,15 @@ def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
 
 
 def without_sheet_words(said: str) -> str:
-    """Pure logic. The answer without her own working said aloud ("the fact sheet says", "the sheet doesn't mention":
-    the live sweep, 2026-11-26): a sheet she was given is his records to him."""
-    said = re.sub(r"\b(?:the |my )?fact sheet (?:says|shows|lists|suggests) (?:to |that )?", "", said, flags=re.I)
-    said = re.sub(r"\b(?:the |my )?(?:fact )?sheet (?:doesn'?t|does not) (?:mention|say|show|have|include|list)\b",
+    """Pure logic. The answer without her own working said aloud ("the fact sheet says", "the fact sheet doesn't
+    mention": the live sweep, 2026-11-26): a sheet she was given is his records to him. Only "fact sheet" itself, so a
+    balance sheet, a cookie sheet and the rest of the sentence stay as written (the Fable review)."""
+    said = re.sub(r"\b(?:the |my )?fact sheet (?:says|shows|lists|suggests) (?:to |that )?(\w)",
+                  lambda m: m.group(1).upper(), said, flags=re.I)  # the sentence starts where the words were
+    said = re.sub(r"\b(?:the |my )?fact sheet (?:doesn'?t|does not) (?:mention|say|show|have|include|list)\b",
                   "I don't have", said, flags=re.I)
-    said = re.sub(r"\bit only (?:talks about|mentions|shows|has)\b", "I only have", said, flags=re.I)
-    said = re.sub(r"\b(?:on|in|from) the (?:fact )?sheet\b", "in your records", said, flags=re.I)
+    said = re.sub(r"\b(?:on|in|from) the fact sheet\b", "in your records", said, flags=re.I)
     said = re.sub(r"\bthe fact sheet\b", "your records", said, flags=re.I)
-    said = re.sub(r"(^|[.!?]\s+)([a-z])", lambda m: m.group(1) + m.group(2).upper(), said)
     return said
 
 

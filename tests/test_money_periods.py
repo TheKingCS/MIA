@@ -25,6 +25,11 @@ def test_the_periods_are_read():
     assert money_periods.period("last week", TODAY)[:2] == (date(2026, 11, 16), date(2026, 11, 22))
     assert money_periods.period("in december", TODAY)[:2] == (date(2025, 12, 1), date(2025, 12, 31))
     assert money_periods.period("lately", TODAY) is None
+    assert money_periods.period("for march 2025", TODAY)[2] == "March 2025"
+    assert money_periods.period("in december", TODAY)[2] == "December 2025"
+    assert money_periods.only_period(" last month") and money_periods.only_period(" so far this year")
+    for rest in (" at Costco last month", " last month on gas", " this month vs last month", " in the shop this month"):
+        assert not money_periods.only_period(rest), rest
 
 
 def test_spending_last_month_with_its_top_categories():
@@ -53,6 +58,10 @@ def test_the_words_reach_them(monkeypatch):
     assert ask("where does my money go") == "biggest"
     assert ask("What did I make from the shop this month?") == "shop"
     assert ask("How much did I spend on groceries this month?") != "spent", "a category is its own route"
+    for words in ("how much did I spend at Costco last month", "what did I spend this month compared to last month",
+                  "where is my money going to come from", "How's the shop doing on orders?",
+                  "what's my top expense for the greenhouse build"):
+        assert ask(words) not in ("spent", "biggest", "shop"), words
 
 
 def test_a_plan_answer_never_says_the_fact_sheet():
@@ -60,3 +69,6 @@ def test_a_plan_answer_never_says_the_fact_sheet():
         "Put extra toward #1, the card."
     assert question_plans.without_sheet_words("The fact sheet doesn't mention customers.") == \
         "I don't have customers."
+    for kept in ("The balance sheet doesn't show a loss.", "Bake on the sheet pan.", "It only shows up on Tuesdays.",
+                 "Use a jig, e.g. it holds the board."):
+        assert question_plans.without_sheet_words(kept) == kept, kept

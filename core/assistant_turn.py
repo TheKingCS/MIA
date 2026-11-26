@@ -1257,8 +1257,10 @@ _OWN_TOOLS = (
                             r".*\bdo (?:i|we) have enough (?:chicken |layer )?feed\b)", re.I), True),
     # what she may do herself is her grants' (list_grants); the model had made up a browser and the Classroom
     # tools a question plan had answered instead, from a sheet without their records (the live sweep, 2026-11-26)
-    ("best_customers", re.compile(r"\b(?:best|top|biggest|repeat|regular) (?:customers?|clients?|buyers?)\b|"
-                                  r"\bwho (?:buys|spends|orders) the most\b", re.I), False),
+    ("best_customers", re.compile(r"^\s*(?:hey mia,? )?(?:who (?:are|is) (?:my|our) (?:best|top|biggest|repeat|regular) "
+                                  r"(?:customers?|clients?|buyers?)|(?:show me |list )?(?:my|our) (?:best|top|biggest) "
+                                  r"(?:customers?|clients?)|who (?:buys|spends|orders) the most(?: from me| with me| from "
+                                  r"us| with us)?)\s*[?.!]*\s*$", re.I), False),
     ("suggest_recipes", re.compile(r"^\s*(?:hey mia,? )?(?:what (?:should|can|could) (?:i|we) (?:make|cook|have|eat) (?:for "
                                    r")?(?:dinner|supper|lunch|tonight)|what'?s for (?:dinner|supper)|(?:any )?(?:dinner|"
                                    r"supper) ideas|what can (?:i|we) make with what (?:i|we) have)\s*[?.!]*\s*$", re.I), False),
@@ -1346,13 +1348,13 @@ _WOOD_NEXT = re.compile(r"^\s*(?:hey mia,? )?(?:what (?:woodworking )?project sh
 _SPENT_PERIOD = re.compile(r"^\s*(?:hey mia,? )?(?:how much (?:did|have) (?:i|we) (?:spend|spent)|what did (?:i|we) spend|"
                            r"what(?:'s| is| was) (?:my|our) (?:total )?spending)(?! on\b)(?! for\b)\b(?P<rest>[^?]*)"
                            r"\s*[?.!]*\s*$", re.I)
-_BIGGEST_CATEGORY = re.compile(r"\b(?:biggest|largest|top|main) (?:expense|spending)(?: category| categories)?\b|"
-                               r"\bwhere (?:does|did|is) (?:all )?(?:my|our) money go(?:ing)?\b|"
-                               r"\bwhat (?:do|did) (?:i|we) spend the most on\b", re.I)
+_BIGGEST_CATEGORY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| was| are| were) (?:my|our) (?:biggest|largest|top|"
+                               r"main) (?:expense|spending)(?: categor(?:y|ies))?|where (?:does|did) (?:all )?(?:my|our) "
+                               r"money go|what (?:do|did) (?:i|we) spend the most on)(?P<rest>[^?]*?)\s*[?.!]*\s*$", re.I)
 _SHOP_MADE = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|how much) did (?:i|we) make (?:from|in|at|with|off) (?:the |my "
                         r")?(?:shop|workshop|woodshop|business)|how much did (?:the|my) (?:shop|workshop|woodshop|"
-                        r"business) make|how(?:'s| is| did) (?:the|my) (?:shop|workshop) (?:doing|do)|what(?:'s| are| "
-                        r"were) (?:the|my) shop'?s? (?:sales|revenue|profit))\b[^?]*[?.!]*\s*$", re.I)
+                        r"business) make|what(?:'s| are| were) (?:the|my) shop'?s? (?:sales|revenue|profit))"
+                        r"(?P<rest>[^?]*?)\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1386,7 +1388,7 @@ def _own_tool_reply(context, prompt: str):
     workout (core/workout_today), "what woodworking project should I do next?" his next piece
     (core/woodworking.next_project; "build next ... shop", the business's, stays make_next's), "how much did I
     spend last month?", "my biggest expense category this year" and "what did I make from the shop this month?"
-    (core/money_periods), "tell me when..." a watch from his whole sentence
+    (core/money_periods; only when what follows is a period: "at Costco last month" is the model's), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
     said = prompt.replace("’", "'")
@@ -1445,18 +1447,19 @@ def _own_tool_reply(context, prompt: str):
     if _REMEMBER_TALK.match(said):  # "do you remember what I told you yesterday?": her own record of it
         return _run_own(context, "list_past_conversations", {"question": said})
     low = said.lower()
-    spent_in = _SPENT_PERIOD.match(said)
-    if spent_in or _BIGGEST_CATEGORY.search(said) or _SHOP_MADE.match(said):  # money over a period (core/money_periods)
+    asked = _SHOP_MADE.match(said) or _BIGGEST_CATEGORY.match(said) or _SPENT_PERIOD.match(said)
+    if asked:  # money over a period (core/money_periods), only when what follows is a period
         from core import money_periods
 
         try:
-            if _SHOP_MADE.match(said):
-                return money_periods.shop_made(context, said)
-            if _BIGGEST_CATEGORY.search(said):
-                return money_periods.biggest(context, said)
-            answer = money_periods.spent(context, spent_in.group("rest"))
-            if answer:
-                return answer
+            if money_periods.only_period(asked.group("rest")):
+                if asked.re is _SHOP_MADE:
+                    return money_periods.shop_made(context, said)
+                if asked.re is _BIGGEST_CATEGORY:
+                    return money_periods.biggest(context, said)
+                answer = money_periods.spent(context, asked.group("rest"))
+                if answer:
+                    return answer
         except Exception:
             log.exception("Couldn't say the money for that period")
             return None
