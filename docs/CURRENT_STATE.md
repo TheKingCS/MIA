@@ -106,7 +106,11 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   what's due, "what bills are still due?" names the debts' minimums too, and "I paid the electric bill" marks it paid
   in code (never twice for one time round; "pay the electric bill" says what's due, since she pays nothing). Also
   "are the eggs paying for the feed?" is the flock's numbers, and "Saturday morning" on a reminder is 8am.
-  Fable-reviewed. 8811 passing.
+  Fable-reviewed.
+- The automation conversation check: "every morning tell me what's due today" and "and every Sunday tell me how my
+  money is doing" are kept as standing reports ("what's due today?" now answered in code: core/today.due_today_said),
+  "what reports do you send me?" is her own list and "stop the Sunday one" stops that one (the model had made up a
+  Bank Sync report and a stop). Fable-reviewed. 8814 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
