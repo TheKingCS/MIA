@@ -5,6 +5,25 @@
 session. Last updated: 2026-11-25 (Opus at the PC: interactive labs, the ESP32 simulator, scenario drills), by
 claude.*
 
+**2026-11-25, night: the Fable reviews, and what they changed.** A Fable review of the day's 113 commits, two
+Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh Fable review. What stands now:
+- The emergency floor (core/first_aid_floor.py) covers the home's own emergencies too (fire, gas, carbon monoxide:
+  get out, call from outside), a veto takes out only its own words (K-0497), contractions without apostrophes are
+  read, and a person's emergency is always said beside a home's; the never-miss list grew by about 160 phrasings.
+  The floor stays wide: false alarms are its accepted cost.
+- Every tool call's arguments are cleaned first (core/tool_args.py): placeholders ("null", "N/A"), bad times,
+  negative counts and an update's zero-filled fields never reach a record; times and dates said in words are tidied.
+- The routes that write records act only on what they read whole (Q-0018 asks Zac whether to retire them); a
+  tool's guard on his words runs only for tools in core/tool_loop.HIS_WORDS_TOOLS (K-0499; giving every tool his
+  sentence was tried and reverted).
+- New in code: holidays (core/holidays.py), conversions, the time and date, square feet, home trouble (a burst pipe,
+  a flood: core/home_trouble.py), an outlet's voltage in safe words, the power going out asked ahead
+  (core/outage_plan.py; core/outage.py is the outage clock), when to fish from his catches, an egg price from his
+  feed cost, monthly reminders, project hours (core/project_time.py), yesterday's conversations summarised.
+- Two courses: Fishing basics (core/fishing_path.py) and Soldering and the meter (core/soldering_path.py).
+- Waiting on Zac: Q-0018; which other hobbies get courses (hunting, 3D printing, small engines); shop mode; the
+  offline packs and SearXNG; PlatformIO; phone access. 8626 passing.
+
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
 the build; `docs/future/INTERACTIVE_LABS_PLAN.md`). Built: Build With ESP32, six stages of real labs, each check
