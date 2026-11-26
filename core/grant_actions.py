@@ -31,7 +31,8 @@ def _grant(context, params):
 def _describe(context, params) -> str:
     """The approval sentence for `grant.take_back`."""
     g = _grant(context, params)
-    after = "it goes back to practising with you" if g.kind == "skill" else "it's put away and won't run"
+    after = {"skill": "it goes back to practising with you",
+             "kind": "I'll ask you first again before each one"}.get(g.kind, "it's put away and won't run")
     return f"Take back “{g.name}”: {after}"
 
 

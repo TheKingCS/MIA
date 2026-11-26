@@ -61,7 +61,8 @@ def _grants(context, arguments: dict) -> str:
     if not found:
         return ("Nothing yet. I ask before every change, until you teach me a skill and it runs cleanly with you, or "
                 "you publish a workflow. Paying, sending and deleting always need your yes.")
-    said = "; ".join(f"{g.name} ({'a skill' if g.kind == 'skill' else 'a workflow'}: {g.covers}; {g.how})" for g in found)
+    what = {"skill": "a skill", "kind": "a standing yes"}
+    said = "; ".join(f"{g.name} ({what.get(g.kind, 'a workflow')}: {g.covers}; {g.how})" for g in found)
     return f"On my own I may run: {said}. Paying, sending and deleting always need your yes. You can take any of these back."
 
 
@@ -122,9 +123,11 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
     registry.register(AssistantAction(
         name="take_back_grant", domain="app_registry",
         description=("Take back something MIA may do on her own, by its name: a learned skill goes back to practising "
-                     "with the person; a workflow is put away."),
+                     "with the person; a workflow is put away; a standing yes for a kind of change (\"grocery add\") "
+                     "means she asks first again."),
         parameters={"type": "object", "properties": {
-            "grant": {"type": "string", "description": "The skill's or workflow's name."}}, "required": ["grant"]},
+            "grant": {"type": "string", "description": "The skill's, workflow's or change's name, in his words."}},
+            "required": ["grant"]},
         handler=_take_back, prompt_arg="grant",
         trigger_phrases=("take back", "stop doing that on your own", "don't do that on your own", "revoke",
                          "ask me first for"),

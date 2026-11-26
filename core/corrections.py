@@ -205,15 +205,17 @@ DOUBT_DAYS = 7
 
 def _doubt(context, folder: Path, kind: str, now: datetime) -> None:
     """After he corrects a kind of change she makes on her own (his standing yes, core/kind_grants.py) DOUBT_COUNT
-    times within DOUBT_DAYS (brainstorm round 17: learned this week, then asked): she offers, through the gate, to
-    ask him first again, never taking his yes back herself. Once a week per kind. Never raises."""
+    times within DOUBT_DAYS and since he gave it (brainstorm round 17: learned this week, then asked), by edit,
+    delete or Undo: she offers, through the gate, to ask him first again, never taking his yes back herself, naming
+    the one yes by family and verb ("grocery add"). Once a week per kind. Never raises."""
     try:
         from core import kind_grants
 
         kind = kind[len("action_"):] if kind.startswith("action_") else kind
         if not kind_grants.has(context, kind):
             return
-        since = (now - timedelta(days=DOUBT_DAYS)).isoformat(timespec="seconds")
+        given = str(kind_grants.live(context).get(kind, {}).get("given", ""))
+        since = max((now - timedelta(days=DOUBT_DAYS)).isoformat(timespec="seconds"), given)  # since his yes only
         times = sum(1 for e in _lines(folder) if e.get("what") == "corrected" and e.get("at", "") >= since
                     and (e.get("kind") == kind or e.get("kind") == f"action_{kind}"))
         gate = getattr(context, "communication", None)
@@ -222,11 +224,12 @@ def _doubt(context, folder: Path, kind: str, now: datetime) -> None:
         from core.communication_gate import TIMELY, Candidate
 
         family = family_of(kind).replace("_", " ")
+        named = f"{family} {verb_of(kind).replace('_', ' ')}".strip()  # "grocery add": the one yes, never its family
         year, week, _ = now.isocalendar()
         gate.offer(Candidate(
             topic="grant_doubt", title=f"Should I ask first about {family}?",
             message=(f"You've corrected my {family} changes {times} times this week, and I make those on my own "
-                     f"since you said yes from now on. Say \"ask me first for {family}\" and I'll check with you "
+                     f"since you said yes from now on. Say \"ask me first for {named}\" and I'll check with you "
                      f"again before each one."),
             urgency=TIMELY, source="system", fingerprint=f"grant-doubt-{kind}-{year}-W{week:02d}"), now)
     except Exception:
@@ -269,7 +272,8 @@ def screen_edit(context, kind: str, record_id: str = "") -> Optional[dict]:
 
 
 def undone(context, label: str, now: Optional[datetime] = None) -> Optional[dict]:
-    """The person undid one of MIA's changes (its undo label: `add_expense`, `action_bill.add`)."""
+    """The person undid one of MIA's changes (its undo label: `add_expense`, `action_bill.add`); at the second within
+    a week of a kind she does on her own, her offer to ask first again (`_doubt`)."""
     folder = _folder(context)
     if folder is None:
         return None
@@ -280,6 +284,7 @@ def undone(context, label: str, now: Optional[datetime] = None) -> Optional[dict
     entry = {"at": now.isoformat(timespec="seconds"), "what": "corrected", "how": "undo", "kind": found["kind"],
              "area": found["area"], "corrects": found.get("id")}
     _append(folder, entry)
+    _doubt(context, folder, str(found["kind"]), now)  # an Undo of something she did on her own counts too
     return entry
 
 

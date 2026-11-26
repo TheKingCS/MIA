@@ -239,8 +239,9 @@ def standing(context) -> list[Grant]:
 
 def find(context, words: str) -> Optional[Grant]:
     """The grant an id or a name means: its id exactly, else its name exactly, else the only one whose name holds the
-    words (a name two share is neither), else the only standing yes whose kind the words name ("grocery" for kind:grocery.add, core/corrections'
-    offer to ask first)."""
+    words (a name two share is neither), else the only standing yes whose kind the words name ("grocery add" for kind:grocery.add, its verb
+    telling two in one family apart; core/corrections' offer to ask first); None when a grant's name and a different
+    yes's kind both fit."""
     wanted = " ".join(str(words or "").lower().split())
     grants = standing(context)
     for g in grants:
@@ -252,12 +253,21 @@ def find(context, words: str) -> Optional[Grant]:
     if len(same) > 1:
         return None  # two with that name ("Add"): which one?
     some = [g for g in grants if wanted and wanted in g.name.lower()]
+    # a standing yes by what it's about ("ask me first for grocery add": kind:grocery.add): its family's words, and
+    # its verb when he says it, so two yeses in one family are told apart
+    words = set(wanted.replace("_", " ").replace(".", " ").split())
+
+    def _about(g) -> set:
+        """A standing yes's family words."""
+        return set(g.grant_id.partition(":")[2].split(".")[0].replace("_", " ").split())
+
+    kinds = [g for g in grants if g.kind == "kind" and _about(g) <= words]
+    exact = [g for g in kinds if set(g.grant_id.partition(".")[2].replace("_", " ").split()) <= words]
+    kinds = exact if len(kinds) > 1 and exact else kinds
+    if some and kinds and {g.grant_id for g in some} != {g.grant_id for g in kinds}:
+        return None  # a skill's name and a yes's kind both fit: which one?
     if len(some) == 1:
         return some[0]
-    # a standing yes by what it's about ("ask me first for grocery": kind:grocery.add), when only one is
-    words = set(wanted.replace("_", " ").split())
-    kinds = [g for g in grants if g.kind == "kind"
-             and set(g.grant_id.partition(":")[2].split(".")[0].replace("_", " ").split()) <= words]
     return kinds[0] if len(kinds) == 1 and not some else None
 
 
