@@ -632,7 +632,8 @@ def _next_lesson_reply(context, prompt: str):
 
 # "...and 2 hours on the shed" inside what money was for: a second thing, never part of the first (_two_things_reply)
 _AND_HOURS = re.compile(r"\band\s+(?:i\s+\w+(?:\s+in)?\s+)?(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|"
-                        r"eight|half an?)\s*(?:hours?|hrs?|minutes?|mins?)\b", re.I)
+                        r"eight|nine|ten|eleven|twelve|half an?)(?: and a half)?\s*(?:hours?|hrs?|minutes?|mins?)\b",
+                        re.I)
 _AMOUNT = r"(?:\$\s?(?P<d>\d[\d,]*(?:\.\d{1,2})?)|(?P<n>\d[\d,]*(?:\.\d{1,2})?)\s*(?:dollars|bucks))"
 _SPENT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:spent|paid|dropped)\s+" + _AMOUNT + r"\s+(?:on|for)\s+(?P<what>.+?)"
                     r"\s*[.!]*\s*$", re.I)
@@ -1003,11 +1004,11 @@ def _garden_kit_reply(context, prompt: str):
 
 
 _TIME_ON = (
-    re.compile(r"^\s*(?:please\s+)?(?:log|put down|add|record|track)\s+" + r"(?P<h>(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|half an?)\s*(?:hours?|hrs?|minutes?|mins?)(?: and a half)?)" + r"\s+(?:on|to|for|into)\s+(?P<p>.+?)"
+    re.compile(r"^\s*(?:please\s+)?(?:log|put down|add|record|track)\s+" + r"(?P<h>(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|half an?)(?: and a half)?\s*(?:hours?|hrs?|minutes?|mins?)(?: and a half)?)" + r"\s+(?:on|to|for|into)\s+(?P<p>.+?)"
                r"(?:\s+(?P<day>today|yesterday))?\s*[.!]?\s*$", re.I),
-    re.compile(r"^\s*i\s+(?:just\s+)?(?:worked|spent|put in|put)\s+" + r"(?P<h>(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|half an?)\s*(?:hours?|hrs?|minutes?|mins?)(?: and a half)?)" + r"\s+(?:on|into|at)\s+(?P<p>.+?)"
+    re.compile(r"^\s*i\s+(?:just\s+)?(?:worked|spent|put in|put)\s+" + r"(?P<h>(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|half an?)(?: and a half)?\s*(?:hours?|hrs?|minutes?|mins?)(?: and a half)?)" + r"\s+(?:on|into|at)\s+(?P<p>.+?)"
                r"(?:\s+(?P<day>today|yesterday))?\s*[.!]?\s*$", re.I),
-    re.compile(r"^\s*i\s+worked\s+on\s+(?P<p>.+?)\s+for\s+" + r"(?P<h>(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|half an?)\s*(?:hours?|hrs?|minutes?|mins?)(?: and a half)?)" + r"(?:\s+(?P<day>today|yesterday))?\s*[.!]?\s*$", re.I),
+    re.compile(r"^\s*i\s+worked\s+on\s+(?P<p>.+?)\s+for\s+" + r"(?P<h>(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|half an?)(?: and a half)?\s*(?:hours?|hrs?|minutes?|mins?)(?: and a half)?)" + r"(?:\s+(?P<day>today|yesterday))?\s*[.!]?\s*$", re.I),
 )
 _HOURS_ASK = re.compile(r"^\s*how many hours (?:have|did) (?:i|we) (?:put|spent|spend|logged|log|worked)\s+(?:in\s+)?"
                         r"(?:into|on|in)\s+(?P<p>.+?)\s*\??\s*$", re.I)
@@ -1069,7 +1070,8 @@ def _project_time_reply(context, prompt: str):
 _TWO_THINGS = re.compile(
     r"^\s*(?P<left>.+?)\s*,?\s+and\s+(?:then\s+)?(?P<right>(?:i\s+(?:also\s+)?(?:just\s+)?(?:spent|paid|dropped|bought|"
     r"purchased|worked|put in|put|logged)\s.+|(?:also\s+)?(?:\$\s?\d|\d[\d,.]*\s*(?:dollars|bucks|hours?|hrs?|minutes?|"
-    r"mins?)\b|(?:an?|one|two|three|four|five|six|seven|eight|half an?)\s+(?:hours?|hrs?|minutes?|mins?)\b).*))$", re.I)
+    r"mins?)\b|\d+(?:\.\d+)? and a half (?:hours?|hrs?)\b|(?:an?|one|two|three|four|five|six|seven|eight|nine|ten|"
+    r"eleven|twelve|half an?)(?: and a half)?\s+(?:hours?|hrs?|minutes?|mins?)\b).*))$", re.I)
 
 
 def _one_thing(context, clause: str) -> str:
@@ -1087,13 +1089,18 @@ def _one_thing(context, clause: str) -> str:
 
 
 def _no_such_project(context, clause: str):
-    """The hours half naming no project of his: log_project_time's own answer (no such project, and his projects'
-    names; nothing kept), unless the words are one of his machines' ("the mower"), handed back as None."""
+    """The hours half `_project_time_reply` turned down: log_project_time's own answer (no such project, and his
+    projects' names; nothing kept) only when the words say it's a project ("the porch build") and it isn't one of his;
+    a project of his it turned down (30 hours), "the phone", "hold" or one of his machines ("the mower") handed back
+    as None (the Fable review, 2026-11-26)."""
     from core import project_time
 
     for pattern in _TIME_ON:
         found = pattern.match(clause)
         if found:
+            if project_time.project_named(context, found.group("p")) is not None or not re.search(
+                    r"\b(?:build|project|job|remodel|rewire|renovation|reno|addition)\b", found.group("p"), re.I):
+                return None
             named = project_time._words(found.group("p"))
             if any(named & project_time._words(a) for a in _assets(context)):
                 return None
@@ -1106,21 +1113,27 @@ def _two_things_reply(context, prompt: str):
     """Two things in one sentence (brainstorm round 18): "I spent $40 on screws and 2 hours on the shed", "I paid $5
     for coffee and $10 for gas", each half through its own code (an expense by `_spent_reply`, a project's hours by
     `_project_time_reply`) and said back together. A half with no verb takes "I spent"; a day said at the end
-    ("...yesterday") is both halves'. Only when both halves are whole for one of them; if one is then turned down (a
+    ("...yesterday", or one after the first half) is both halves', never added beside another day. Never a question.
+    Only when both halves are whole for one of them; if one is then turned down (a
     bill of his, a person), the other's record is said and that half handed back in his words, never dropped; hours on
     no project of his are said as that, with his projects (`_no_such_project`). None otherwise."""
     said = (prompt or "").replace("’", "'").strip()
     found = _TWO_THINGS.match(said)
-    if not found or getattr(context, "assistant_actions", None) is None:
-        return None
+    if not found or "?" in said or getattr(context, "assistant_actions", None) is None:
+        return None  # "...on the shed, right?" is a question, never two records
     left = found.group("left").strip().rstrip(",")
     right = re.sub(r"^also\s+", "", found.group("right").strip(), flags=re.I)
     right = re.sub(r"^i\s+also\s+", "I ", right, flags=re.I)
     if not re.match(r"^i\s", right, re.I):
-        right = "I spent " + right
+        verb = re.match(r"^\s*(?:i\s+)?(?:just\s+)?(spent|paid|dropped)\b", left, re.I)
+        money = re.match(r"^(?:\$|\d[\d,.]*\s*(?:dollars|bucks)\b)", right, re.I)
+        right = f"I {verb.group(1).lower() if verb and money else 'spent'} {right}"  # "paid $85 ... and $40 ..."
     day = re.search(r"\s+(today|yesterday)\s*[.!]*\s*$", right, re.I)
-    if day and not re.search(r"\b(?:today|yesterday)\b", left, re.I):
-        left = f"{left} {day.group(1)}"
+    if day and not _DAY_LEFT.search(left) and not re.search(r"\btoday\b", left, re.I):
+        left = f"{left} {day.group(1)}"  # "...and 2 hours on the shed yesterday": both were yesterday
+    left_day = re.search(r"\s+(today|yesterday)\s*$", left, re.I)
+    if left_day and not day and not _DAY_LEFT.search(right):
+        right = f"{right.rstrip('.! ')} {left_day.group(1)}"  # "screws yesterday and 2 hours on the shed"
     kinds = [_one_thing(context, left), _one_thing(context, right)]
     if not all(kinds):
         return None
