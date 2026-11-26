@@ -63,6 +63,21 @@ ASKS: dict[tuple, re.Pattern] = {
                                             r"chickens|flock|layers)\b|\b(?:protect|keep)\w*\s+(?:my\s+|the\s+)?"
                                             r"(?:hens|chickens|flock|coop)\b.{0,30}\b(?:predators?|raccoons?|foxes|"
                                             r"hawks|winter|cold|warm|safe)\b"),
+    # his hobbies' courses, by their lessons' own subjects (the live sweep, 2026-11-25: "give me a chord progression to
+    # practice" was told to start the course)
+    ("guitar", "hold_tune"): re.compile(r"\btune (?:my |a |the )?guitar\b|\btuning (?:my |a |the )?guitar\b|\bguitar\b.{0,20}"
+                                        r"\b(?:in tune|tuning)\b|\bstandard tuning\b"),
+    ("guitar", "progression"): re.compile(r"\bchord progressions?\b|\bfour[- ]chord\b|\b(?:chords?|progression) to "
+                                          r"practi[cs]e\b"),
+    ("guitar", "barre_f"): re.compile(r"\bbarre chords?\b|\bf chord\b|\bbar chords?\b"),
+    ("guitar", "power"): re.compile(r"\bpower chords?\b"),
+    ("guitar", "pentatonic"): re.compile(r"\bpentatonic\b|\b(?:guitar )?scales? to (?:learn|practi[cs]e)\b|\bstart soloing\b"),
+    ("guitar", "bends"): re.compile(r"\bbend (?:a |the )?strings?\b|\bstring bends?\b"),
+    ("woodworking", "joints"): re.compile(r"\b(?:dovetail|mortise|tenon|dado|rabbet|butt joint|wood joints?)\b"),
+    ("woodworking", "finishes"): re.compile(r"\b(?:finish|stain|oil|varnish|poly(?:urethane)?|seal)\w*\s+(?:a |the |my )?"
+                                            r"(?:wood|table|board|cutting board|bench|shelf|project|piece)\b"),
+    ("fitness", "progression"): re.compile(r"\bprogressive overload\b|\b(?:add|increase|put on) (?:more )?weight\b.{0,20}"
+                                           r"\b(?:lift|squat|bench|press)\w*\b|\bwhen (?:should|do) i (?:go up|add weight)\b"),
     # soldering and the meter (core/soldering_path.py: the live sweeps found it a gap); the Fable check of the courses
     # (2026-11-25): each needs its own subject's words, never a hook for hanging, a bass guitar or an outlet
     ("soldering", "fixing"): re.compile(r"\bsolder(?:ing)? bridges?\b|\bbridged? (?:two |the )?pins\b|\bdesolder\w*|"
@@ -98,6 +113,7 @@ ASKS: dict[tuple, re.Pattern] = {
                                                r"(?:indoors|inside)\b"),
 }
 _HOWTO = re.compile(r"\b(?:what size|which size|what hook|which hook|what knot|which knot|what(?:'s| is) the best knot|"
+                    r"give me a|show me a|"
                     r"how hot|what temp\w*|where (?:do|should|can|would) (?:i|you)|do i need a|"
                     r"how (?:do|should|would|can|could) (?:i|you|one|we)|how to|what'?s the (?:best|right|safest) "
                     r"way to|what is the (?:best|right|safest) way to|best way to|"
@@ -132,6 +148,8 @@ NOT_ASKS = {
                                      r"\b(?:take|get|remove)\b.{0,10}\bhook out\b|\bunhook\w*\b|\bremov\w* (?:a |the )?"
                                      r"hook\b"),  # taking one out is the release lesson
     ("fishing", "cleaning"): re.compile(r"\bfish ?tank\b|\baquarium\b|\baquaponics\b|\bpond\b|\bfryer\b"),
+    # a car's, a truck's or a deck's finish isn't the bench's; nor an oil change
+    ("woodworking", "finishes"): re.compile(r"\b(?:car|truck|deck|floor|concrete|metal|oil change|engine)\b"),
     # a hook in a person or a pet is first aid or the vet's, never a fish's release (the Fable check)
     ("fishing", "release"): re.compile(r"\b(?:hand|finger|thumb|skin|arm|leg|ear|eye|lip|face|foot|dog|cat|puppy|horse|"
                                        r"trailer|washing machine|bra)\b"),

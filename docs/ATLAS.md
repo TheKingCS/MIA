@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1850 files, 393,187 lines; 1850 files describe themselves; 21,360 of 21,485 classes and functions are documented.
+1851 files, 393,235 lines; 1851 files describe themselves; 21,362 of 21,487 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-723 files, 205,095 lines; 10,187 of 10,266 classes and functions documented
+723 files, 205,113 lines; 10,187 of 10,266 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1022,7 +1022,7 @@
 
 ## tests/: the test suite: what each part must do
 
-717 files, 105,961 lines; 8,799 of 8,845 classes and functions documented
+718 files, 105,991 lines; 8,801 of 8,847 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1264,6 +1264,7 @@
 - `tests/test_hen_laying.py`: "Why did my hens stop laying?" (core/hen_laying.py): short winter days counted from the sun for his town with the day they're back over 14 hours, molt season by hemisphere, a young or old flock by when it came, a change in the flock first, and his log's lay rate this week against before; with no flo
 - `tests/test_his_words_reach_the_tool.py`: A calculator whose one detail is his question (canning_time, feed_mix, bleach_for_water, meat_cure) gets his own words, never the model's (core/tool_loop.his_words; live check, 2026-11-25: "how long do I pressure can quart jars of green beans?" reached canning_time with the tool's own description as
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
+- `tests/test_hobby_lessons.py`: His hobbies' courses answer their own how-tos (core/lesson_answer.py, the live sweep 2026-11-25): tuning, a chord progression, barre and power chords, the pentatonic, string bends, wood joints and finishes, progressive overload; never a car's finish or an oil change.
 - `tests/test_hobby_programs.py`: His hobbies' learning programs (DEC-0289): woodworking, gardening and homesteading, fitness, survival and bushcraft, on core/paths.py's method like guitar and carpentry; a recorded check counts from the day its stage opened. Each one's skill is a real skill, every recorded check reads a record MIA k *(1 undocumented)*
 - `tests/test_home_dashboard.py`: Unit tests for gui.home_dashboard's pure formatting helpers. The reactive widget/QTimer behavior itself is verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior), not pytest — see gui/character_panel.py's own test file for the same split.
 - `tests/test_home_link.py`: Supercharged online (DEC-0022 level 2, core/home_link.py): a phone links to MIA on the home computer with the person's own sign-in, Talk uses the computer's model, and the phone's own model answers whenever the computer can't (and MIA says which one did).
