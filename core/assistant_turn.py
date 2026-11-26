@@ -1971,7 +1971,8 @@ def _own_tool_reply(context, prompt: str):
 
         try:
             found = reminders_view.cancel_event(context, cancelling.group("what"), bool(cancelling.group("kind")),
-                                                cancelling.group("day") or "")  # None when no event of his fits
+                                                cancelling.group("day") or "",
+                                                kind=(cancelling.group("kind") or "").strip())  # None: no event fits
             if found:
                 return found
         except Exception:

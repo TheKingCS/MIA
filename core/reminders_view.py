@@ -89,11 +89,22 @@ def _words(text: str) -> set:
 _WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 
 
-def cancel_event(context, words: str, kind_said: bool, day: str = "", today: Optional[date] = None) -> Optional[str]:
+def _says_back(title: str) -> bool:
+    """Pure logic. Whether "cancel the <title>" said back would reach this title whole: plain words only, no
+    weekday or kind word at its end, nothing her routes keep for other things."""
+    return bool(re.fullmatch(r"[A-Za-z0-9' -]{2,40}", title or "")) and not re.search(
+        r"\b(?:appointment|appt|event|meeting|visit|today|tomorrow|" + "|".join(_WEEKDAYS) + r")\s*$", title, re.I) and \
+        not re.search(r"\b(?:reminders?|alarms?|subscriptions?|orders?|plans?|projects?|reports?|all|every|everything)\b",
+                      title, re.I)
+
+
+def cancel_event(context, words: str, kind_said: bool, day: str = "", today: Optional[date] = None,
+                 kind: str = "") -> Optional[str]:
     """For "cancel the dentist appointment" (the calendar conversation check, 2026-11-26), careful because it deletes:
     the calendar events whose titles hold every word (the one titled exactly that first); none, None (the model's);
-    several, which one. One event is cancelled outright only when he called it an appointment, event, meeting or
-    visit (`kind_said`) or said its whole title, it doesn't repeat, and a day he said is the day it falls on (the
+    several, which one. One event is cancelled outright, by its id, only when his words are its whole title (with the
+    kind word he said, `kind`: "the dentist appointment" for "Dentist appointment", or "Dentist"), it doesn't
+    repeat, and a day he said is the day it falls on (the
     Fable review: "remove the oil change" or "cancel the gym on Friday" had deleted an event or a whole series);
     otherwise she asks, saying the words that do it."""
     today = today or date.today()
@@ -119,16 +130,21 @@ def cancel_event(context, words: str, kind_said: bool, day: str = "", today: Opt
             or (said_day in _WEEKDAYS and on.weekday() == _WEEKDAYS.index(said_day))
         if not fits:
             return f"I don't have {event.title} on {day}: it's {when}. Say which, and I'll cancel the right one."
-    if not (kind_said or _words(event.title) == want):
-        return f"Cancel {event.title} ({when})? Say \"cancel the {event.title.lower()}\" and I'll do it."
-    return cancel(context, event.title, today)
+    title_words = _words(event.title)
+    exact = title_words == want or (kind_said and title_words == want | _words(kind))
+    if not exact:  # "cancel the team meeting" is never "Team lunch" (the Fable review): asked first
+        if _says_back(event.title):
+            return f"Cancel {event.title} ({when})? Say \"cancel the {event.title.lower()}\" and I'll do it."
+        return f"Is it {event.title} ({when})? Remove it on the Calendar page, so the right one goes."
+    return _delete(context, "event.delete", {"event_id": event.event_id}, event.title, when)
 
 
 def cancel(context, words: str, today: Optional[date] = None) -> Optional[str]:
     """For "cancel the oil reminder": the one reminder or alarm whose title holds every word he said, cancelled by
     its id through the action contract (undoable); the choice when several fit; for "all", the list and a question.
     None when no words are left to match or none fits (the model's then); with no actions engine here, where to
-    remove it. The one titled exactly his words wins over others that hold them."""
+    remove it. The one titled exactly his words wins over others that hold them, unless something of the other kind
+    (an alarm beside an event) fits too; it's deleted by its id (`_delete`)."""
     today = today or date.today()
     if re.search(r"\b(?:all|every|everything)\b", words or "", re.I):
         found = listing(context, today)
@@ -139,17 +155,25 @@ def cancel(context, words: str, today: Optional[date] = None) -> Optional[str]:
     # every word he said is in its title (never one shared word: "the oil change reminder" isn't "Change the filter")
     events = [e for e in _events(context, today) if want <= _words(e.title)]
     alarms = [a for a in _alarms(context) if want <= _words(a.label)]
-    exact = [e for e in events if _words(e.title) == want] + [a for a in alarms if _words(a.label) == want]
-    if len(exact) == 1:  # "cancel dinner" with "Dinner" and "Dinner with Sarah": the one titled exactly that
-        events = [x for x in events if x is exact[0]]
-        alarms = [x for x in alarms if x is exact[0]]
+    exact_events = [e for e in events if _words(e.title) == want]
+    exact_alarms = [a for a in alarms if _words(a.label) == want]
+    # "cancel dinner" with "Dinner" and "Dinner with Sarah": the one titled exactly that, only when nothing of the
+    # other kind fits too (an alarm "Dentist appointment reminder" beside the event "Dentist" is still asked about)
+    if len(exact_events) == 1 and not alarms:
+        events = exact_events
+    elif len(exact_alarms) == 1 and not events:
+        alarms = exact_alarms
     hits = [("event.delete", {"event_id": e.event_id}, e.title, _when(e, today)) for e in events] + \
         [("alarm.delete", {"alarm_id": a.alarm_id}, f"the {a.label} alarm", a.time) for a in alarms]
     if not hits:
         return None  # nothing it can name for sure: the model's (a maintenance task, a watch, a far-off reminder)
     if len(hits) > 1:
         return "Which one? " + "; ".join(f"{name} ({when})" for _k, _p, name, when in hits) + "."
-    kind, params, name, when = hits[0]
+    return _delete(context, *hits[0])
+
+
+def _delete(context, kind: str, params: dict, name: str, when: str) -> str:
+    """One event or alarm deleted by its id through the action contract (recorded; "undo that" brings it back)."""
     actions = getattr(context, "actions", None)
     if actions is None:
         return f"I found {name}, but I can't cancel it from here: remove it on the Calendar page."
