@@ -206,13 +206,15 @@ def summary(context) -> str:
 
 _BREAKS = re.compile(r"\bwhat (?:breaks|stops|stops working|happens|goes down) (?:if|when) (.+?)\??$")
 _NEEDS = re.compile(r"\bwhat does (.+?) (?:need|depend on|run on)\??$")
-_DOWN = re.compile(r"\bwhat (?:are you|am i) missing\b|\bwhat(?:'s| is) (?:not )?(?:running|set up|missing)\b|"
-                   r"\bwhat do you run on\b")
+# "what are you missing?" is hers; "what am I missing?" only when it says her setup (a bare one after a storm's checklist
+# is his kit's: core/her_asks, the preparedness conversation check 2026-11-26)
+_DOWN = re.compile(r"\bwhat are you missing\b|\bwhat am i missing\b(?=.*\b(?:set ?up|install\w*|running|services?|for you|"
+                   r"to run)\b)|\bwhat(?:'s| is) (?:not )?(?:running|set up)\b|\bwhat do you run on\b")
 
 
 def reply(context, text: str) -> Optional[str]:
-    """What MIA says, in code, to "what breaks if <a service> stops?", "what does <a service> need?" and "what am
-    I missing?" / "what do you run on?"; None when the words aren't for it."""
+    """What MIA says, in code, to "what breaks if <a service> stops?", "what does <a service> need?" and "what are
+    you missing?" (or "what am I missing" in her setup) / "what do you run on?"; None when the words aren't for it."""
     said = " ".join(str(text or "").lower().replace("’", "'").split())
     m = _BREAKS.search(said)
     if m:

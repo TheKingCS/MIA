@@ -16,6 +16,8 @@ freezing when one of the three nights is cold enough (`cold_nights`, core/weathe
 progress), phones and power banks charged, and "the power went out" to start the outage clock if it goes
 (core/outage.py). With no storm in three days, that's said with the days' weather.
 
+`ready_for` is "how prepared am I for a winter storm?": the checklist from his records, whatever the forecast.
+
 Facts from the forecast and his records; the model only phrases them.
 """
 
@@ -97,6 +99,13 @@ def checklist(context, forecast: dict = None) -> list[str]:
     lines.append("Charge phones and power banks. If the power goes, tell me \"the power went out\" and I'll keep "
                  "the clock on the food.")
     return lines
+
+
+def ready_for(context, kind: str = "storm") -> str:
+    """For "how prepared am I for a winter storm?" (the preparedness conversation check, 2026-11-26: a plan had
+    rambled about frost dates): the checklist from his records, whatever the forecast, with "what am I missing?"
+    after it his kit's gaps (core/her_asks)."""
+    return f"For a {kind}, from your records: " + " ".join(checklist(context)) + " Ask \"what am I missing?\" for the kit."
 
 
 def say(context, fetch=None) -> str:

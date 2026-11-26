@@ -23,6 +23,7 @@ yet" a made-up forecast). Each ask is known by its own words in her last message
   (best_time_to_fish).
 
 - after her ask for his last spring frost, a bare date ("April 20") is kept as it (core/planting_now.keep_frost);
+- after her storm checklist, "what am I missing?" is his emergency kit's gaps (core/ready_kit);
 - after one of her course replies, "what should I work on next?" is that course's next step;
 - after her own money reply (a bill marked paid, income or an expense recorded), "how much is left (after that)?"
   is the month's money after what's due.
@@ -65,6 +66,9 @@ _COURSE_SAID = re.compile(r"(?:^|\. |\n)(?:From )?(?P<prog>[A-Z][\w' ]{1,40}?)(?
                           r"this week:")
 _NEXT = re.compile(r"^\s*(?:so\s+|ok(?:ay)?,?\s+|and\s+)?(?:what(?:'s| is) next|what next|what (?:should|do) i (?:work on|do|practi[cs]e)"
                    r" next|what(?:'s| is) my next step)\s*[?.!]*\s*$", re.I)
+_AFTER_READY = re.compile(r"Charge phones and power banks|\bfrom your records: .*Drinking water|Ask \"what am I missing\?\"")
+_MISSING = re.compile(r"^\s*(?:so\s+|and\s+|ok(?:ay)?,?\s+)?(?:what am i missing|what(?:'s| is) missing|what (?:else )?do i (?:still )?"
+                      r"need|what should i (?:get|buy|add))\s*[?.!]*\s*$", re.I)
 _AFTER_CATCH = re.compile(r"\b\d+ fish logged in all\b", re.I)  # her catch replies' own words, never hours or eggs
 _GO_BACK = re.compile(r"^\s*(?:so\s+|and\s+)?(?:when(?:'s| is) (?:the )?best (?:time|day) to go (?:back|again|fishing)|when "
                       r"should (?:i|we) go (?:back|again|fishing)|when (?:can|could) (?:i|we) go back)(?: out)?(?: there)?\s*"
@@ -98,7 +102,8 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
     own thread; a board's size ("a 2 by 4") is never the build's, a fence takes its feet, and a project of that name
     already kept is said so, never added twice (the Fable review). After a catch she logged, "when's the best time to
     go back?" is the fishing times; after her money reply, "how much is left?" is the month's money; after her frost ask, a bare
-    date is his last frost; after her course reply, "what should I work on next?" is that course's next step."""
+    date is his last frost; after her course reply, "what should I work on next?" is that course's next step; after her storm
+    checklist, "what am I missing?" is his kit's gaps."""
     asked, said = str(last_reply or ""), str(prompt or "").strip()
     if not asked or not said or len(said) > 60:
         return None
@@ -135,6 +140,10 @@ def reply(context, last_reply: str, prompt: str, recent: tuple = ()) -> Optional
         kept = planting_now.keep_frost(context, said, "last")  # "April 20" after her frost ask
         if kept is not None:
             return kept
+    if _AFTER_READY.search(asked) and _MISSING.match(said):  # his kit's gaps (core/ready_kit)
+        from core import ready_kit
+
+        return ready_kit.say(context)
     course = _COURSE_SAID.search(asked) if _NEXT.match(said) else None
     if course:
         from core import paths

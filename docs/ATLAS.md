@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1920 files, 401,651 lines; 1920 files describe themselves; 21,745 of 21,891 classes and functions are documented.
+1921 files, 401,713 lines; 1921 files describe themselves; 21,746 of 21,893 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,636 lines; 10,385 of 10,464 classes and functions documented
+741 files, 210,669 lines; 10,386 of 10,465 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-769 files, 108,853 lines; 8,986 of 9,053 classes and functions documented
+770 files, 108,882 lines; 8,986 of 9,054 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1655,6 +1655,7 @@
 - `tests/test_stopwatch_format.py`: Unit tests for modules.toolbox.tools.stopwatch_tool.format_elapsed — pure formatting logic, no Qt/QApplication needed.
 - `tests/test_store_lock.py`: The server's store lock (core/store_lock.py, roadmap 2.3): released() lets go of the locks this thread holds and takes them back; a turn lets go of it while the model thinks, so another request (here /api/state) answers meanwhile; and one conversation's turns still run one after another.
 - `tests/test_storm_ready.py`: "Is a storm coming?" (core/storm_ready.py): stormy days found by their weather or gusts in the next three (a night cold enough for the pipes adds them to the list), and a checklist from his records; the forecast's gusts read when Open-Meteo gives them (core/weather.read).
+- `tests/test_storm_thread.py`: The preparedness conversation check's fixes (2026-11-26): "how prepared am I for a winter storm?" is the checklist from his records, "what am I missing?" after it his kit's gaps (it had listed MIA's own software), and her setup's "what am I missing" only when it says her setup. *(1 undocumented)*
 - `tests/test_subnet_calculator.py`: Unit tests for core.subnet_calculator — real stdlib `ipaddress` calls, not mocked (there's nothing external to fake; this is pure computation against known-correct real values).
 - `tests/test_subscriptions.py`: The "still using it?" mark on subscriptions (core/subscriptions.py, DEC-0054): which bills are subscriptions, the quiet finding for ones not checked in three months (never unprompted), Money's Still Using as bill.still_using, and the same by voice.
 - `tests/test_support_choice.py`: MIA asks which kind of support when it isn't clear (core/support_choice.py, wired through core/talk_it_out.pre_turn).

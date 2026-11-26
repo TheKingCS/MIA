@@ -1653,6 +1653,9 @@ _PRACTICED = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:practiced|practised|played
                         r"\s+(?:for\s+)?(?P<n>\d+(?:\.\d+)?|an?|half an?|one|two)\s*(?P<unit>minutes?|mins?|hours?|hrs?)"
                         r"(?:\s+on\s+(?P<on>[\w' -]{2,30}?))?(?:\s+(?:today|tonight|this morning|this evening))?\s*[.!]*\s*$",
                         re.I)
+_STORM_READY = re.compile(r"^\s*(?:hey mia,? )?(?:how (?:prepared|ready) am i|am i (?:prepared|ready)|are we (?:prepared|ready)|how "
+                          r"(?:prepared|ready) are we) for (?:a |an |the )?(?P<kind>(?:winter |ice |snow |big |bad )?storm|"
+                          r"blizzard|ice storm|hurricane|power outage|outage)\s*[?.!]*\s*$", re.I)
 _DUE_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is)|whats|what do i have) due (?:today|for today)\s*[?.!]*\s*$|"
                         r"^\s*(?:hey mia,? )?what(?:'s| is) (?:on )?(?:my )?(?:list|plate) (?:for )?today\s*[?.!]*\s*$", re.I)
 _REPORTS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|which) (?:reports|updates) (?:do|will) you (?:send|give) me|what (?:are )?"
@@ -1775,7 +1778,8 @@ def _own_tool_reply(context, prompt: str):
     projects' open needs (never a guess from his expenses), "I caught a 3 pound bass at the pond" one catch, as said (core/catch_actions.parse), "how much is left this month?" the month's records after what's due (core/money_periods.afford), "I paid the
     electric bill" that bill of his marked paid (mark_bill_paid; never twice for one time round, and "pay the electric
     bill" is what's due and how to mark it, since she pays nothing),
-    "I practiced for 30 minutes today" a session on his
+    "how prepared am I for a winter storm?" the checklist
+    from his records (core/storm_ready.ready_for), "I practiced for 30 minutes today" a session on his
     course (log_practice: the course named whole, never "guitar hero"; unnamed only as "practiced", never a day or a
     game), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
     me?" and "stop the Sunday one" her standing reports (core/standing_reports), "what's overdue?" everything
@@ -2090,6 +2094,15 @@ def _own_tool_reply(context, prompt: str):
         actions = getattr(context, "assistant_actions", None)
         if actions is not None:
             return actions.execute(context, "log_catch", caught)
+    storm = _STORM_READY.match(said)
+    if storm:  # "how prepared am I for a winter storm?": the checklist from his records (core/storm_ready.ready_for)
+        from core import storm_ready
+
+        try:
+            return storm_ready.ready_for(context, storm.group("kind").lower())
+        except Exception:
+            log.exception("Couldn't say how ready he is")
+            return None
     practiced = _PRACTICED.match(said)
     if practiced:  # a practice session on his course: the one named, else the only one started (core/paths)
         from core import paths
