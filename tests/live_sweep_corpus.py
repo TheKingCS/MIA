@@ -38,6 +38,23 @@ CORPUS = {
         "When is Thanksgiving?", "How many days until Christmas?", "What time is it?",
         "What's the square footage of a 12 by 16 shed?", "Teach me how to tie a bowline",
     ],
+    "hobbies": [
+        "What's my next guitar lesson?", "Give me a chord progression to practice", "How do I tune my guitar?",
+        "I practiced guitar for 20 minutes", "What woodworking project should I do next?",
+        "How do I sharpen a chisel?", "I want to learn to weld", "What's a good workout for today?",
+        "I did 3 sets of 10 squats at 185", "How's my training going this week?",
+    ],
+    "homestead": [
+        "How many eggs did the hens lay this week?", "I collected 8 eggs today", "Why aren't my hens laying?",
+        "How much feed do I have left?", "When should I plant garlic?", "Should I water the garden today?",
+        "It rained an inch last night", "How long will my water last?", "How do I can tomatoes?",
+        "How much firewood do I need for the winter?",
+    ],
+    "automation": [
+        "What can you do on your own?", "Remind me every Friday to check the oil",
+        "Every morning tell me the weather and my day", "Stop the morning briefing",
+        "Watch me: the Friday reset", "What are you watching for me?",
+    ],
     "conversation": [
         ["I'm thinking about getting goats", "What breed would be good for milk?", "How much space do they need?",
          "Thanks, that's helpful"],

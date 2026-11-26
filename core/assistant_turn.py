@@ -130,7 +130,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A monthly reminder (`_monthly_reminder_reply`) too, a unit conversion (`_convert_reply`) and a holiday's date
     (`_holiday_reply`), and the house's trouble (`_home_trouble_reply`), and when to fish (`_fish_when_reply`), and the
     power out (`_outage_reply`), and the small everyday answers (`_everyday_reply`), and a load's watts
-    (`_load_watts_reply`), and a bill paid, a product's stock or a debt's balance (`_records_reply`).
+    (`_load_watts_reply`), and a bill paid, a product's stock or a debt's balance (`_records_reply`), and the
+    homestead's own answers (`_own_tool_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -206,6 +207,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _outage_reply(context, prompt)  # the power out, and his readiness, as in a turn
     if walked is None:
         walked = _records_reply(context, prompt)  # "did I pay the electric bill?", "how many cutting boards?", as in a turn
+    if walked is None:
+        walked = _own_tool_reply(context, prompt)  # the hens, the garden's water, the feed, canning, as in a turn
     if walked is None:
         walked = _load_watts_reply(context, prompt)  # "my freezer uses 150 watts", as in a turn
     if walked is None:
@@ -1232,6 +1235,45 @@ def _load_watts_reply(context, prompt: str):
         return None
 
 
+# his homestead's own answers, which the model passed over (the live sweep, 2026-11-25): each read-only tool by the
+# words that are its whole question
+_OWN_TOOLS = (
+    ("why_hens_not_laying", re.compile(r"\b(?:why|how come)\b.{0,40}\b(?:hens?|chickens?|flock|girls)\b.{0,30}\b(?:not|aren'?t|"
+                                       r"isn'?t|stopped|quit|haven'?t been) laying\b|\b(?:hens?|chickens?|flock)\b.{0,15}"
+                                       r"\b(?:stopped|quit) laying\b|\b(?:why|how come)\s+(?:aren'?t|isn'?t|haven'?t|are|"
+                                       r"is)\s+(?:my|the|our)\s+(?:hens?|chickens?|flock|girls)\b.{0,20}\blaying\b", re.I),
+     False),
+    ("should_i_water", re.compile(r"^\s*(?:should|do) i (?:water|need to water)\b.{0,30}\b(?:garden|beds|plants|tomatoes|"
+                                  r"vegetables|lawn)?|\b(?:does|do) (?:the |my )?(?:garden|beds|plants) need (?:water|"
+                                  r"watering)\b", re.I), False),
+    # the flock's feed only: "how much feed is left?" alone could be any animal's (the everyday corpus)
+    ("get_eggs", re.compile(r"\bhow (?:much|many)\b.{0,15}\bfeed\b.{0,10}\b(?:do (?:i|we) have|have (?:i|we) got)\b|"
+                            r"\bhow long will (?:the |my |our )?(?:chicken |layer |hens'? )?feed last\b", re.I), True),
+    ("canning_time", re.compile(r"^\s*how (?:do|should|would) (?:i|you|we) (?:pressure |water[- ]bath )?can\b(?! i\b| you\b)|"
+                                r"^\s*how long (?:do|should) (?:i|you) (?:pressure |water[- ]bath )?(?:can|process)\b", re.I),
+     True),
+)
+
+
+def _own_tool_reply(context, prompt: str):
+    """The homestead's own read-only answers by the words that are their question (the live sweep, 2026-11-25: "why
+    aren't my hens laying?" was asked about stress, "how much feed do I have left?" asked what feed, "should I water
+    the garden?" said there was no garden, and "how do I can tomatoes?" got back "How to can tomatoes."):
+    why_hens_not_laying, should_i_water, get_eggs (its feed runway) and canning_time. None otherwise."""
+    said = prompt.replace("’", "'")
+    actions = getattr(context, "assistant_actions", None)
+    if actions is None:
+        return None
+    for name, pattern, words in _OWN_TOOLS:
+        if pattern.search(said) and name in getattr(actions, "_actions", {name: 1}):
+            try:
+                return actions.execute(context, name, {"question": said} if words else {})
+            except Exception:
+                log.exception("Couldn't run %s", name)
+                return None
+    return None
+
+
 _DEBT_ASK = re.compile(r"^\s*how much (?:is|do (?:i|we) (?:still )?owe on|is left on|do (?:i|we) have left on) (?:my|the|our) "
                        r"(?P<debt>[\w' -]+?)(?: balance)?\s*\??\s*$", re.I)
 
@@ -1567,7 +1609,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     flooded basement is said in fixed words (`_home_trouble_reply`), and when to fish from his catches
     (`_fish_when_reply`), and the power out with his own readiness (`_outage_reply`); the time, days until a holiday,
     square feet, a walk logged and an egg price are worked out in code (`_everyday_reply`); a load's watts are kept
-    (`_load_watts_reply`); a bill paid or a product's stock is read from his records (`_records_reply`). A turn the
+    (`_load_watts_reply`); a bill paid or a product's stock is read from his records (`_records_reply`); the hens,
+    the garden's water, the feed and canning go to their own tools (`_own_tool_reply`). A turn the
     model answers ends a question plan's thread
     (core/conversation_state.forget), and a reply that is only a humor example is never said.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
@@ -1717,6 +1760,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _outage_reply(context, prompt)  # the power out: the first things, then his own stores
         if walked is None:
             walked = _records_reply(context, prompt)  # a bill paid or not, a product's stock, from his records
+        if walked is None:
+            walked = _own_tool_reply(context, prompt)  # the homestead's own answers the model passed over
         if walked is None:
             walked = _load_watts_reply(context, prompt)  # a load's watts, kept for the power picture
         if walked is None:

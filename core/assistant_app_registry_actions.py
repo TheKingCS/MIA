@@ -93,7 +93,8 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
     (core/grant_actions.py says why). describe_app's "depends on" is the app's ("what does the app depend on"), never
     a bare "what depends on", which is the links tool's.
     And what_can_you_automate.
-    what_can_you_automate is reached by "automate my bills" too."""
+    what_can_you_automate is reached by "automate my bills" too.
+    what_can_you_automate is reached by "what do you do automatically?" too ("on your own" is list_grants')."""
     registry.register(AssistantAction(
         name="list_grants", domain="app_registry",
         description=("What MIA may do on her own without asking: the skills she has learned and the workflows the "
@@ -115,7 +116,7 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
         trigger_phrases=("what can you automate", "what could you automate", "what can be automated",
                          "what can i automate", "what do you do automatically", "automate for me",
                          "things you can automate", "help me automate", "automate my bill", "automate my bills",
-                         "automate bill reminders", "automate my reminders"),
+                         "automate bill reminders", "automate my reminders", "you do automatically"),
         subjects=("automate", "automation"),
     ))
     registry.register(AssistantAction(
