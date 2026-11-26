@@ -48,7 +48,8 @@ def changes(history: dict[str, list[dict]], since: str) -> tuple[list[str], list
 
 def report(now: Optional[datetime] = None, context=None) -> Optional[str]:
     """This week, in a few plain lines. None when there's nothing to say. With a context, it ends with the state of her
-    apps (DEC-0057's weekly self-check): how many are working, partly working or planned, and any that broke."""
+    apps (DEC-0057's weekly self-check): how many are working, partly working or planned, and any that broke; then
+    what she learned from him this week, as numbers only (core/learned_week.counts)."""
     from core import loops, night_school, work_tasks
 
     since = _ago(7, now)
@@ -85,6 +86,14 @@ def report(now: Optional[datetime] = None, context=None) -> Optional[str]:
         state = _apps_line(context)
         if state:
             lines.append(state)
+        try:
+            from core.learned_week import counts
+
+            learned = counts(context, now)  # what she learned from him this week, in numbers (brainstorm round 16)
+        except Exception:  # noqa: BLE001 - the report still goes without it
+            learned = ""
+        if learned:
+            lines.append(learned)
     return " ".join(lines) if lines else None
 
 

@@ -1274,6 +1274,8 @@ _HOMESTEAD_HEALTH = re.compile(r"^\s*(?:how(?:'s| is) (?:the |my |our )?homestea
                                r"on what we have))?|how long (?:could|can|would|will) i (?:last|hold out|make it) "
                                r"(?:here|at home|on what (?:we|i) have)|how many days (?:could|can|will) we last)"
                                r"\s*[?.!]*\s*$", re.I)
+_LEARNED_WEEK = re.compile(r"^\s*what(?: did you| have you|'ve you|'d you) learn(?:ed|t)? (?:(?:from|about) me )?"
+                           r"this week\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1286,7 +1288,8 @@ def _own_tool_reply(context, prompt: str):
     the garden?" said there was no garden, and "how do I can tomatoes?" got back "How to can tomatoes."):
     why_hens_not_laying, should_i_water, get_eggs (its feed runway) and canning_time; and what she may do on her own,
     her grants (list_grants). "How's the homestead?" is its days in one line (core/homestead_health), "how's my
-    money this week?" its pulse (core/money_pulse). None otherwise."""
+    money this week?" its pulse (core/money_pulse), "what did you learn this week?" the week's learning
+    (core/learned_week). None otherwise."""
     said = prompt.replace("’", "'")
     if _HOMESTEAD_HEALTH.match(said):  # "how's the homestead?": its days in one line (core/homestead_health)
         from core import homestead_health
@@ -1295,6 +1298,14 @@ def _own_tool_reply(context, prompt: str):
             return homestead_health.line(context)
         except Exception:
             log.exception("Couldn't say the homestead's health")
+            return None
+    if _LEARNED_WEEK.match(said):  # "what did you learn this week?" (core/learned_week)
+        from core import learned_week
+
+        try:
+            return learned_week.say(context)
+        except Exception:
+            log.exception("Couldn't say what she learned this week")
             return None
     if _MONEY_PULSE.match(said):  # "how's my money this week?": its pulse in a line (core/money_pulse)
         from core import money_pulse
