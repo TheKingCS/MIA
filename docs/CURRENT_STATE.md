@@ -51,7 +51,13 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   "how about water?", "and a 10 by 12?", "and until New Year's?"); a go-ahead that says to act runs her own
   'Say "..." and I'll' offer (core/conversation_state.offered_phrase, K-0501: never a bare ok, never an undo); "what
   do I need for the chili?" reads the recipe; "I'm thinking about building a chicken coop" says what she can work
-  out. 8729 passing.
+  out.
+- Business, finance and automation sweeps ("bizfin", "automate"): "can I afford $500 this month?" from this month's
+  records (core/money_periods.afford: an unpaid bill once, expected pay counted, no income logged said as can't
+  tell); a side hustle from what he has (core/side_hustle); standing reports, his questions answered on a schedule
+  (core/standing_reports: "every Sunday tell me what's due this week", kept only when her code answers it, TIMELY,
+  sealed in his folder); and no claims she can't keep ("stop reminding me" only stops one that's there, rent as a
+  bill, spending tracked automatically, "when I get paid"). 8742 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through

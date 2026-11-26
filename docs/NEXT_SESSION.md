@@ -7,6 +7,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-25 (Opus on the PC: interactive labs, the ESP32 simulator, scenario drills)*
 
+**2026-11-26: conversation, money and automation sweeps.** At the PC: "what about this month?" after a spending
+question, "and the card?", "every Sunday tell me what's due this week", "can I afford a $500 purchase this month?",
+"what's a good side hustle for me?". Waiting on Zac: Q-0019 (a fire how-to through the emergency floor).
+
 **2026-11-25, late: brainstorm round 16** (docs/future/JARVIS_BRAINSTORM.md). Built: the homestead's health line
 the Sunday money pulse, what she learned this week and his hobbies' progress. At the PC: "how's the homestead?",
 "how's my money this week?", "what did you learn this week?", "how are my hobbies going?", "what does my week look
