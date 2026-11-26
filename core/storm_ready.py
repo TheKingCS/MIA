@@ -23,6 +23,7 @@ Facts from the forecast and his records; the model only phrases them.
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from typing import Optional
 
@@ -103,9 +104,17 @@ def checklist(context, forecast: dict = None) -> list[str]:
 
 def ready_for(context, kind: str = "storm") -> str:
     """For "how prepared am I for a winter storm?" (the preparedness conversation check, 2026-11-26: a plan had
-    rambled about frost dates): the checklist from his records, whatever the forecast, with "what am I missing?"
-    after it his kit's gaps (core/her_asks)."""
-    return f"For a {kind}, from your records: " + " ".join(checklist(context)) + " Ask \"what am I missing?\" for the kit."
+    rambled about frost dates): the checklist from his records, whatever the forecast, the pipes said for a winter
+    kind and never freezing water for another, with "what am I missing?" after it his kit's gaps (core/her_asks)."""
+    lines = checklist(context)
+    winter = bool(re.search(r"\b(?:winter|ice|snow|blizzard)", kind))
+    if winter:  # no forecast to say a cold night: the pipes said anyway for a winter one (the Fable review)
+        lines.insert(1, "Keep the pipes from freezing: drip a faucet on an outside wall, open the sink cabinets, unhook "
+                        "the hoses.")
+    else:
+        lines = [line.replace("water that won't freeze or tip", "water that won't tip") for line in lines]
+    article = "an" if kind[:1].lower() in "aeiou" else "a"
+    return f"For {article} {kind}, from your records: " + " ".join(lines) + " Ask \"what am I missing?\" for the kit."
 
 
 def say(context, fetch=None) -> str:

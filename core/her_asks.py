@@ -67,7 +67,7 @@ _COURSE_SAID = re.compile(r"(?:^|\. |\n)(?:From )?(?P<prog>[A-Z][\w' ]{1,40}?)(?
 _NEXT = re.compile(r"^\s*(?:so\s+|ok(?:ay)?,?\s+|and\s+)?(?:what(?:'s| is) next|what next|what (?:should|do) i (?:work on|do|practi[cs]e)"
                    r" next|what(?:'s| is) my next step)\s*[?.!]*\s*$", re.I)
 _AFTER_READY = re.compile(r"Charge phones and power banks|\bfrom your records: .*Drinking water|Ask \"what am I missing\?\"")
-_MISSING = re.compile(r"^\s*(?:so\s+|and\s+|ok(?:ay)?,?\s+)?(?:what am i missing|what(?:'s| is) missing|what (?:else )?do i (?:still )?"
+_MISSING = re.compile(r"^\s*(?:so\s+|and\s+|ok(?:ay)?,?\s+)?(?:what am i missing|what (?:else )?do i (?:still )?"
                       r"need|what should i (?:get|buy|add))\s*[?.!]*\s*$", re.I)
 _AFTER_CATCH = re.compile(r"\b\d+ fish logged in all\b", re.I)  # her catch replies' own words, never hours or eggs
 _GO_BACK = re.compile(r"^\s*(?:so\s+|and\s+)?(?:when(?:'s| is) (?:the )?best (?:time|day) to go (?:back|again|fishing)|when "

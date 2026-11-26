@@ -5,7 +5,7 @@ core.service_map
 What MIA runs on, and what depends on what (T-0007; the personality and ecosystem plan's phase 3,
 docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md section C; beside core/self_knowledge.py, which says what she is, this
 says what she runs on), so she can answer "if Ollama stops, what breaks?", "what does
-the browser need?" and "what am I missing?" from code, never a guess.
+the browser need?" and "what are you missing?" from code, never a guess.
 
 - **`SERVICES`**: each service, device or package she relies on (the local model, the embedding and vision models,
   speech in and out, OCR, the reference packs, her browser, private search, the internet, bank sync, the phone, the
@@ -209,7 +209,7 @@ _NEEDS = re.compile(r"\bwhat does (.+?) (?:need|depend on|run on)\??$")
 # "what are you missing?" is hers; "what am I missing?" only when it says her setup (a bare one after a storm's checklist
 # is his kit's: core/her_asks, the preparedness conversation check 2026-11-26)
 _DOWN = re.compile(r"\bwhat are you missing\b|\bwhat am i missing\b(?=.*\b(?:set ?up|install\w*|running|services?|for you|"
-                   r"to run)\b)|\bwhat(?:'s| is) (?:not )?(?:running|set up)\b|\bwhat do you run on\b")
+                   r"to run)\b)|\bwhat(?:'s| is) (?:not )?(?:running|set up|missing)\b|\bwhat do you run on\b")
 
 
 def reply(context, text: str) -> Optional[str]:

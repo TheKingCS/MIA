@@ -1654,8 +1654,9 @@ _PRACTICED = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:practiced|practised|played
                         r"(?:\s+on\s+(?P<on>[\w' -]{2,30}?))?(?:\s+(?:today|tonight|this morning|this evening))?\s*[.!]*\s*$",
                         re.I)
 _STORM_READY = re.compile(r"^\s*(?:hey mia,? )?(?:how (?:prepared|ready) am i|am i (?:prepared|ready)|are we (?:prepared|ready)|how "
-                          r"(?:prepared|ready) are we) for (?:a |an |the )?(?P<kind>(?:winter |ice |snow |big |bad )?storm|"
-                          r"blizzard|ice storm|hurricane|power outage|outage)\s*[?.!]*\s*$", re.I)
+                          r"(?:prepared|ready) are we) for (?:a |an |the )?(?:big |bad )?(?P<kind>(?:winter |ice |snow )?storm|snowstorm|"
+                          r"thunderstorm|blizzard|ice storm|hurricane|tornado|power outage|outage)(?: this weekend| this week|"
+                          r" tomorrow| tonight)?\s*[?.!]*\s*$", re.I)
 _DUE_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is)|whats|what do i have) due (?:today|for today)\s*[?.!]*\s*$|"
                         r"^\s*(?:hey mia,? )?what(?:'s| is) (?:on )?(?:my )?(?:list|plate) (?:for )?today\s*[?.!]*\s*$", re.I)
 _REPORTS_LIST = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|which) (?:reports|updates) (?:do|will) you (?:send|give) me|what (?:are )?"
@@ -2099,6 +2100,10 @@ def _own_tool_reply(context, prompt: str):
         from core import storm_ready
 
         try:
+            if storm.group("kind").lower().endswith("outage"):  # the outage plan's first steps (core/outage_plan)
+                from core import outage_plan
+
+                return outage_plan.reply(context, "be ready for a power outage")
             return storm_ready.ready_for(context, storm.group("kind").lower())
         except Exception:
             log.exception("Couldn't say how ready he is")
