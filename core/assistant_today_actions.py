@@ -64,7 +64,7 @@ def due_through(context, words: str, today=None) -> str:
     """"What's due this month?" (the live sweep, 2026-11-26: it had named one thing 36 days off and left out an
     overdue bill): everything overdue now, then each day to the month's end with what falls due (core.today.week_days,
     the Dashboard's sources), alarms left out; "in the next 30 days" or "next month" (from its 1st) read too; "bills"
-    alone keeps the budget's bills (never a payday)."""
+    alone keeps the budget's bills (never a payday), with his debts' minimums not yet paid this month."""
     import calendar
     import re
     from datetime import timedelta
@@ -91,9 +91,31 @@ def due_through(context, words: str, today=None) -> str:
             i.get("module_id") == "budget" and str(i.get("title", "")).startswith("Pay ")))]
         if items:
             found.append(dict(d, items=items))
+    minimums = _minimums_due(context, today) if only_bills and first is None else ""
     if not found:
-        return "Nothing's due " + ("in that time." if days > 7 else "for the rest of the month.")
-    return describe_week(found, today)
+        return ("Nothing's due " + ("in that time." if days > 7 else "for the rest of the month.") if not minimums
+                else minimums)
+    return describe_week(found, today) + (f" {minimums}" if minimums else "")
+
+
+def _minimums_due(context, today) -> str:
+    """His household debts' minimums not paid yet this month (core/money_periods.afford counts them too), in one line;
+    "" when none (the Fable review: "what bills are still due?" had left them out)."""
+    try:
+        from core import money_ahead
+        from core.money_periods import _household
+        from core.region import money
+
+        _bills, _incomes, debts = (_household(r) for r in money_ahead._records(context))
+    except Exception:  # noqa: BLE001
+        return ""
+    month = today.strftime("%Y-%m")
+    owed = [(d.name, float(d.minimum_payment)) for d in debts
+            if float(d.minimum_payment or 0) > 0 and float(d.balance or 0) > 0
+            and not str(getattr(d, "last_payment_date", "") or "").startswith(month)]
+    if not owed:
+        return ""
+    return "Debt minimums still to pay this month: " + ", ".join(f"{n} {money(a)}" for n, a in owed) + "."
 
 
 def _action_get_weather(context, arguments: dict) -> str:

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1916 files, 401,150 lines; 1916 files describe themselves; 21,725 of 21,871 classes and functions are documented.
+1916 files, 401,230 lines; 1916 files describe themselves; 21,727 of 21,873 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,355 lines; 10,380 of 10,459 classes and functions documented
+741 files, 210,411 lines; 10,381 of 10,460 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-765 files, 108,633 lines; 8,971 of 9,038 classes and functions documented
+765 files, 108,657 lines; 8,972 of 9,039 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1425,7 +1425,7 @@
 - `tests/test_module_validator.py`: Unit tests for core.module_validator.validate_module_folder.
 - `tests/test_momentum.py`: Natural Momentum (core/momentum.py, DEC-0148): runs of things done found in the history, what they have in common said as counts once there are enough, what tends to follow what, whether the person is in flow (and the gate holding her non-urgent messages then), one easy start in their usual hour, an
 - `tests/test_money_ahead.py`: The next 13 weeks of money (core/money_ahead.py, brainstorm 6.1): bills, income and debt minimums by week from his budget, the tight weeks worst first, every overdue and late one said now, a debt never counted twice (paid this month, or already a bill), never a bank balance it can't know. *(2 undocumented)*
-- `tests/test_money_left.py`: The money conversation check's fixes (2026-11-26): "how much is left this month?" from the month's records (the model had made up a starting balance), "can I afford a $300 chainsaw?" reaching the afford check, and "what bills are still due?" the month's due list.
+- `tests/test_money_left.py`: The money conversation check's fixes (2026-11-26): "how much is left this month?" from the month's records (the model had made up a starting balance), "can I afford a $300 chainsaw?" reaching the afford check, and "what bills are still due?" the month's due list with the debts' minimums; "I paid the
 - `tests/test_money_periods.py`: Money over a period in code (core/money_periods.py, the live sweep 2026-11-26): spending in a period with its top categories, the biggest category, the shop's month; and plan answers never say "the fact sheet". *(1 undocumented)*
 - `tests/test_money_pulse.py`: The money pulse (core/money_pulse.py, 2026-11-25): the category drifting furthest over its usual pace, what's due in the next seven days and the tightest week ahead, from his own budget; said on Sundays once a week through the gate, and on "how's my money this week?". *(5 undocumented)*
 - `tests/test_month_vs.py`: This month against last (core/money_periods.compare, brainstorm round 19): to the same day, last month's whole beside it, the categories that moved most, or one category's own.

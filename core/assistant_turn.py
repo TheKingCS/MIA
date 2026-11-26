@@ -1542,12 +1542,21 @@ _THINKING_OF_BUILDING = re.compile(r"^\s*(?:hey mia,? )?(?:i'?m|i am|we'?re|we a
 _SAID_AS = {"stairs": "set of stairs", "steps": "set of steps", "shelving": "shelving unit", "shelves": "set of shelves",
             "compost": "compost bin", "stringer": "set of stair stringers"}
 _AFFORD_ONCE = re.compile(r"^\s*(?:hey mia,? )?can (?:i|we) afford (?:to (?:spend|buy|get) )?(?:a |an )?\$\s?(?P<amount>\d[\d,]*"
-                          r"(?:\.\d{1,2})?)(?:\s+(?!this month\b|right now\b|now\b|today\b|a month\b|monthly\b|per\b|each\b|"
-                          r"every\b)(?:on (?:a |an )?)?[a-z][\w' -]{1,30}?)?(?:\s+(?:this month|right now|now|today))?\s*[?.!]*\s*$",
+                          r"(?:\.\d{1,2})?)(?!.*\b(?:(?:a|per|each|every) (?:week|month|year)|weekly|monthly|yearly|payments?|"
+                          r"subscriptions?|rent)\b)(?:\s+(?!this month\b|right now\b|now\b|today\b|a month\b|monthly\b|"
+                          r"per\b|each\b|every\b)(?:on (?:a |an )?)?[a-z][\w' -]{1,30}?)?(?:\s+(?:this month|right now|now|today))?\s*[?.!]*\s*$",
                           re.I)  # "a $300 chainsaw" too (the money conversation check); never a monthly cost
-_MONEY_LEFT = re.compile(r"^\s*(?:and\s+|so\s+|ok(?:ay)?,?\s+)?(?:how much (?:money )?(?:is|do (?:i|we) have|have (?:i|we) got) "
-                         r"left(?: over)?|what(?:'s| is) left)(?:\s+(?:this month|for the month|after that|after (?:the |my |"
-                         r"those )?bills|to spend))*\s*[?.!]*\s*$", re.I)
+# "pay the electric bill", "I paid the electric bill", "mark the water bill paid": one of his bills marked paid
+# (mark_bill_paid), only a bill of his by its whole name (the money conversation check: the model had once asked for
+# the bill's amount to add it)
+_BILL_PAID = re.compile(r"^\s*(?:hey mia,? )?(?:ok(?:ay)?,?\s+)?(?:please\s+)?(?:(?:i\s+)?(?:just\s+)?paid|pay|mark)\s+(?:the |my |our )?"
+                        r"(?P<name>[\w&' -]{2,30}?)(?: bill)?(?: as)?(?: paid)?(?: today| this month)?\s*[.!]*\s*$", re.I)
+# "how much is left this month?": a money word or a money period said; a bare "how much is left?" is money only after
+# her own money reply (core/her_asks), never after a feed or a loan question (the Fable review)
+_MONEY_LEFT = re.compile(r"^\s*(?:hey mia,? )?(?:and\s+|so\s+|ok(?:ay)?,?\s+)?(?:how much money (?:is|do (?:i|we) have|have (?:i|we) "
+                         r"got) left(?: over)?(?:\s+(?:this month|for the month|after (?:the |my |those )?bills|to spend))*|"
+                         r"(?:how much (?:is|do (?:i|we) have|have (?:i|we) got) left(?: over)?|what(?:'s| is) left)(?:\s+(?:this "
+                         r"month|for the month|after (?:the |my |those )?bills|to spend|in the budget))+)\s*[?.!]*\s*$", re.I)
 _SIDE_HUSTLE = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| would be) a good side (?:hustle|business|gig|income)(?: for "
                           r"me)?|how (?:can|could) i (?:make|earn) (?:some )?(?:extra|side) (?:money|income|cash)|"
                           r"what (?:side hustle|side business) (?:should|could) i (?:do|start|try))\s*[?.!]*\s*$", re.I)
@@ -1709,7 +1718,8 @@ def _own_tool_reply(context, prompt: str):
     something" a lesson from her own courses (core/teach_something), "did I spend more this month than last month?" the
     months side by side (core/money_periods.compare), "what's my best-selling product?" by units sold
     (core/money_periods.best_sellers), "what do I need from the hardware store?" his
-    projects' open needs (never a guess from his expenses), "I caught a 3 pound bass at the pond" one catch, as said (core/catch_actions.parse), "how much is left this month?" the month's records after what's due (core/money_periods.afford),
+    projects' open needs (never a guess from his expenses), "I caught a 3 pound bass at the pond" one catch, as said (core/catch_actions.parse), "how much is left this month?" the month's records after what's due (core/money_periods.afford), "I paid the
+    electric bill" that bill of his marked paid (mark_bill_paid),
     "what's overdue?" everything
     overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
@@ -1787,6 +1797,18 @@ def _own_tool_reply(context, prompt: str):
     if _REMEMBER_TALK.match(said):  # "do you remember what I told you yesterday?": her own record of it
         return _run_own(context, "list_past_conversations", {"question": said})
     low = said.lower()
+    paid_bill = _BILL_PAID.match(said)
+    budget = getattr(context, "budget", None)
+    if paid_bill and budget is not None and hasattr(budget, "all_bills") and not re.search(r"\$|\d", said):
+        from core.assistant_tools import by_name
+
+        try:
+            bill = by_name(budget.all_bills(), paid_bill.group("name")) or by_name(budget.all_bills(),
+                                                                                   paid_bill.group("name") + " bill")
+            if bill is not None:
+                return context.assistant_actions.execute(context, "mark_bill_paid", {"name": bill.name})
+        except Exception:
+            log.exception("Couldn't mark the bill paid")
     if _MONEY_LEFT.match(said):  # "how much is left this month?": the month's records (core/money_periods.afford)
         from core import money_periods
 
