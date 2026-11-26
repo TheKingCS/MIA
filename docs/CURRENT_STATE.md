@@ -92,7 +92,11 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
 - The skills live sweep's fixes: new lessons for tying down a load (bushcraft knots), the chainsaw (carpentry: running
   it, filing the chain) and storing roots (each crop's curing and keeping temperatures; never sweet potatoes); garlic
   from his first fall frost (core/planting_now.say_garlic); a week-long outage asked ahead is the outage plan; "the
-  sheet shows" said as his records. Fable-reviewed. 8799 passing.
+  sheet shows" said as his records. Fable-reviewed.
+- "Should I form an LLC?" is a business lesson (sole proprietor or LLC, insurance first). A build she offers is kept
+  up across turns (core/her_asks: "a 10 by 12" is its materials, "add it to my projects" adds it once), her offer's
+  own "materials for ..." words now reach the calculators, and a claim of a change to any of his records (a project,
+  an expense) is caught when nothing was done. Fable-reviewed. 8804 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
