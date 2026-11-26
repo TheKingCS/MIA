@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1870 files, 396,048 lines; 1870 files describe themselves; 21,515 of 21,651 classes and functions are documented.
+1872 files, 396,289 lines; 1872 files describe themselves; 21,525 of 21,663 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-731 files, 207,056 lines; 10,278 of 10,357 classes and functions documented
+732 files, 207,222 lines; 10,283 of 10,362 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -731,6 +731,7 @@
 - `core/workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092; `docs/ACAF_REVIEW.md` section 6): something done again and again, written as a specification, not code. A trigger (every day, week or month, or, DEC-0293, an event in his history: `{"on": "bill_paid"}`, run for each new one by `run_on_events`; one from som
 - `core/workout_actions.py`: Every change the Workout screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: exercises (add, edit, delete) and logging a session the way the concept's form does (an exercise, reps, sets, weight, how long, notes). Workout templates are gone (Zac, 2026-10-16):
 - `core/workout_manager.py`: MIA's Workout Module — an exercise library, named workout templates, logged sessions (sets/reps/weight, real elapsed time from a live session's own stopwatch), personal records, and per-exercise progress.
+- `core/workout_today.py`: "What's a good workout for today?" (the live sweep, 2026-11-26: it had said it couldn't suggest one), answered in code from his own training: the muscle group he's rested longest over the last LOOKBACK_DAYS (by his exercises' categories, grouped PUSH, PULL, LEGS and CORE), his own exercises for it w
 - `core/workshop_machine.py`: WorkshopMachine: the interface every controllable workshop-hardware device (laser engraver, CNC, 3D printer, ...) implements, plus WorkshopMachineRegistry holding whichever machines are actually registered. This reconciles a real architecture question from MIA Home's expanded-scope handoff doc (`doc
 - `core/world_intel.py`: World Intelligence's store and its watch runs (DEC-0170, DEC-0171; the plan is `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, phase W1).
 - `core/world_intel_actions.py`: World Intelligence's actions (DEC-0170, core/world_intel.py) on the action contract: proposed in plain words, approved, run, undoable (every one writes world_intel.json or the person's settings through the atomic write).
@@ -1030,7 +1031,7 @@
 
 ## tests/: the test suite: what each part must do
 
-729 files, 106,830 lines; 8,863 of 8,920 classes and functions documented
+730 files, 106,905 lines; 8,868 of 8,927 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1751,6 +1752,7 @@
 - `tests/test_workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092, core/workflows.py): a trigger and steps from a fixed vocabulary, approved once for exactly what they list, messages only through the gate, adds through actions, every run logged, and a real run (never a dry one) kept in the run book (UI-1).
 - `tests/test_workout_manager.py`: Unit tests for core.workout_manager. Isolates _DATA_DIR/the three per-record-type file constants into a tmp_path scratch area, same monkeypatch pattern as test_kitchen_manager.py's isolated_paths.
 - `tests/test_workout_module.py`: Unit tests for modules.workout.module's pure formatters — no Qt event loop needed, same shape as tests/test_kitchen_module.py. format_elapsed()'s own tests mirror tests/test_stopwatch_format.py's exact shape (a deliberately-duplicated, independently-owned copy — see module docstring for why).
+- `tests/test_workout_today.py`: "What's a good workout for today?" (core/workout_today.py, the live sweep 2026-11-26): the group he's rested longest, his own exercises for it with last time and a small step up, his saved workout for it; a starter with no history; "what should I train today?" reaches it in code. *(2 undocumented)*
 - `tests/test_workshop_machine.py`: Unit tests for core.workshop_machine — same shape as tests/test_calculator_engine.py, since WorkshopMachineRegistry is deliberately modeled on CalculatorEngine's registry pattern (see that module's docstring for why). LaserEngraverMachine's own tests confirm it behaves as a real, honest stub — repor
 - `tests/test_workshop_module.py`: Unit tests for modules.workshop.module's pure formatting logic — no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test. format_component_row() covers Components (the original tab); format_material_row()/format_job_row() format_product_row()/format_revenue_row()/fo
 - `tests/test_world_intel.py`: World Intelligence, phase W1 (DEC-0170; core/world_intel.py, core/world_sources.py, core/world_intel_actions.py, core/web_world_intel.py): a watch's words are matched phrase by phrase; the same find is kept once however it's linked; a run reads each source through its kind's adapter and records one 

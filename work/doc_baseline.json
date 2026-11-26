@@ -35,6 +35,7 @@
   "tests/test_ual.py": 1,
   "tests/test_unusual.py": 1,
   "tests/test_weather_watch.py": 2,
-  "tests/test_workflow_events.py": 5
+  "tests/test_workflow_events.py": 5,
+  "tests/test_workout_today.py": 2
  }
 }

@@ -10,6 +10,9 @@ missions from the practice log. Safety first; never a claim of certification.
 Written from: Albert Jackson and David Day, The Complete Manual of Woodworking (Knopf); Leonard Lee, The Complete Guide
 to Sharpening (Taunton); US Forest Products Laboratory, Wood Handbook (FPL-GTR-282, wood movement and moisture);
 OSHA 29 CFR 1910.213 (woodworking machinery). Its XP goes to the Woodworking skill.
+
+"What woodworking project should I do next?" is `next_project`: on the course, where he is and its piece; off it,
+the first pieces and the shop's workbench.
 """
 
 from __future__ import annotations
@@ -122,3 +125,27 @@ PROGRAM = register(Program(
     "sawing and joinery, to finishing a first piece.",
     ("woodworking", "woodwork", "joinery", "furniture making", "sharpening chisels", "fine woodworking"), STAGES,
     plan=(30, 3)))
+
+
+FIRST_PIECES = ("a cutting board (glue-up, flattening and a food-safe oil)", "a box with rabbet or finger joints",
+                "a step stool with mortise and tenon legs")
+
+
+def next_project(context) -> str:
+    """For "what woodworking project should I do next?" (the live sweep, 2026-11-26: a generic answer): on the
+    course, where he is in it and the piece for that stage; off it, the course's first pieces (small, with real
+    joints, finished start to end) and the workbench, bookshelf or picnic table worked out at his size (core/build_calcs, the
+    material_list tool)."""
+    from core import paths
+
+    book = getattr(context, "paths", None)
+    started = book is not None and book.path(PROGRAM.id) is not None
+    if started:
+        stage = paths.stage_of(book, PROGRAM)
+        piece = ("Your piece for it: " + FIRST_PIECES[0] + ", then " + FIRST_PIECES[1] + "." if stage.number < 3 else
+                 "Your piece: " + "; or ".join(FIRST_PIECES) + ", start to end, with notes on what you'd change.")
+        return paths.next_step(book, PROGRAM) + " " + piece
+    return ("Something small with real joints, finished start to end: " + "; ".join(FIRST_PIECES) + ". Bigger, a "
+            "workbench, a bookshelf or a picnic table: say \"materials for a 6 foot workbench\" and I'll work out "
+            "the cut list at your size. Say \"start "
+            "woodworking\" and I'll take you through it from a sharp edge to a first piece.")

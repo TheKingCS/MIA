@@ -1328,6 +1328,15 @@ _REMEMBER_TALK = re.compile(r"^\s*(?:hey mia,? )?(?:do you |can you |did you )?r
                             r"talked about)(?: (?:yesterday|last night|last time|earlier|the other day))?\s*[?.!]*\s*$|"
                             r"^\s*what did (?:we talk about|i tell you)(?: (?:yesterday|last night|last time|earlier))?"
                             r"\s*[?.!]*\s*$", re.I)
+_WORKOUT_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is) (?:a )?good workout(?: for)? today|what (?:should|do) i "
+                             r"(?:work out|train|lift|hit|do at the gym)(?: today| tonight)?|what workout should i do"
+                             r"(?: today| tonight)?|(?:give me |suggest )?a workout for today|what(?:'s| is) (?:my |the )?"
+                             r"workout (?:for )?today)\s*[?.!]*\s*$", re.I)
+_WOOD_NEXT = re.compile(r"^\s*(?:hey mia,? )?(?:what (?:woodworking )?project should i (?:do|build|make|try)(?: next)?"
+                         r"(?: in the shop| in woodworking| with wood)?|what(?:'s| is) a good (?:first )?woodworking "
+                         r"project|what should i build in (?:the|my) shop(?: next)?|(?:give me |any )?woodworking "
+                         r"project ideas?|what woodworking project (?:should i|to) (?:do|build|make|try)(?: next)?)"
+                         r"\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1357,7 +1366,9 @@ def _own_tool_reply(context, prompt: str):
     my week look like?" the week with its look-ahead (get_week), "we're out of milk" the grocery list
     (add_grocery_item, never the pantry; only for groceries: food and household words, or what's in
     his pantry or on his list, never "out of the woods", "out of hope" or "out of diesel": `_groceries`), "do you remember what I told
-    you yesterday?" her record of it (list_past_conversations), "tell me when..." a watch from his whole sentence
+    you yesterday?" her record of it (list_past_conversations), "what's a good workout for today?" his own next
+    workout (core/workout_today), "what woodworking project should I do next?" his next piece
+    (core/woodworking.next_project; "for the shop", the business's, stays make_next's), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
     said = prompt.replace("’", "'")
@@ -1415,6 +1426,22 @@ def _own_tool_reply(context, prompt: str):
         return _run_own(context, "add_grocery_item", {"items": out.group(1).strip(), "question": said})
     if _REMEMBER_TALK.match(said):  # "do you remember what I told you yesterday?": her own record of it
         return _run_own(context, "list_past_conversations", {"question": said})
+    if _WOOD_NEXT.match(said) and ("wood" in said.lower() or "shop" in said.lower()):  # his next piece
+        from core import woodworking
+
+        try:
+            return woodworking.next_project(context)
+        except Exception:
+            log.exception("Couldn't say the next woodworking project")
+            return None
+    if _WORKOUT_TODAY.match(said):  # "what's a good workout for today?": from his own training (core/workout_today)
+        from core import workout_today
+
+        try:
+            return workout_today.say(context)
+        except Exception:
+            log.exception("Couldn't say today's workout")
+            return None
     if _MY_WEEK.match(said):  # "what does my week look like?": the week and its look-ahead (get_week, core/week_ahead)
         actions = getattr(context, "assistant_actions", None)
         if actions is not None and "get_week" in getattr(actions, "_actions", {"get_week": 1}):
