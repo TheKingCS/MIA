@@ -1366,6 +1366,10 @@ _REMINDER_CANCEL = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:cancel|delete|
 _GREETING = re.compile(r"^\s*(?:good (?:morning|afternoon|evening)|morning|hi|hello|hey|howdy|yo)(?:,? (?:mia|there))?"
                        r"\s*[.!]*\s*$", re.I)
 _YESTERDAY = re.compile(r"^\s*(?:hey mia,? )?what did (?:i|we) (?:do|get done|accomplish) yesterday\s*[?.!]*\s*$", re.I)
+_DUE_MONTH = re.compile(r"^\s*(?:hey mia,? )?what(?:'s| is| bills are| bills do i have| do i have) (?:due|coming due|"
+                        r"coming up)(?: for)? (?:this month|the rest of the month|in the next (?:30|thirty) days|next "
+                        r"month|this coming month)\s*[?.!]*\s*$|^\s*what bills are due (?:this month|the rest of the "
+                        r"month)\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1402,7 +1406,8 @@ def _own_tool_reply(context, prompt: str):
     (core/money_periods; only when what follows is a period: "at Costco last month" is the model's), "should I pay
     off the card or the truck first?" his own debts compared (get_debt_payoff_plan), his reminders listed and one
     cancelled by its words (never all on one sentence), "good morning" back in kind with the day, and "what did I do
-    yesterday?" (core/reminders_view), "tell me when..." a watch from his whole sentence
+    yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
+    (core/assistant_today_actions.due_through), "tell me when..." a watch from his whole sentence
     when core/condition_watch can read it (watch_condition) and "what are you watching?" every watch (list_watches),
     "what do I need for my trip?" tomorrow's trip before he goes (core/trip_eve). None otherwise."""
     said = prompt.replace("’", "'")
@@ -1501,6 +1506,14 @@ def _own_tool_reply(context, prompt: str):
                 return found
         except Exception:
             log.exception("Couldn't answer about reminders")
+            return None
+    if _DUE_MONTH.match(said):  # "what's due this month?": the month to its end, overdue first (get_week's sources)
+        from core.assistant_today_actions import due_through
+
+        try:
+            return due_through(context, said)
+        except Exception:
+            log.exception("Couldn't say what's due this month")
             return None
     if _WOOD_NEXT.match(said) and ("wood" in low or ("shop" in low and "next" not in low)):  # his next piece
         from core import woodworking

@@ -60,6 +60,35 @@ def _action_get_week(context, arguments: dict) -> str:
     return said + (" Looking ahead: " + " ".join(ahead) if ahead else "")
 
 
+def due_through(context, words: str, today=None) -> str:
+    """"What's due this month?" (the live sweep, 2026-11-26: it had named one thing 36 days off and left out an
+    overdue bill): everything overdue now, then each day to the month's end with what falls due (core.today.week_days,
+    the Dashboard's sources), alarms left out; "in the next 30 days" or "next month" read too; "bills" alone keeps the
+    budget's."""
+    import calendar
+    import re
+
+    from core.today import is_alarm, week_days
+
+    today = today or date.today()
+    said = (words or "").lower()
+    if re.search(r"\bnext (?:30|thirty) days\b|\bnext month\b|\bcoming month\b", said):
+        days = 31 if "next month" not in said else (calendar.monthrange(today.year, today.month)[1] - today.day + 1
+                                                    + calendar.monthrange(today.year + (today.month == 12),
+                                                                          today.month % 12 + 1)[1])
+    else:
+        days = calendar.monthrange(today.year, today.month)[1] - today.day + 1
+    only_bills = bool(re.search(r"\bbills?\b", said))
+    found = []
+    for d in week_days(context, today, days=days):
+        items = [i for i in d["items"] if not is_alarm(i) and (not only_bills or i.get("module_id") == "budget")]
+        if items:
+            found.append(dict(d, items=items))
+    if not found:
+        return "Nothing's due " + ("in that time." if days > 7 else "for the rest of the month.")
+    return describe_week(found, today)
+
+
 def _action_get_weather(context, arguments: dict) -> str:
     """Tool get_weather: the weather in the person's town (core.weather), for the days his words name (Saturday, the
     weekend, the day after tomorrow, this week: core.weather.say_days), else now, today and tomorrow."""

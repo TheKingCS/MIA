@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1878 files, 397,051 lines; 1878 files describe themselves; 21,561 of 21,702 classes and functions are documented.
+1879 files, 397,131 lines; 1879 files describe themselves; 21,564 of 21,705 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-734 files, 207,731 lines; 10,304 of 10,383 classes and functions documented
+734 files, 207,773 lines; 10,305 of 10,384 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1033,7 +1033,7 @@
 
 ## tests/: the test suite: what each part must do
 
-734 files, 107,158 lines; 8,883 of 8,945 classes and functions documented
+735 files, 107,196 lines; 8,885 of 8,947 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1203,6 +1203,7 @@
 - `tests/test_doc_freshness.py`: Documentation that keeps up with the code (core/doc_freshness.py, DEC-0110): a definition whose code changed while its docstring didn't is found, changed parameters most of all; a docstring edit, moved code or an added decorator is not; a file's opening is asked about only when public definitions co
 - `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current.
 - `tests/test_drills.py`: Scenario drills (core/drills.py): every drill well formed (one best choice a question, a lesson its course has); a drill run by voice from its start to its summary, the place riding in MIA's own message; answers by letter or by ordinal, "stop the drill", and words that aren't a drill (a drill bit, a
+- `tests/test_due_month.py`: "What's due this month?" (core/assistant_today_actions.due_through, the live sweep 2026-11-26): overdue first, then each day to the month's end, alarms out; "bills" keeps the budget's; the words reach it in code.
 - `tests/test_dungeon_master.py`: Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is committed to the store; the turn records a fictional event (DEC-0137), never real
 - `tests/test_eggs_span.py`: "How many eggs last week?" (core/assistant_goods_actions.py get_eggs): last week, this month and last month read from his words (a follow-up's own first) and counted from the flock's log, both ends counted.
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
