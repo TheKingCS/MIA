@@ -13,6 +13,9 @@ sheet's words). From his own records:
 - `compare`: this month so far against last month at the same day, and last month whole, with the categories
   that moved most, or one category's (brainstorm round 19: "did I spend more this month than last month?" got "I
   don't have last month's spending").
+- `best_sellers`: his products by units sold in the period (this year when none is said), from the ledger's sales
+  tied to a product, with the money each brought in (the live sweep, 2026-11-26: "what's my best-selling product?"
+  had been judged by what's in stock).
 - `afford`: a purchase once against this month's logged income, spending and what's still due (never a bank
   balance: none is linked).
 
@@ -183,6 +186,35 @@ def compare(context, category: str = "", today: Optional[date] = None) -> str:
             f"{c} ({'up' if now.get(c, 0) > then.get(c, 0) else 'down'} {_money(abs(now.get(c, 0) - then.get(c, 0)))})"
             for c in moved) + "."
     return head
+
+
+def best_sellers(context, words: str = "", today: Optional[date] = None) -> str:
+    """His products by units sold in the period (this year when none is said), the money each brought in beside it,
+    from the ledger's sales tied to a product; the top three. Stock is never taken for sales."""
+    today = today or date.today()
+    start, end, label = period(words, today) or (today.replace(month=1, day=1), today, "this year")
+    ledger = getattr(context, "ledger", None)
+    if ledger is None:
+        return "The workshop ledger isn't on this MIA."
+    s, e = start.isoformat(), end.isoformat()
+    units, money_in = {}, {}
+    for entry in ledger.all_revenue():
+        if entry.product_id and s <= (entry.date or "")[:10] <= e:
+            units[entry.product_id] = units.get(entry.product_id, 0) + (entry.quantity_sold or 0)
+            money_in[entry.product_id] = money_in.get(entry.product_id, 0) + (entry.amount or 0)
+    if not units:
+        return (f"No sales tied to a product {label}, so I can't say what sells best. Tell me when you sell (\"I sold "
+                f"2 cutting boards for $80\") and I'll keep count.")
+    products = getattr(context, "products", None)
+
+    def name(pid: str) -> str:
+        """The product's name, or that it's no longer on the list."""
+        found = products.get_product(pid) if products is not None and hasattr(products, "get_product") else None
+        return found.name if found is not None else "a product no longer listed"
+
+    ranked = sorted(units, key=lambda pid: (-units[pid], -money_in[pid]))
+    said = [f"{name(pid)}: {units[pid]:g} sold, {_money(money_in[pid])}" for pid in ranked[:3]]
+    return f"Your best seller {label} is " + said[0] + (". Then " + "; ".join(said[1:]) if len(said) > 1 else "") + "."
 
 
 def afford(context, amount: float, today: Optional[date] = None) -> str:

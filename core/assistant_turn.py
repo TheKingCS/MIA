@@ -1553,6 +1553,10 @@ _MONTH_VS = re.compile(r"^\s*(?:hey mia,? )?(?=.*\b(?:spend|spent|spending)\b)(?
                        r"versus|compared? (?:to|with)|against|and|to)\s+(?:i did\s+|what i spent\s+)?last month\s*[?.!]*\s*$|^\s*(?:hey mia,? )?"
                        r"(?:my )?(?P<cat2>[\w&' -]{2,30}?)(?: spending)? this month (?:vs\.?|versus|compared (?:to|with)) "
                        r"last month\s*[?.!]*\s*$", re.I)
+_BEST_SELLER = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| are) (?:my )?(?:best[- ]sell(?:ing|er)s?|top[- ]sell(?:ing|er)s?)"
+                          r"(?: products?| items?)?|what (?:sells|sold) (?:the )?best|which (?:of my )?products? (?:sells?|sold) "
+                          r"(?:the )?(?:best|most))(?P<when> this (?:year|month|week)| last (?:year|month|week)| in \w+)?"
+                          r"\s*[?.!]*\s*$", re.I)
 _HARDWARE_NEEDS = re.compile(r"^\s*(?:hey mia,? )?(?:what do (?:i|we) (?:need|have to get|need to (?:get|buy|pick up)) (?:from|at) "
                              r"(?:the )?(?:hardware store|lumber ?yard|lowe'?s|home depot|menards|tractor supply|farm store)|"
                              r"what (?:do|does) (?:i|we|my projects?) (?:still )?need (?:to buy )?for (?:my|our|the) projects?)"
@@ -1669,7 +1673,8 @@ def _own_tool_reply(context, prompt: str):
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation (to finish the shed)" his own reasons and one small step (core/motivation), "teach me
     something" a lesson from her own courses (core/teach_something), "did I spend more this month than last month?" the
-    months side by side (core/money_periods.compare), "what do I need from the hardware store?" his
+    months side by side (core/money_periods.compare), "what's my best-selling product?" by units sold
+    (core/money_periods.best_sellers), "what do I need from the hardware store?" his
     projects' open needs (never a guess from his expenses), "what's overdue?" everything overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
     (core/project_status.whole_cost), "how's the shed coming along?" that project's picture
@@ -1919,6 +1924,15 @@ def _own_tool_reply(context, prompt: str):
             return money_periods.compare(context, category)
         except Exception:
             log.exception("Couldn't compare the months")
+            return None
+    best = _BEST_SELLER.match(said)
+    if best:  # "what's my best-selling product?": units sold from the ledger, never stock (core/money_periods)
+        from core import money_periods
+
+        try:
+            return money_periods.best_sellers(context, best.group("when") or "")
+        except Exception:
+            log.exception("Couldn't say his best seller")
             return None
     if _HARDWARE_NEEDS.match(said):  # "what do I need from the hardware store?": his projects' open needs
         try:

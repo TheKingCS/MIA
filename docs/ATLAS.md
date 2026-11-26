@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1906 files, 400,288 lines; 1906 files describe themselves; 21,701 of 21,847 classes and functions are documented.
+1907 files, 400,369 lines; 1907 files describe themselves; 21,704 of 21,850 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-740 files, 209,861 lines; 10,375 of 10,454 classes and functions documented
+740 files, 209,907 lines; 10,376 of 10,455 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1039,7 +1039,7 @@
 
 ## tests/: the test suite: what each part must do
 
-756 files, 108,265 lines; 8,952 of 9,019 classes and functions documented
+757 files, 108,300 lines; 8,954 of 9,021 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1095,6 +1095,7 @@
 - `tests/test_bench_designs.py`: "Build me a ..." on My Bench (core/bench_designs.py): every design passes the bench's own check on the ESP32, the Mega and the Nano; a design lists only the parts its wiring for that board uses (the Arduino's tank gauge has no divider), with what his Component DB has; its sketch is filled in for the
 - `tests/test_benchmarks.py`: The weekly benchmarks (build plan step 5, core/benchmarks.py): graded by code against the run before, kept as grades only (never an answer), read by the answers.* loops.
 - `tests/test_best_customers.py`: Who his best customers are (core/best_customers.py): ranked by what's been paid on their orders (cancelled ones left out), each one's share, the regulars with no order in six months named as gone quiet, a customer with no orders not ranked, nobody with an order still open called quiet, a payment two
+- `tests/test_best_sellers.py`: "What's my best-selling product?" by units sold from the ledger's product sales (core/money_periods.best_sellers, the live sweep 2026-11-26: it had been judged by what's in stock).
 - `tests/test_bleach_for_water.py`: How much bleach makes water safe to drink, by voice (bleach_for_water): the EPA's dose worked out in code (core/eng_calcs.py), the water read in gallons, liters or quarts, the strength when he says it, both common strengths when he doesn't, a strength that isn't for drinking water refused, and "how 
 - `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved; also the six startup sounds to choose from and the Settings choice that picks one (or Off) (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exerc
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP); and the same by voice (core/assistant_game_actions.py).
