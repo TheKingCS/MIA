@@ -1514,9 +1514,10 @@ _REMEMBER_TALK = re.compile(r"^\s*(?:hey mia,? )?(?:do you |can you |did you )?r
                             r"^\s*what did (?:we talk about|i tell you)(?: (?:yesterday|last night|last time|earlier))?"
                             r"\s*[?.!]*\s*$", re.I)
 _WORKOUT_TODAY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is) (?:a )?good workout(?: for)? today|what (?:should|do) i "
-                             r"(?:work out|train|lift|hit|do at the gym)(?: today| tonight)?|what workout should i do"
-                             r"(?: today| tonight)?|(?:give me |suggest )?a workout for today|what(?:'s| is) (?:my |the )?"
-                             r"workout (?:for )?today)\s*[?.!]*\s*$", re.I)
+                             r"(?:work out|train|lift|hit|do at the gym)(?: today| tonight| tomorrow)?|what workout should i do"
+                             r"(?: today| tonight| tomorrow)?|(?:give me |suggest )?a workout for (?:today|tomorrow)|what(?:'s| is) "
+                             r"(?:my |the )?workout (?:for )?(?:today|tomorrow)|what(?:'s| is) (?:a )?good workout(?: for)? "
+                             r"tomorrow)\s*[?.!]*\s*$", re.I)
 _WOOD_NEXT = re.compile(r"^\s*(?:hey mia,? )?(?:what (?:woodworking )?project should i (?:do|build|make|try)(?: next)?"
                          r"(?: in the shop| in woodworking| with wood)?|what(?:'s| is) a good (?:first )?woodworking "
                          r"project|what should i build in (?:the|my) shop(?: next)?|(?:give me |any )?woodworking "
@@ -1766,7 +1767,7 @@ def _own_tool_reply(context, prompt: str):
     kit, and "should I pay X or Y first?" only when X and Y are two of his debts (the cross-route review); "we're out of milk" the grocery list
     (add_grocery_item, never the pantry; only for groceries: food and household words, or what's in
     his pantry or on his list, never "out of the woods", "out of hope" or "out of diesel": `_groceries`), "do you remember what I told
-    you yesterday?" her record of it (list_past_conversations), "what's a good workout for today?" his own next
+    you yesterday?" her record of it (list_past_conversations), "what's a good workout for today?" (or tomorrow) his own next
     workout (core/workout_today), "what woodworking project should I do next?" his next piece
     (core/woodworking.next_project; "build next ... shop", the business's, stays make_next's), "how much did I
     spend last month?", "my biggest expense category this year" and "what did I make from the shop this month?"
@@ -2264,7 +2265,7 @@ def _own_tool_reply(context, prompt: str):
         from core import workout_today
 
         try:
-            return workout_today.say(context)
+            return workout_today.say(context, tomorrow=bool(re.search(r"\btomorrow\b", said, re.I)))
         except Exception:
             log.exception("Couldn't say today's workout")
             return None

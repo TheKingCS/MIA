@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1923 files, 401,992 lines; 1923 files describe themselves; 21,756 of 21,903 classes and functions are documented.
+1924 files, 402,028 lines; 1924 files describe themselves; 21,757 of 21,904 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,847 lines; 10,390 of 10,469 classes and functions documented
+741 files, 210,855 lines; 10,390 of 10,469 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-772 files, 108,983 lines; 8,992 of 9,060 classes and functions documented
+773 files, 109,011 lines; 8,993 of 9,061 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1804,6 +1804,7 @@
 - `tests/test_workout_manager.py`: Unit tests for core.workout_manager. Isolates _DATA_DIR/the three per-record-type file constants into a tmp_path scratch area, same monkeypatch pattern as test_kitchen_manager.py's isolated_paths.
 - `tests/test_workout_module.py`: Unit tests for modules.workout.module's pure formatters — no Qt event loop needed, same shape as tests/test_kitchen_module.py. format_elapsed()'s own tests mirror tests/test_stopwatch_format.py's exact shape (a deliberately-duplicated, independently-owned copy — see module docstring for why).
 - `tests/test_workout_today.py`: "What's a good workout for today?" (core/workout_today.py, the live sweep 2026-11-26): the group he's rested longest, his own exercises for it with last time and a small step up, his saved workout for it; a starter with no history; "what should I train today?" reaches it in code. *(2 undocumented)*
+- `tests/test_workout_tomorrow.py`: "What should I work out tomorrow?" from his own training (core/workout_today.say with tomorrow, the fitness conversation check 2026-11-26: it had gone to the model), "last trained" still said from today.
 - `tests/test_workshop_machine.py`: Unit tests for core.workshop_machine — same shape as tests/test_calculator_engine.py, since WorkshopMachineRegistry is deliberately modeled on CalculatorEngine's registry pattern (see that module's docstring for why). LaserEngraverMachine's own tests confirm it behaves as a real, honest stub — repor
 - `tests/test_workshop_module.py`: Unit tests for modules.workshop.module's pure formatting logic — no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test. format_component_row() covers Components (the original tab); format_material_row()/format_job_row() format_product_row()/format_revenue_row()/fo
 - `tests/test_world_intel.py`: World Intelligence, phase W1 (DEC-0170; core/world_intel.py, core/world_sources.py, core/world_intel_actions.py, core/web_world_intel.py): a watch's words are matched phrase by phrase; the same find is kept once however it's linked; a run reads each source through its kind's adapter and records one 

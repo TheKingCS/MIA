@@ -90,7 +90,7 @@ def test_his_plan_comes_first(monkeypatch):
 
 
 def test_the_words_reach_it(monkeypatch):
-    monkeypatch.setattr(workout_today, "say", lambda c, t=None: "the workout")
+    monkeypatch.setattr(workout_today, "say", lambda c, t=None, tomorrow=False: "the workout")
     for words in ("What's a good workout for today?", "what should I train today", "what workout should I do",
                   "what should I work out tonight?"):
         assert assistant_turn._own_tool_reply(SimpleNamespace(), words) == "the workout", words
