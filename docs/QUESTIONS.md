@@ -5,6 +5,19 @@ Answer under the question; Claude moves closed ones to the bottom.*
 
 ## Open
 
+### Q-0019: May a how-to about making a fire be let through the emergency floor? (claude → zac)
+- Asked: 2026-11-26 · Status: OPEN
+- What it means: "How do I make a fire in the rain?" gets the house-fire reply ("Get out now and call 911 from
+  outside"), because "a fire in the ..." is one of the floor's fire phrases. "How do I start a fire without
+  matches?" already goes to the Survival course. The floor's rule is that it's never narrowed to quiet a false
+  alarm: false alarms are the accepted cost, and its never-miss list only grows. So I haven't changed it.
+- The choice:
+  1. Leave it: a bushcraft how-to about fire in the rain, wind or snow keeps getting the emergency reply.
+  2. Let only a how-to through: a question that opens "how do I / how to / what's the best way to" and is about
+     making, building or starting a fire (never "my house", "the kitchen", "flames", "smoke" or "help") goes to the
+     Survival course's fire lesson; every never-miss phrase stays caught, checked by its test.
+- Claude's recommendation: 2. Nothing changes until you say.
+
 ### Q-0018: Should the shortcuts that write records stay word patterns? (claude → zac)
 - Asked: 2026-11-25 · Status: OPEN
 - What it means: some everyday sentences are handled in code before the model, because the model kept getting them
