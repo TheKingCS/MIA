@@ -5,10 +5,13 @@ core.week_ahead
 The weekly look-ahead (brainstorm round 16, 2026-11-25): "what does my week look like?" answered with more than
 what's due. After the week's bills, upkeep, events, tasks and birthdays (core/today.week_days, said by the tool
 get_week), it joins what the rest of MIA already knows about the coming seven days: a holiday in it
-(core/holidays), what the forecast means for his plans (core/weather_watch: the garden, the flock, builds, the
-pipes), a flock's feed running out in it (core/feed_runway), the garden's steps due (core/garden_week) and water,
-food or fuel down to a week or under (core/homestead_health). Each part comes from its own module in code; only the
-joining is new.
+(core/holidays), what the next day or two's forecast means for his plans (core/weather_watch reads tonight and
+tomorrow: the garden, the flock, builds; never the long pipes note, which is said when he asks), a flock's feed
+running out in it from a bag bought in the last HISTORY_WINDOW days (core/feed_runway; an old record isn't said
+every time), the garden's steps due (core/garden_week) and water, food or fuel down to a week or under
+(core/homestead_health). Each part comes from its own module in code; only the joining is new. The weekend plan
+(core/question_plans) asks get_week without it (`look_ahead` false), since it looks the garden up itself and an
+empty week there reads as missing (the Fable review, 2026-11-25).
 
 How: `extras(context, today)` gives the lines (each part that can't be read is left out); get_week
 (core/assistant_today_actions) ends with them after "Looking ahead:". Read only; the weather is the forecast
@@ -31,26 +34,34 @@ def _holidays(context, today: date) -> list:
     """A holiday in the coming week, in its own words."""
     from core.holidays import coming_line
 
-    said = coming_line(context, today, DAYS)
+    said = coming_line(context, today, DAYS - 1)  # inclusive: today and the six days after
     return [said] if said else []
 
 
 def _weather(context, today: date) -> list:
-    """What the forecast means for his plans (core/weather_watch.watch), each concern's words."""
+    """What tonight's and tomorrow's forecast means for his plans (core/weather_watch.watch), each concern's words;
+    never an ASKED_ONLY one (the pipes)."""
     from core import weather_watch
 
-    return [c["text"] for c in weather_watch.watch(context, today)]
+    return [c["text"] for c in weather_watch.watch(context, today) if c.get("kind") not in weather_watch.ASKED_ONLY]
 
 
 def _feed(context, today: date) -> list:
-    """Each flock whose feed runs out within the week (core/feed_runway)."""
+    """Each flock whose feed runs out within the week (core/feed_runway), from a bag bought in the last
+    HISTORY_WINDOW days (a bag logged months ago isn't said as run out every week)."""
     from core import feed_runway
 
     book = getattr(context, "flock", None)
     out = []
     for flock in getattr(book, "flocks", []) or []:
         found = feed_runway.runway(book.entries, flock, today)
-        if found and not found.get("unknown") and found["days_left"] is not None and found["days_left"] <= DAYS:
+        if not found or found.get("unknown") or found["days_left"] is None or found["days_left"] > DAYS:
+            continue
+        try:
+            bought = date.fromisoformat(str(found.get("bought_on") or "")[:10])
+        except ValueError:
+            continue
+        if (today - bought).days <= feed_runway.HISTORY_WINDOW:
             out.append(feed_runway.words(flock.name, found))
     return out
 
@@ -71,7 +82,8 @@ def _supplies(context, today: date) -> list:
     low = sorted(((n, v) for n, v in found.items() if not n.startswith("Feed") and v <= DAYS), key=lambda kv: kv[1])
     if not low:
         return []
-    return ["Running low: " + ", ".join(f"{n.lower()} {v:g} day{'' if v == 1 else 's'}" for n, v in low) + "."]
+    return ["Running low on " + ", ".join(f"{n.lower()} ({v:g} day{'' if v == 1 else 's'} left)" for n, v in low)
+            + "."]
 
 
 def extras(context, today: Optional[date] = None) -> list[str]:

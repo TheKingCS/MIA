@@ -42,12 +42,15 @@ def _action_get_week(context, arguments: dict) -> str:
     never something due (the live sweep, 2026-11-25: the weekend plan said "you've got to ... wake up on time"), as the
     evening wrap and the morning briefing leave it out too.
     An alarm is told by `is_alarm`; a task stays. It ends with the look-ahead (core/week_ahead.extras, brainstorm
-    round 16): a holiday, the weather against his plans, feed running out, the garden's steps, low supplies."""
+    round 16): a holiday, the weather against his plans, feed running out, the garden's steps, low supplies; not
+    when `look_ahead` is false (the weekend plan, which looks those up itself)."""
     from core.today import is_alarm, week_days
 
     today = date.today()
     days = [dict(d, items=[i for i in d["items"] if not is_alarm(i)]) for d in week_days(context, today)]
     said = describe_week(days, today)
+    if str(arguments.get("look_ahead", "")).lower() in ("false", "0", "no"):  # the weekend plan's own lookups
+        return said
     try:
         from core.week_ahead import extras
 

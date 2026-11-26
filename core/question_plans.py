@@ -806,7 +806,7 @@ def _weekend(context, sheet, prompt, today):
             sheet.add(MISSING, f"No forecast for {day:%A} yet" + ("" if card.get("place") else
                                                                  " (no town set for the weather)") + ".",
                       "the forecast")
-    _look(context, sheet, "get_week", "this week")
+    _look(context, sheet, "get_week", "this week", look_ahead="false")  # the garden's its own line below
     _look(context, sheet, "garden_this_week", "the garden")
     _look(context, sheet, "learning_progress", "learning paths")
     _look(context, sheet, "list_projects", "Projects")
