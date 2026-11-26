@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1914 files, 401,068 lines; 1914 files describe themselves; 21,723 of 21,869 classes and functions are documented.
+1915 files, 401,091 lines; 1915 files describe themselves; 21,724 of 21,870 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,318 lines; 10,380 of 10,459 classes and functions documented
+741 files, 210,324 lines; 10,380 of 10,459 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-763 files, 108,588 lines; 8,969 of 9,036 classes and functions documented
+764 files, 108,605 lines; 8,970 of 9,037 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1216,6 +1216,7 @@
 - `tests/test_drills.py`: Scenario drills (core/drills.py): every drill well formed (one best choice a question, a lesson its course has); a drill run by voice from its start to its summary, the place riding in MIA's own message; answers by letter or by ordinal, "stop the drill", and words that aren't a drill (a drill bit, a
 - `tests/test_due_month.py`: "What's due this month?" (core/assistant_today_actions.due_through, the live sweep 2026-11-26): overdue first, then each day to the month's end, alarms out; "bills" keeps the budget's; the words reach it in code.
 - `tests/test_dungeon_master.py`: Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is committed to the store; the turn records a fictional event (DEC-0137), never real
+- `tests/test_eggs_pay.py`: "Are the eggs paying for the feed?" is the flock's own numbers (get_eggs, the egg conversation check 2026-11-26: the spending pace had said "I need two months of your spending").
 - `tests/test_eggs_span.py`: "How many eggs last week?" (core/assistant_goods_actions.py get_eggs): last week, this month and last month read from his words (a follow-up's own first) and counted from the flock's log, both ends counted.
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths.

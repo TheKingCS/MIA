@@ -1384,6 +1384,12 @@ _OWN_TOOLS = (
                             r"\bhow (?:much|many)\b.{0,15}\b(?:chicken |layer )?feed\b.{0,10}\b(?:do (?:i|we) have|have (?:i|"
                             r"we) got)\b|.*\bhow long will (?:the |my |our )?(?:chicken |layer |hens'? )?feed last\b|"
                             r".*\bdo (?:i|we) have enough (?:chicken |layer )?feed\b)", re.I), True),
+    # do the eggs pay for the feed: the flock's own numbers (get_eggs has the feed cost a dozen), never the spending
+    # pace's "I need two months of your spending" (the egg conversation check, 2026-11-26)
+    ("get_eggs", re.compile(r"^\s*(?:hey mia,? )?(?:are|do|does|is) (?:the |my |our )?(?:eggs|hens|chickens|flock|girls) "
+                            r"(?:paying|pay|covering|cover|earning|earn)(?: for)? (?:the |their |its |our |my )?(?:feed|"
+                            r"themselves|keep)\b.{0,20}[?.!]*\s*$|^\s*(?:hey mia,? )?(?:what do|how much do) (?:the |my )?"
+                            r"(?:eggs|hens|chickens) cost (?:me|us)(?: a dozen| per dozen)?\s*[?.!]*\s*$", re.I), True),
     # what she may do herself is her grants' (list_grants); the model had made up a browser and the Classroom
     # tools a question plan had answered instead, from a sheet without their records (the live sweep, 2026-11-26)
     ("best_customers", re.compile(r"^\s*(?:hey mia,? )?(?:who (?:are|is) (?:my|our) (?:best|top|biggest|repeat|regular) "
