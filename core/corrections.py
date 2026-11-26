@@ -199,8 +199,43 @@ def _corrects(folder: Path, family: str, ids: list[str], now: datetime, label: s
     return None
 
 
+DOUBT_COUNT = 2  # his corrections of one kind she does on her own, within DOUBT_DAYS, before she asks
+DOUBT_DAYS = 7
+
+
+def _doubt(context, folder: Path, kind: str, now: datetime) -> None:
+    """After he corrects a kind of change she makes on her own (his standing yes, core/kind_grants.py) DOUBT_COUNT
+    times within DOUBT_DAYS (brainstorm round 17: learned this week, then asked): she offers, through the gate, to
+    ask him first again, never taking his yes back herself. Once a week per kind. Never raises."""
+    try:
+        from core import kind_grants
+
+        kind = kind[len("action_"):] if kind.startswith("action_") else kind
+        if not kind_grants.has(context, kind):
+            return
+        since = (now - timedelta(days=DOUBT_DAYS)).isoformat(timespec="seconds")
+        times = sum(1 for e in _lines(folder) if e.get("what") == "corrected" and e.get("at", "") >= since
+                    and (e.get("kind") == kind or e.get("kind") == f"action_{kind}"))
+        gate = getattr(context, "communication", None)
+        if times < DOUBT_COUNT or gate is None:
+            return
+        from core.communication_gate import TIMELY, Candidate
+
+        family = family_of(kind).replace("_", " ")
+        year, week, _ = now.isocalendar()
+        gate.offer(Candidate(
+            topic="grant_doubt", title=f"Should I ask first about {family}?",
+            message=(f"You've corrected my {family} changes {times} times this week, and I make those on my own "
+                     f"since you said yes from now on. Say \"ask me first for {family}\" and I'll check with you "
+                     f"again before each one."),
+            urgency=TIMELY, source="system", fingerprint=f"grant-doubt-{kind}-{year}-W{week:02d}"), now)
+    except Exception:
+        log.exception("Couldn't offer to ask first about %s.", kind)
+
+
 def person_changed(context, kind: str, params: Optional[dict] = None, now: Optional[datetime] = None) -> Optional[dict]:
-    """The person edited or deleted something: a correction when it's of a kind MIA just changed."""
+    """The person edited or deleted something: a correction when it's of a kind MIA just changed (and, at the second
+    within a week of a kind she does on her own, her offer to ask him first again: `_doubt`)."""
     if verb_of(kind) not in CORRECTING:
         return None
     folder = _folder(context)
@@ -213,6 +248,7 @@ def person_changed(context, kind: str, params: Optional[dict] = None, now: Optio
     entry = {"at": now.isoformat(timespec="seconds"), "what": "corrected", "how": verb_of(kind),
              "kind": found["kind"], "area": found["area"], "corrects": found.get("id")}
     _append(folder, entry)
+    _doubt(context, folder, str(found["kind"]), now)
     return entry
 
 

@@ -239,14 +239,26 @@ def standing(context) -> list[Grant]:
 
 def find(context, words: str) -> Optional[Grant]:
     """The grant an id or a name means: its id exactly, else its name exactly, else the only one whose name holds the
-    words."""
+    words (a name two share is neither), else the only standing yes whose kind the words name ("grocery" for kind:grocery.add, core/corrections'
+    offer to ask first)."""
     wanted = " ".join(str(words or "").lower().split())
     grants = standing(context)
     for g in grants:
-        if wanted and wanted in (g.grant_id.lower(), g.name.lower()):
+        if wanted and wanted == g.grant_id.lower():
             return g
+    same = [g for g in grants if wanted and wanted == g.name.lower()]
+    if len(same) == 1:
+        return same[0]
+    if len(same) > 1:
+        return None  # two with that name ("Add"): which one?
     some = [g for g in grants if wanted and wanted in g.name.lower()]
-    return some[0] if len(some) == 1 else None
+    if len(some) == 1:
+        return some[0]
+    # a standing yes by what it's about ("ask me first for grocery": kind:grocery.add), when only one is
+    words = set(wanted.replace("_", " ").split())
+    kinds = [g for g in grants if g.kind == "kind"
+             and set(g.grant_id.partition(":")[2].split(".")[0].replace("_", " ").split()) <= words]
+    return kinds[0] if len(kinds) == 1 and not some else None
 
 
 def take_back(context, grant_id: str) -> str:

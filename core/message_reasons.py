@@ -64,6 +64,8 @@ REASONS: dict[str, tuple[str, str]] = {
                     "once a week I say what falls in the coming seven days, so a seed-starting day doesn't slip by"),
     "money_pulse": ("your money this week", "on Sundays I say in a line what's drifting over your usual spending, "
                     "what's due in the next seven days and the tightest week ahead, all from your own budget"),
+    "grant_doubt": ("asking first again", "you corrected a kind of change I make on my own twice in a week, so I "
+                    "offered to check with you first again; only you take a yes back"),
     "condition_watch": ("something you asked me to watch", "you said \"tell me when...\": I check it in code each "
                         "day and say it when it comes true, once unless you said every time"),
     "trip_eve": ("the day before a trip", "you planned a trip: the afternoon before, I say what isn't packed, "

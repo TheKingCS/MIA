@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1868 files, 395,591 lines; 1868 files describe themselves; 21,493 of 21,628 classes and functions are documented.
+1869 files, 395,690 lines; 1869 files describe themselves; 21,497 of 21,632 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-731 files, 206,793 lines; 10,267 of 10,346 classes and functions documented
+731 files, 206,843 lines; 10,268 of 10,347 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1030,7 +1030,7 @@
 
 ## tests/: the test suite: what each part must do
 
-727 files, 106,667 lines; 8,852 of 8,908 classes and functions documented
+728 files, 106,716 lines; 8,855 of 8,911 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1256,6 +1256,7 @@
 - `tests/test_good_news.py`: Good News Radio (DEC-0096, core/good_news.py): good news judged in code, each story saying how it's known (confirmed by two outlets, from the source itself, or one outlet, each with its tag), its caveats kept, four personalities, on only when switched on, and stories called misleading counted by sou
 - `tests/test_goods_voice.py`: Saying it to MIA (core/assistant_goods_actions.py): eggs, goods on hand, a sale, deadlines and freedom, through the same code as their screens.
 - `tests/test_gps_tracks.py`: Tracks (build plan step 14, core/gps_tracks.py): a GPX walk read in code: distance, climb past GPS jitter, moving time, start and end grids; kept in the person's folder; a line in the TAK package.
+- `tests/test_grant_doubt.py`: Learned, then asked (core/corrections._doubt, brainstorm round 17): his second correction within a week of a kind she makes on her own offers, through the gate, to ask him first again; she never takes his yes back herself, and "ask me first for grocery" finds that standing yes (core/grants.find).
 - `tests/test_grants.py`: Tiers, grants and the grant check (DEC-0156, approved; migration phase M4; core/grants.py): every tool and action kind has a tier in its app's manifest; the kinds that always ask are tiered at the person's yes, so there is one classification; a person's own press is always theirs; on MIA's own initi
 - `tests/test_greenhouse.py`: Handing the greenhouse to MIA and setting up its hardware (DEC-0150): core/greenhouse_link.py watches every sensor the node reports, raises its new alerts once each (critical urgent, warning timely), keeps its readings in the grow lab, keeps its harvests once each (produce counted, fish not), reads 
 - `tests/test_greenhouse_adjust.py`: MIA setting the greenhouse node's targets (core/greenhouse_adjust.py, DEC-0185 step 4): his words read in code, the exact change said and sent only on "yes, set it", signed so the node's own check accepts it (homestead's core/command_auth.verify, loaded on its own: MIA never imports the node's packa
