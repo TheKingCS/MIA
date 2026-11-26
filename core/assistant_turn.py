@@ -1286,9 +1286,11 @@ _MY_WEEK = re.compile(r"^\s*(?:(?:what(?:'s| is| does)|whats) (?:my|the) week (?
 _WATCH_ASK = re.compile(r"^\s*(?:please |hey mia,? )?(?:(?:tell|let|warn|alert|ping) me(?: know)?|remind me) "
                         r"(?:when(?:ever)?|if|once|every time|each time)\b", re.I)
 _WATCHING = re.compile(r"^\s*what (?:are|r) you (?:watching|keeping an eye on)(?: for)?(?: for me)?\s*[?.!]*\s*$", re.I)
-_TRIP_EVE = re.compile(r"^\s*(?:what do i need (?:for|to pack for|to bring (?:on|for)) (?:my |the |tomorrow'?s )?trip(?: tomorrow)?|"
-                       r"am i ready for (?:my |the |tomorrow'?s )?trip(?: tomorrow)?|before i go|what(?:'s| is) left to pack"
-                       r"(?: for (?:my |the )?trip)?)\s*[?.!]*\s*$", re.I)
+_TRIP_EVE = re.compile(r"^\s*(?:hey mia,? )?(?:what (?:do i need|should i (?:pack|bring)|do i (?:pack|bring))"
+                       r"(?: (?:for|to pack for|to bring (?:on|for)|on) (?:my |the |tomorrow'?s |this )?(?:\w+ )?trip"
+                       r"(?: tomorrow)?)?|am i (?:ready|packed) for (?:my |the |tomorrow'?s )?(?:\w+ )?trip(?: tomorrow)?|"
+                       r"am i packed|before i go|what(?:'s| is) left to pack(?: for (?:my |the )?(?:\w+ )?trip)?)"
+                       r"\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
