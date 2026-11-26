@@ -63,6 +63,22 @@ def test_a_pantry_item_is_said_when_it_runs_low_then_done(tmp_path):
     assert cw.WatchList(context, data_dir=tmp_path).get("w1").told == "2026-11-25"
 
 
+def test_a_pantry_watch_offers_the_grocery_list_as_a_card():
+    proposed = []
+    kitchen = SimpleNamespace(all_pantry_items=lambda: [SimpleNamespace(name="Coffee", quantity=1, unit="lb")],
+                              all_grocery_items=lambda: [])
+    actions = SimpleNamespace(propose=lambda c, kind, params, proposed_by="person":
+                              proposed.append((kind, params, proposed_by)) or SimpleNamespace(status="proposed"))
+    context = SimpleNamespace(kitchen=kitchen, actions=actions)
+    watch = cw.Watch("w6", "item", about="coffee", value=1.0)
+    assert cw.restock(context, watch) == " Want Coffee on the grocery list? It's on a card for your yes."
+    assert proposed == [("grocery.add", {"name": "Coffee"}, "mia")]
+    kitchen.all_grocery_items = lambda: [SimpleNamespace(name="coffee", checked=False)]
+    assert cw.restock(context, watch) == " Coffee is already on your grocery list."
+    assert len(proposed) == 1
+    assert cw.restock(context, cw.Watch("w7", "freeze", value=32.0)) == ""
+
+
 def test_a_dozen_in_the_pantry_counts_as_twelve(tmp_path):
     context = SimpleNamespace(kitchen=_pantry(("Eggs", 3, "dozen")))
     context.condition_watches = cw.WatchList(context, data_dir=tmp_path)

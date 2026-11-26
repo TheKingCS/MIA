@@ -25,7 +25,8 @@ day (`until`).
 **The store** (`WatchList`, each person's own, condition_watches.json, sealed at rest and written through
 atomic_write_text so "undo that" restores it): adding and stopping a watch are the actions `condition_watch.add` / `condition_watch.remove`
 (his own words, so act_within_grant: he asked, and undo takes it back). Marking one told is her bookkeeping on her
-own watch, the way the gate logs what it said. The daily check `condition_watch` (`offer`) offers each one that's
+own watch, the way the gate logs what it said. A pantry watch that fires offers the item for the grocery list as a
+card for his yes (`restock`, brainstorm round 17), never added on her own unless he approved that kind ahead. The daily check `condition_watch` (`offer`) offers each one that's
 true, TIMELY (held for an opening, never dropped, and never paused for dismissals: core/communication_gate's
 NEVER_PAUSED), the weather's ending the next morning.
 """
@@ -337,11 +338,36 @@ def check(context, watch: Watch, today: date, forecast: Optional[dict] = None) -
     return None
 
 
+def restock(context, watch: Watch) -> str:
+    """When a pantry watch fires (brainstorm round 17: a watch that acts on itself): adding the item to the grocery
+    list, proposed by MIA as a card for his yes (core/actions.propose, proposed_by "mia": run at once only when he
+    approved grocery.add from now on, DEC-0215), unless it's already on the list unchecked. The sentence to add to
+    the message, or ""."""
+    if watch.kind != "item":
+        return ""
+    item = _pantry_item(context, watch.about)
+    kitchen, actions = getattr(context, "kitchen", None), getattr(context, "actions", None)
+    if item is None or kitchen is None or actions is None:
+        return ""
+    try:
+        listed = {g.name.lower() for g in kitchen.all_grocery_items() if not g.checked}
+        if item.name.lower() in listed:
+            return f" {item.name} is already on your grocery list."
+        card = actions.propose(context, "grocery.add", {"name": item.name}, proposed_by="mia")
+    except Exception:  # noqa: BLE001 - the message still goes without the offer
+        log.exception("Condition watch: couldn't offer %s for the grocery list", watch.about)
+        return ""
+    if getattr(card, "status", "") == "executed":
+        return f" I added {item.name} to your grocery list (undo it if you don't want it)."
+    return f" Want {item.name} on the grocery list? It's on a card for your yes."
+
+
 def offer(context, now: datetime) -> list:
     """The daily check: each live watch whose condition is true, through the gate as TIMELY (he asked for it, so it
     waits for an opening rather than being dropped; the topic is never paused for dismissals, NEVER_PAUSED), once for
     a once-watch (then marked told) and once a day for a standing one. The weather's expires the next morning, the
-    rest after two days (the Fable review, 2026-11-25)."""
+    rest after two days (the Fable review, 2026-11-25). A pantry watch's message ends with its grocery-list
+    offer (`restock`)."""
     from core.communication_gate import TIMELY, Candidate
 
     today = now.date()
@@ -357,6 +383,7 @@ def offer(context, now: datetime) -> list:
             continue
         if not said:
             continue
+        said += restock(context, watch)
         weather = watch.kind in ("freeze", "rain")
         ends = datetime.combine(today, datetime.min.time()) + (timedelta(days=1, hours=9) if weather else timedelta(days=2))
         out.append(Candidate(topic="condition_watch", title="Something you asked me to watch", message=said,
