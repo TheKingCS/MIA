@@ -197,7 +197,8 @@ def _catch_card(context) -> dict:
 def expeditions_page(context, today: Optional[date] = None) -> dict:
     """The data the Expeditions screen shows, assembled here (the web only draws it); {"available": False} when expeditions or trips aren't here. Each expedition with when it is
     (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes, the route
-    and checkpoints: core/trip_route.route_card), the
+    and checkpoints: core/trip_route.route_card; a planned one's list to copy from its last like trip,
+    core/trip_packing.copy_from), the
     packing and distance across them and what has to happen first (`_trip_heads_up`); current ones first, then past
     ones newest first; counts, forms (with the journal's, for a trip's log and its weather) and the saved waypoints a stop is picked from.
     And his catch log (catches: the latest five and what it says, core/catch_log.py).
@@ -210,6 +211,15 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
 
     journal = getattr(context, "journal", None)
     iso = today.isoformat()
+
+    def _copy_from(t) -> dict:
+        """The last like trip's list to copy onto a planned one (core/trip_packing.copy_from), or {}."""
+        try:
+            from core.trip_packing import copy_from
+
+            return copy_from(context, t)
+        except Exception:  # noqa: BLE001 - the card shows without it
+            return {}
 
     def trip_card(t) -> dict:
         try:
@@ -225,6 +235,7 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                 "journal": [{"id": e.entry_id, "title": e.title, "conditions": e.conditions,
                              "when": (e.created_at or "")[:10]} for e in notes],
                 "route": route_card(context, t),
+                "copy_from": _copy_from(t),
                 "values": {"name": t.name, "activity_type": t.activity_type, "start_date": t.start_date,
                            "end_date": t.end_date, "notes": t.notes}}
 

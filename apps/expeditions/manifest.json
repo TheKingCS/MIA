@@ -56,11 +56,13 @@
       "whats_biting"
     ],
     "actions": [
+      "catch.log",
       "expedition.add",
       "expedition.delete",
       "expedition.edit",
       "expedition.media_delete",
       "gear.add",
+      "gear.copy_last",
       "gear.remove",
       "gear.toggle",
       "trip.add",
@@ -69,8 +71,7 @@
       "trip.edit",
       "trip.route_add",
       "trip.route_remove",
-      "trip.status",
-      "catch.log"
+      "trip.status"
     ],
     "tiers": {
       "add_expedition": "act_within_grant",
@@ -105,7 +106,8 @@
       "whats_biting": "observe",
       "catch.log": "act_within_grant",
       "best_time_to_fish": "observe",
-      "copy_packing_list": "act_within_grant"
+      "copy_packing_list": "act_within_grant",
+      "gear.copy_last": "act_within_grant"
     },
     "outside": []
   },

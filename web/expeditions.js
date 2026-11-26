@@ -165,6 +165,9 @@
           onclick: () => act({ kind: "gear.remove", params: { trip_id: t.id, index: g.index } }) }, "✕"))))
         : el("p", { class: "dim" }, "Nothing on the list yet."),
       el("form", { class: "gear-add", onsubmit: addGear }, input, el("button", { type: "submit", class: "btn btn-ghost btn-small" }, "Add")),
+      t.copy_from && t.copy_from.count ? el("button", { type: "button", class: "btn btn-ghost btn-small",
+        onclick: () => act({ kind: "gear.copy_last", params: { trip_id: t.id, from_trip_id: t.copy_from.trip_id } }) },
+        "Copy " + t.copy_from.count + " from " + t.copy_from.name) : null,
       el("h4", {}, "Trip Log"),
       t.journal.length ? el("ul", { class: "trip-log" }, t.journal.map((j) => el("li", {},
         el("a", { href: "journal.html" }, j.title), j.conditions ? el("span", { class: "dim" }, " · " + j.conditions) : null)))

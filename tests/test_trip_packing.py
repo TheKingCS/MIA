@@ -11,6 +11,19 @@ from types import SimpleNamespace
 from core import trip_packing
 
 
+def test_the_trip_page_offers_the_copy_and_the_action_does_it():
+    from core.actions import ACTION_TYPES
+
+    context = SimpleNamespace(trips=_Trips())
+    new = context.trips.trips[3]
+    assert trip_packing.copy_from(context, new) == {"name": "Lake day", "trip_id": "b", "count": 2}
+    assert trip_packing.copy_from(context, context.trips.trips[1]) == {}, "a finished trip copies nothing"
+    action = ACTION_TYPES["gear.copy_last"]
+    assert action.describe(context, {"trip_id": "d"}).startswith("Copy 2 items from Lake day's packing list to Fall")
+    assert action.execute(context, {"trip_id": "d", "from_trip_id": "b"}).startswith("Copied 2 items")
+    assert trip_packing.copy_from(context, new) == {}
+
+
 class _Trips:
     """Three trips: an old and a newer fishing trip with lists, and a hike."""
 
@@ -30,6 +43,10 @@ class _Trips:
     def all_trips(self):
         """Every trip."""
         return self.trips
+
+    def get_trip(self, trip_id):
+        """One trip by its id."""
+        return next((t for t in self.trips if t.trip_id == trip_id), None)
 
     def add_gear_item(self, trip_id, label, item_id=None):
         """Adds an unpacked item to a trip."""
