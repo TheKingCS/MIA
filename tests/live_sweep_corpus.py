@@ -100,6 +100,14 @@ CORPUS = {
         ["What can you do on your own?", "Why not?"],
         ["I'm thinking about building a chicken coop", "What would it cost?", "How long would it take?"],
     ],
+    "bizfin": [
+        "How much should I charge for a cutting board?", "What's my profit margin on cutting boards?",
+        "How much should I set aside for taxes?", "Am I saving enough?", "How long until I'm debt free?",
+        "What's my monthly income?", "Can I afford a $500 purchase this month?", "What are my fixed expenses?",
+        "How do I start an emergency fund?", "What's a good side hustle for me?", "Who owes me money?",
+        "Draft an invoice for Sarah for 2 cutting boards", "What sold best this month?",
+        "How much did the shop spend on materials?", "Should I raise my prices?", "What's my hourly rate on builds?",
+    ],
     "conversation": [
         ["I'm thinking about getting goats", "What breed would be good for milk?", "How much space do they need?",
          "Thanks, that's helpful"],

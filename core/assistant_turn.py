@@ -1271,6 +1271,13 @@ _OWN_TOOLS = (
     ("suggest_recipes", re.compile(r"^\s*(?:hey mia,? )?(?:what (?:should|can|could) (?:i|we) (?:make|cook|have|eat) (?:for "
                                    r")?(?:dinner|supper|lunch|tonight)|what'?s for (?:dinner|supper)|(?:any )?(?:dinner|"
                                    r"supper) ideas|what can (?:i|we) make with what (?:i|we) have)\s*[?.!]*\s*$", re.I), False),
+    # his own prices and hourly earnings (a question plan had answered from a sheet without them, 2026-11-26)
+    ("check_my_prices", re.compile(r"^\s*(?:hey mia,? )?(?:should i (?:raise|up|increase) my prices|am i charging enough|"
+                                   r"are my prices (?:too low|right|ok|okay)|check my prices)\s*[?.!]*\s*$", re.I), False),
+    ("earnings_per_hour", re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is) my (?:hourly rate|hourly|rate per hour) on "
+                                     r"(?:my )?(?:builds|jobs|the shop|the workshop)|how much do i (?:really )?make (?:an|per) "
+                                     r"hour (?:on|from) (?:my )?(?:builds|jobs|the shop|the workshop))\s*[?.!]*\s*$", re.I),
+     True),
     ("list_grants", re.compile(r"^\s*what (?:can|may|do|will) you do (?:on your own|by yourself|without (?:asking(?: me)?|"
                                r"me asking))\s*\??\s*$|^\s*what are you allowed to do (?:on your own|by yourself)\s*\??\s*$",
                                re.I), False),
@@ -1384,6 +1391,9 @@ _THINKING_OF_BUILDING = re.compile(r"^\s*(?:hey mia,? )?(?:i'?m|i am|we'?re|we a
                                    r"(?P<what>[\w' -]{3,40}?)\s*[.!?]*\s*$", re.I)
 _SAID_AS = {"stairs": "set of stairs", "steps": "set of steps", "shelving": "shelving unit", "shelves": "set of shelves",
             "compost": "compost bin", "stringer": "set of stair stringers"}
+_AFFORD_ONCE = re.compile(r"^\s*(?:hey mia,? )?can (?:i|we) afford (?:a |an |to (?:spend|buy|pay) )?\$\s?(?P<amount>\d[\d,]*"
+                          r"(?:\.\d{1,2})?)(?:\s+(?:purchase|thing|item|buy))?(?:\s+(?:this month|right now|now|today))?"
+                          r"\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1417,7 +1427,9 @@ def _own_tool_reply(context, prompt: str):
     workout (core/workout_today), "what woodworking project should I do next?" his next piece
     (core/woodworking.next_project; "build next ... shop", the business's, stays make_next's), "how much did I
     spend last month?", "my biggest expense category this year" and "what did I make from the shop this month?"
-    (core/money_periods; only when what follows is a period: "at Costco last month" is the model's), "should I pay
+    (core/money_periods; only when what follows is a period: "at Costco last month" is the model's), "can I afford a
+    $500 purchase this month?" this month's records against it (core/money_periods.afford; a monthly cost is the
+    afford plan's), "should I pay
     off the card or the truck first?" his own debts compared (get_debt_payoff_plan), his reminders listed and one
     cancelled by its words (never all on one sentence), "good morning" back in kind with the day, and "what did I do
     yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
@@ -1482,6 +1494,15 @@ def _own_tool_reply(context, prompt: str):
     if _REMEMBER_TALK.match(said):  # "do you remember what I told you yesterday?": her own record of it
         return _run_own(context, "list_past_conversations", {"question": said})
     low = said.lower()
+    once = _AFFORD_ONCE.match(said)
+    if once:  # "can I afford a $500 purchase this month?": this month's records against it (core/money_periods)
+        from core import money_periods
+
+        try:
+            return money_periods.afford(context, float(once.group("amount").replace(",", "")))
+        except Exception:
+            log.exception("Couldn't say whether it's affordable")
+            return None
     asked = _SHOP_MADE.match(said) or _BIGGEST_CATEGORY.match(said) or _SPENT_PERIOD.match(said)
     if asked:  # money over a period (core/money_periods), only when what follows is a period
         from core import money_periods

@@ -72,3 +72,20 @@ def test_a_plan_answer_never_says_the_fact_sheet():
     for kept in ("The balance sheet doesn't show a loss.", "Bake on the sheet pan.", "It only shows up on Tuesdays.",
                  "Use a jig, e.g. it holds the board."):
         assert question_plans.without_sheet_words(kept) == kept, kept
+
+
+def test_affording_a_purchase_from_this_months_records(monkeypatch):
+    from core import money_ahead
+
+    monkeypatch.setattr(money_ahead, "_records", lambda c: ([], [], []))
+    monkeypatch.setattr(money_ahead, "flows", lambda *a, **k: [{"amount": -120.0, "what": "Electric", "day": TODAY,
+                                                               "note": "overdue"}])
+    broke = SimpleNamespace(budget=SimpleNamespace(total_income=lambda s, e: 0.0,
+                                                   total_expenses_by_category=lambda s, e, entity_id=None: {}))
+    said = money_periods.afford(broke, 500.0, TODAY)
+    assert said.startswith("I can't tell from your records: no income is logged this month")
+    assert "Not marked paid yet: Electric." in said and "$120.00" not in said, "an overdue bill named, never summed"
+    paid = SimpleNamespace(budget=SimpleNamespace(total_income=lambda s, e: 2000.0,
+                                                  total_expenses_by_category=lambda s, e, entity_id=None: {"Food": 600.0}))
+    assert money_periods.afford(paid, 500.0, TODAY).startswith("From what's logged, $500.00 fits: $1,280.00 is left")
+    assert assistant_turn._own_tool_reply(SimpleNamespace(), "Can I afford a $500 purchase this month?") is not None

@@ -10,6 +10,8 @@ sheet's words). From his own records:
   categories;
 - `biggest`: the biggest category in the period (this year when none is said);
 - `shop_made`: the workshop ledger's revenue, expenses and profit in the period (core/ledger_manager).
+- `afford`: a purchase once against this month's logged income, spending and what's still due (never a bank
+  balance: none is linked).
 
 `period(words, today)` reads "today", "yesterday", "this week", "last week", "this month", "last month", "this year",
 "last year" and a month by name ("in October": the latest one not after today; "in March 2025" that year, said in
@@ -133,3 +135,46 @@ def shop_made(context, words: str, today: Optional[date] = None) -> str:
     net = revenue - expenses
     return (f"The shop {label}: {_money(revenue)} in sales, {_money(expenses)} in costs, "
             + (f"{_money(net)} profit." if net >= 0 else f"{_money(-net)} behind."))
+
+
+def afford(context, amount: float, today: Optional[date] = None) -> str:
+    """For "can I afford a $500 purchase this month?" (the live sweep, 2026-11-26: "you can afford it ... you have the
+    full $0.00 available"): this month's logged income less its spending and the bills still due by its end, against
+    the amount, a bill not marked paid counted once (never every missed month); with no income logged, that it can't
+    be told (no bank balance is linked), and what's still due. A purchase once; a monthly cost is the afford plan's
+    (the freedom date)."""
+    from core import money_ahead
+
+    today = today or date.today()
+    budget = getattr(context, "budget", None)
+    if budget is None:
+        return "Your budget isn't on this MIA."
+    first = today.replace(day=1).isoformat()
+    income = budget.total_income(first, today.isoformat())
+    spent = sum(budget.total_expenses_by_category(first, today.isoformat(), entity_id="").values())
+    end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+    bills, incomes, debts = money_ahead._records(context)
+    bills = [b for b in bills if not getattr(b, "entity_id", "")]
+    moves = money_ahead.flows(bills, [], [d for d in debts if not getattr(d, "entity_id", "")], today, 6)
+    due = [m for m in moves if m["amount"] < 0 and m["day"] <= end and m["note"] != "overdue"]
+    late_amounts = {}
+    for m in moves:
+        if m["note"] == "overdue":
+            late_amounts.setdefault(m["what"], -m["amount"])  # each counted once, never every missed month
+    late = list(late_amounts)
+    owed = sum(-m["amount"] for m in due) + sum(late_amounts.values())
+    names = ", ".join(dict.fromkeys(m["what"] for m in due))
+    nth = "st" if end.day == 31 else "th"  # a month ends on the 28th, 29th, 30th or 31st
+    still = f" Still due by the {end.day}{nth}: {_money(owed)} ({names})." if due else ""
+    if late:
+        still += " Not marked paid yet: " + ", ".join(late) + " (each counted once)."
+    if not income:
+        return (f"I can't tell from your records: no income is logged this month, and no bank balance is linked, so I "
+                f"don't know what you have.{still} Log your pay as it comes in (\"I got paid $1,200\") and I'll work it "
+                f"out.")
+    left = income - spent - owed
+    verdict = (f"From what's logged, {_money(amount)} fits: {_money(left)} is left after what's due." if left >= amount
+               else f"From what's logged, it doesn't fit: {_money(max(left, 0))} is left after what's due, "
+                    f"{_money(amount - max(left, 0))} short.")
+    return (f"{verdict} This month: {_money(income)} in, {_money(spent)} spent.{still} That's from your records, not "
+            f"a bank balance.")
