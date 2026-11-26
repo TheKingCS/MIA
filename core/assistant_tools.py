@@ -4258,8 +4258,11 @@ class AssistantTools:
     def _resolve_property(context: AppContext, name: str) -> tuple[Optional[Property], Optional[str]]:
         """Exact case-insensitive name match — never fuzzy, same
         fail-closed discipline as every other name-resolution action
-        this session."""
-        match = next((p for p in context.real_estate.all_properties() if p.name.lower() == name.lower()), None)
+        this session. One still owned wins over a sold one of the same name."""
+        from core.real_estate_manager import is_sold
+
+        named = [p for p in context.real_estate.all_properties() if p.name.lower() == name.lower()]
+        match = next((p for p in named if not is_sold(p)), named[0] if named else None)  # a sold one only if alone
         if match is None:
             return None, f"I don't have a property called '{name}'."
         return match, None

@@ -1670,7 +1670,7 @@ _CUT_BACK = re.compile(r"^\s*(?:hey mia,? )?(?:so\s+|ok(?:ay)?,?\s+)?(?:where|wh
 # "the tenant paid $1800 today", "rent came in, $1,800": rent on his one rental (record_rental_income), the property
 # named when he has several (the rentals conversation check, 2026-11-26: "I don't have a property called 'the tenant'")
 _RENT_IN = re.compile(r"^\s*(?:hey mia,? )?(?:(?:the |my |our )?(?:tenants?|renters?)(?: (?:at|in|on) (?P<prop>[\w' .-]{2,40}?))? "
-                      r"(?:just )?paid(?: me| us)?(?: the)?(?: rent)?(?: of)?|(?:the )?rent (?:came in|was paid|got paid|is in)(?: "
+                      r"(?:just )?paid(?: me| us)?(?: the)?(?: rent)?(?: of)?|(?:the )?rent (?:came in|is in)(?: "
                       r"(?:at|for|on) (?P<prop2>[\w' .-]{2,40}?))?,?(?: for| at)?|(?:i |we )?got (?:the )?rent(?: (?:for|from) "
                       r"(?P<prop3>[\w' .-]{2,40}?))?,?(?: of)?)\s*\$\s?(?P<amt>\d[\d,]*(?:\.\d{1,2})?)(?: (?:in )?rent)?"
                       r"(?: (?:today|this month|just now))?\s*[.!]*\s*$", re.I)
@@ -1801,7 +1801,8 @@ def _own_tool_reply(context, prompt: str):
     from his records (core/storm_ready.ready_for), "cancel the dentist appointment" that event of his, or a question first (core/reminders_view.cancel_event), "I practiced for 30 minutes today" a session on
     his
     course (log_practice: the course named whole, never "guitar hero"; unnamed only as "practiced", never a day or a
-    game), "the tenant paid $1800 today" rent on his rental (record_rental_income), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
+    game), "the tenant paid $1800 today" rent on his rental or investment property (record_rental_income; never his own rent,
+    never the same payment twice), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
     me?" and "stop the Sunday one" her standing reports (core/standing_reports), "what's overdue?" everything
     overdue on his list
     (core/today.overdue_said), "what has the shed cost me?" its money and hours
@@ -2185,8 +2186,10 @@ def _own_tool_reply(context, prompt: str):
 
         try:
             named = (rent_in.group("prop") or rent_in.group("prop2") or rent_in.group("prop3") or "").strip()
+            from core.real_estate_manager import SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES
+
             owned = [p for p in estate.all_properties() if not is_sold(p)
-                     and str(getattr(p, "property_type", "")).lower() == "rental"]
+                     and getattr(p, "property_type", "") in SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES]  # a rental or investment
             prop = None
             if named:
                 fits = [p for p in owned if named.lower() in p.name.lower()]
@@ -2196,8 +2199,19 @@ def _own_tool_reply(context, prompt: str):
             if prop is None and owned:
                 return "Which property? " + ", ".join(p.name for p in owned) + "."
             if prop is not None:
-                return _run_own(context, "record_rental_income", {"property_name": prop.name,
-                                                                   "amount": float(rent_in.group("amt").replace(",", ""))})
+                from datetime import date as _date
+
+                from core.region import money
+
+                amount = float(rent_in.group("amt").replace(",", ""))
+                today_iso = _date.today().isoformat()
+                already = [e for e in (estate.income_for_property(prop.property_id, today_iso, today_iso)
+                                       if hasattr(estate, "income_for_property") else [])
+                           if abs(float(getattr(e, "amount", 0) or 0) - amount) < 0.005]
+                if already:  # the same payment said twice is never two (the Fable review)
+                    return (f"I already have {money(amount)} rent for {prop.name} today, so I didn't add it again. If it "
+                            f"really was a second payment, add it on the Real Estate page.")
+                return _run_own(context, "record_rental_income", {"property_name": prop.name, "amount": amount})
         except Exception:
             log.exception("Couldn't record the rent")
     if _DUE_TODAY.match(said):  # "what's due today?": today's things, then what's overdue (core/today.due_today_said)
