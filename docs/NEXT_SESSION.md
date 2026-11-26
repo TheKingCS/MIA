@@ -13,8 +13,13 @@ the Sunday money pulse, what she learned this week and his hobbies' progress. At
 like?" (the week now ends with a look-ahead: holidays, weather against his plans, feed, the garden, low supplies).
 "Tell me when..." is built too (core/condition_watch.py): at the PC say "tell me if it freezes tonight", "tell me
 when we're down to a dozen eggs", "what are you watching for me?"; and "before you go" (core/trip_eve.py: "what do I
-need for my trip?", and the afternoon before a planned trip). Round 16 is all built; round 17 (joining them up) is
-next, most needing no decision. The live sweep's "anticipating" area checks them.
+need for my trip?", and the afternoon before a planned trip). Round 16 is all built. Round 17 so far: the money
+pulse names the two biggest expenses behind a drift, the evening wrap names a hobby streak, a pantry watch offers the
+grocery list ("say add coffee to my grocery list"), and a new trip offers its last like trip's packing list ("copy the
+packing list to <trip>"). Left from 17: asking after two corrections of the same kind; the lock-screen look-ahead
+(Zac's say); a homestead tile (Muse). Loose end the Fable review found: MIA's own approval cards (actions.pending)
+show on no screen, only by asking "what's waiting for me?" (web/mia.js has pending() unused): a Home/Today card
+strip is for Muse's look. copy_packing_list has no screen button yet (DEC-0125). The live sweep's "anticipating" area checks them.
 
 **2026-11-25: interactive labs** (`docs/future/INTERACTIVE_LABS_PLAN.md`; CURRENT_STATE has the whole of it). At the
 PC: open Classroom > Hands-on labs; build the blink lab in the simulator; say "walk me through building the pot lab",

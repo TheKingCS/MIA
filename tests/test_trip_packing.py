@@ -41,11 +41,20 @@ def test_a_new_trip_names_the_last_like_one_and_copies_it_on_his_word():
     context = SimpleNamespace(trips=_Trips())
     new = context.trips.trips[3]
     assert trip_packing.last_like(context, new).name == "Lake day"
-    assert "Your last fishing trip, Lake day, packed: Rod, Tackle box, Waders." in trip_packing.offer_line(context, new)
+    assert "Your last fishing trip, Lake day, packed: Rod, Tackle box, Waders. Say \"copy the packing list to Fall " \
+        "creek\"" in trip_packing.offer_line(context, new)
     said = trip_packing._copy_tool(context, {})
     assert said == "Copied 2 items from Lake day to Fall creek: Tackle box, Waders."
     assert [g.label for g in new.gear] == ["Rod", "Tackle box", "Waders"]
     assert trip_packing._copy_tool(context, {}) == "Fall creek already has everything from Lake day's packing list."
+
+
+def test_a_finished_trip_named_alone_is_copied_from_never_onto():
+    context = SimpleNamespace(trips=_Trips())
+    said = trip_packing._copy_tool(context, {"trip_name": "Spring creek"})
+    assert said == "Copied 1 item from Spring creek to Fall creek: Rod." or "already has everything" in said
+    assert [g.label for g in context.trips.trips[0].gear] == ["Rod"], "the finished trip is left as it was"
+    assert "Copied 2 items from Lake day" in trip_packing._copy_tool(context, {"trip_name": "Lake day"})
 
 
 def test_no_earlier_trip_of_that_kind_says_so():

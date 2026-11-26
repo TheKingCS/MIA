@@ -24,6 +24,11 @@ def _when(trip) -> str:
     return str(trip.start_date or trip.created_at or "")
 
 
+def _kind(trip) -> str:
+    """Pure logic. "fishing trip", or "trip" for one with no activity."""
+    return f"{trip.activity_type.lower()} trip" if trip.activity_type else "trip"
+
+
 def last_like(context, trip) -> Optional[object]:
     """The latest other trip of the same activity with a packing list, or None (no activity: any kind)."""
     trips = getattr(context, "trips", None)
@@ -40,14 +45,16 @@ def offer_line(context, trip) -> str:
     if found is None:
         return ""
     labels = [g.label for g in found.gear if g.label]
+    if not labels:
+        return ""
     shown = ", ".join(labels[:SHOWN]) + (f" and {len(labels) - SHOWN} more" if len(labels) > SHOWN else "")
-    return (f" Your last {(trip.activity_type or 'trip').lower()} trip, {found.name}, packed: {shown}. Say \"copy the "
-            f"packing list\" and I'll put those on this one.")
+    return (f" Your last {_kind(trip)}, {found.name}, packed: {shown}. Say \"copy the packing list to {trip.name}\" "
+            f"and I'll put those on it.")
 
 
 def copy(context, to_trip, from_trip) -> list[str]:
     """Puts from_trip's items on to_trip, unpacked, leaving out any already there (by name); the labels added."""
-    have = {g.label.lower() for g in to_trip.gear}
+    have = {(g.label or "").lower() for g in to_trip.gear}
     added = []
     for g in from_trip.gear:
         if g.label and g.label.lower() not in have:
@@ -63,22 +70,37 @@ def _newest_planned(context):
     return max(trips, key=lambda t: str(t.created_at or "")) if trips else None
 
 
+def _named(context, name: str, planned_first: bool):
+    """The trip with that name: a planned one first when copying onto it, the latest one when copying from it."""
+    found = [t for t in context.trips.all_trips() if t.name.lower() == name]
+    if not found:
+        return None
+    if planned_first and any(t.status == "planned" for t in found):
+        found = [t for t in found if t.status == "planned"]
+    return max(found, key=_when)
+
+
 def _copy_tool(context, arguments: dict) -> str:
     """Tool copy_packing_list: copies the last like trip's list (or the one he names as `from_trip`) onto the trip
-    he names (`trip_name`), else onto the trip he made most recently that's still planned."""
+    he names (`trip_name`), else onto the trip he made most recently that's still planned. A trip named alone that
+    isn't planned is the one to copy from ("copy the packing list from Lake day"), never one to add to (the Fable
+    review, 2026-11-25)."""
     if getattr(context, "trips", None) is None:
         return "Expeditions isn't on this MIA."
     name = str(arguments.get("trip_name") or "").strip().lower()
-    to_trip = next((t for t in context.trips.all_trips() if t.name.lower() == name), None) if name else \
-        _newest_planned(context)
+    source = str(arguments.get("from_trip") or "").strip().lower()
+    to_trip = _named(context, name, True) if name else _newest_planned(context)
+    if name and not source and to_trip is not None and to_trip.status != "planned":
+        source, to_trip = name, _newest_planned(context)
+        name = ""
     if to_trip is None:
         return f"I don't have a trip called '{arguments.get('trip_name')}'." if name else "You don't have a trip planned."
-    source = str(arguments.get("from_trip") or "").strip().lower()
-    from_trip = next((t for t in context.trips.all_trips() if t.name.lower() == source), None) if source else \
-        last_like(context, to_trip)
+    from_trip = _named(context, source, False) if source else last_like(context, to_trip)
     if from_trip is None:
-        return (f"I don't have a trip called '{arguments.get('from_trip')}'." if source else
-                f"There's no earlier {(to_trip.activity_type or 'trip').lower()} trip with a packing list to copy.")
+        return (f"I don't have a trip called '{source}'." if source else
+                f"There's no earlier {_kind(to_trip)} with a packing list to copy.")
+    if from_trip.trip_id == to_trip.trip_id:
+        return f"That's {to_trip.name}'s own list: tell me which trip to copy it to."
     added = copy(context, to_trip, from_trip)
     if not added:
         return f"{to_trip.name} already has everything from {from_trip.name}'s packing list."
@@ -94,10 +116,11 @@ def register_trip_packing_actions(registry) -> None:
         name="copy_packing_list", domain="expeditions",
         description="Copy a packing list from his last trip of the same kind (or one he names) onto a trip.",
         parameters={"type": "object", "properties": {
-            "trip_name": {"type": "string", "description": "the trip to copy onto (optional: the newest planned one)"},
-            "from_trip": {"type": "string", "description": "the trip to copy from (optional: the last of the same kind)"}},
+            "trip_name": {"type": "string", "description": "the trip to copy onto; leave empty unless he names it"},
+            "from_trip": {"type": "string", "description": "the trip to copy from; leave empty unless he names it"}},
             "required": []},
         handler=_copy_tool,
-        trigger_phrases=("copy the packing list", "same packing list", "copy my gear list", "use the last packing list"),
+        trigger_phrases=("copy the packing list", "the same packing list", "copy my gear list",
+                         "use the last packing list"),
         subjects=("packing", "gear"),
     ))
