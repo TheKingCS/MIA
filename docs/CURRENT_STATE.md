@@ -61,7 +61,18 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
 - The full sweep after all that (195 asks, nothing stolen) and its fixes: "when did I last ..." from his maintenance
   record or history (any tense, the day it happened), "remind me in 2 hours" worked out in code (a one-shot alarm),
   "I need motivation" from his own reasons (core/motivation), a vehicle's emergency kit (core/ready_kit.say_vehicle).
-  The crisis floor now hears "no motivation to live" too. 8755 passing.
+  The crisis floor now hears "no motivation to live" too.
+- A cross-route review of about 200 sentences, and its fixes: sentences put in the shape her routes read
+  (assistant_turn.reshaped: a greeting before a question, "every Saturday evening remind me to call mom at 7" as 7pm),
+  spending in any period her money code reads, "when did I last pay rent" from that bill's record, motivation for a
+  named task ("to finish the shed": its smallest piece and his hours on it).
+- Brainstorm round 18 (from answering to keeping up a conversation), built and Fable-reviewed: "teach me something"
+  (core/teach_something: a lesson from her own courses, his stage when he's on one); "what should I be doing on the
+  homestead this month?" (or "in March": core/homestead_year.this_month, his own items then the season's usual work,
+  the flock's only with hens, the firewood's only when he burns it); two things in one sentence
+  (assistant_turn._two_things_reply: "I spent $40 on screws and 2 hours on the shed" keeps both, one never swallowed
+  into the other's record, a question never writes). Next from round 18: a conversation's thread across three or four
+  turns, and "what she noticed today" in the evening wrap. 8775 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
