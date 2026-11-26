@@ -45,7 +45,13 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   dinner to their tools, plan answers never say "the fact sheet"; reminders listed and one cancelled (every word
   must match, by id, undoable), "good morning", yesterday's wins, what's due this month; a library answer is never
   cut to its second sentence, and with no packs installed it isn't held to figures. Waiting on Zac: Q-0019 (a fire
-  how-to through the emergency floor). 8721 passing.
+  how-to through the emergency floor).
+- Conversation (the corpus's "followups" and "followups2" areas): a short follow-up to a code answer is joined to
+  his last question and answered by the same code (core/follow_through: "what about this month?", "and the card?",
+  "how about water?", "and a 10 by 12?", "and until New Year's?"); a go-ahead that says to act runs her own
+  'Say "..." and I'll' offer (core/conversation_state.offered_phrase, K-0501: never a bare ok, never an undo); "what
+  do I need for the chili?" reads the recipe; "I'm thinking about building a chicken coop" says what she can work
+  out. 8729 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
