@@ -219,14 +219,16 @@ def best_sellers(context, words: str = "", today: Optional[date] = None) -> str:
     return f"Your best seller {said_when} is " + said[0] + (". Then " + "; ".join(said[1:]) if len(said) > 1 else "") + "."
 
 
-def afford(context, amount: float, today: Optional[date] = None) -> str:
+def afford(context, amount: Optional[float], today: Optional[date] = None) -> str:
     """For "can I afford a $500 purchase this month?" (the live sweep, 2026-11-26: "you can afford it ... you have the
     full $0.00 available"): this month's household income (logged, plus what's expected by its end) less its
     household spending and what's still due by its end (a bill already paid this month never twice, a debt's
     minimum not paid this month counted, a bill not marked paid counted once, never every missed month), against the
     amount; with no income logged or expected, that it can't be told (no bank balance is linked), and what's still
     due. A purchase once; a monthly cost is the afford plan's (the freedom date). The Fable review (2026-11-26) found
-    an early-paid bill counted twice, a passed minimum dropped, business income counted and an overrun said as $0."""
+    an early-paid bill counted twice, a passed minimum dropped, business income counted and an overrun said as $0.
+    With `amount` None it's "how much is left this month?" (the money conversation check, 2026-11-26: the model had
+    made up a $4,900 to start from): what's left after what's due, from the same records."""
     from core import money_ahead
 
     today = today or date.today()
@@ -267,7 +269,10 @@ def afford(context, amount: float, today: Optional[date] = None) -> str:
                 f"don't know what you have.{still} Log your pay as it comes in (\"I got paid $1,200\") and I'll work it "
                 f"out.")
     left = income + coming - spent - owed
-    if left >= amount:
+    if amount is None:
+        verdict = (f"From what's logged, {_money(left)} is left this month after what's due." if left >= 0 else
+                   f"From what's logged, this month is {_money(-left)} over after what's due.")
+    elif left >= amount:
         verdict = f"From what's logged, {_money(amount)} fits: {_money(left)} is left after what's due."
     elif left >= 0:
         verdict = f"From what's logged, it doesn't fit: {_money(left)} is left after what's due, {_money(amount - left)} short."
