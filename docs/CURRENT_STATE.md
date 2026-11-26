@@ -57,7 +57,11 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   tell); a side hustle from what he has (core/side_hustle); standing reports, his questions answered on a schedule
   (core/standing_reports: "every Sunday tell me what's due this week", kept only when her code answers it, TIMELY,
   sealed in his folder); and no claims she can't keep ("stop reminding me" only stops one that's there, rent as a
-  bill, spending tracked automatically, "when I get paid"). 8742 passing.
+  bill, spending tracked automatically, "when I get paid").
+- The full sweep after all that (195 asks, nothing stolen) and its fixes: "when did I last ..." from his maintenance
+  record or history (any tense, the day it happened), "remind me in 2 hours" worked out in code (a one-shot alarm),
+  "I need motivation" from his own reasons (core/motivation), a vehicle's emergency kit (core/ready_kit.say_vehicle).
+  The crisis floor now hears "no motivation to live" too. 8755 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
