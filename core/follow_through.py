@@ -108,10 +108,10 @@ def merged(prev: str, x: str) -> Optional[str]:
             return _PERIOD_WORDS.sub(x, prev, count=1)
         return prev.rstrip(" ?.!") + f" {x}?"
     volts = re.fullmatch(r"(?:on |at |with |for )?(?:a |an )?(\d+(?:\.\d+)?)\s*(?:v|volts?)(?: supply| battery)?", x, re.I)
-    said_volts = list(re.finditer(r"\b\d+(?:\.\d+)?\s*(?:v|volts?)\b", prev, re.I))
-    if volts and len(said_volts) == 1:  # "and on 12 volts?" after the LED's resistor on 5 (the electronics check)
-        found = said_volts[0]
-        return prev[:found.start()] + f"{volts.group(1)} volts" + prev[found.end():]
+    said_volts = list(re.finditer(r"\b(\d+(?:\.\d+)?)(\s*(?:v|volts?))\b", prev, re.I))
+    if volts and len(said_volts) == 1:  # "and on 12 volts?" after the LED's resistor on 5 (the electronics check):
+        found = said_volts[0]  # the number swapped, his own unit kept ("a 20v drill" -> "a 18v drill")
+        return prev[:found.start(1)] + volts.group(1) + prev[found.end(1):]
     size = re.fullmatch(r"(?:an? |the )?(\d+(?:\.\d+)?\s*(?:by|x)\s*\d+(?:\.\d+)?)(?: one)?", x, re.I)
     if size and _SIZE.search(prev):  # "and a 10 by 12?" after "the square footage of a 12 by 16 shed?"
         last = list(_SIZE.finditer(prev))[-1]  # the thing's size, never a lumber size before it ("2 by 4 studs")

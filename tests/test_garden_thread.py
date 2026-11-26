@@ -54,6 +54,7 @@ def test_and_peppers_after_a_planting_question():
     assert follow_through.merged("When should I start selling eggs?", "tomatoes") is None
     assert follow_through.merged("What resistor do I need for an LED on 5 volts?", "on 12 volts") == \
         "What resistor do I need for an LED on 12 volts?"
+    assert follow_through.merged("How many 12 volt batteries do I have?", "6 volt") == "How many 6 volt batteries do I have?"
 
 
 def test_keeping_a_frost_is_undoable(tmp_path, monkeypatch):
