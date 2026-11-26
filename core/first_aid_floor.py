@@ -70,7 +70,14 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
     # wide on purpose (the Fable review of the home kinds: "the toaster is on fire", "i smell smoke", "help fire" had
     # been missed): anything on fire, smoke seen or smelled, a fire named; "I'm on fire today" is the accepted false alarm
     ("fire", re.compile(r"\bon fire\b|\bin flames\b|\bcaught fire\b|\bcatching fire\b|\bburning (?:down|up)\b|"
-                        r"\b(?:barn|house|shed|garage|kitchen|shop|trailer|coop)s?\s+(?:is |'s )?burning\b|"
+                        # anything burning, said any way (Fable's check: "the apartment is burning", "the woods behind
+                        # my house are burning" had gone quiet); a figure is _FIGURE's
+                        r"\b(?:is|are|'s|s|was|were) (?:still )?burning\b|\b\w+s burning\b|"
+                        r"\bflames?\b.{0,25}\b(?:coming|in the|out of|from|everywhere|shooting|spreading)\b|"
+                        r"\b(?:there are|there'?s|i see|we see|see) (?:\w+ )?flames\b|\ba fire (?:started|broke out)\b|"
+                        r"\b(?:outlet|plug|cord|wire|wiring|panel|toaster|microwave|dryer|motor|heater|appliance|charger)s?"
+                        r" (?:is |are |'s )?smoking\b|\bsmells? (?:like |of )smoke\b|\bsmoke everywhere\b|"
+                        r"\bsmoke alarms?\b.{0,40}\b(?:smoke|flames?|fire|going|blaring|beeping|sounding|woke)\b|"
                         r"^\s*(?:help\W*)?fire\b|\b(?:house|garage|kitchen|barn|shop|brush|grass|chimney|grease|"
                         r"electrical|car|truck|wood ?stove|attic|basement|field|wild) ?fire\b|\bfire in (?:the |my |our )?\w+|"
                         r"\b(?:we|i) (?:have|got) a fire\b|\bthere'?s (?:a )?fire\b|\bthe fire is (?:spreading|growing|"
@@ -86,8 +93,9 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
     ("gas", re.compile(r"\b(?:smell|smells|smelling|smelled|reeks?|reeking|stinks?|odor|odour)\b.{0,15}\b(?:gas|propane|"
                        r"natural gas|rotten eggs?)\b(?!\s+(?:station|prices?|mileage|tank fill))|\b(?:gas|propane)\s+"
                        r"(?:smell|odou?r|leak\w*|is leaking|leaking)\b|\bleaking (?:gas|propane)\b|\bhissing (?:from|at|by) "
-                       r"the (?:gas|propane)\b|\b(?:hit|cut|broke|nicked|damaged) (?:a |the |our )?gas line\b|\bgas line "
-                       r"(?:is )?(?:broken|broke|cut|hit|damaged|leaking)\b|\bleft the gas on\b|\bgas (?:is )?in the "
+                       r"the (?:gas|propane)\b|\b(?:hit|cut|broke|nicked|damaged|dug into|dug up|ruptured|punctured) "
+                       r"(?:a |the |our )?gas (?:line|pipe|main)\b|\bgas (?:line|pipe|main) (?:is |was |has )?(?:broken|"
+                       r"broke|cut|hit|damaged|leaking|ruptured|burst|split)\b|\bleft the gas on\b|\bgas (?:is )?in the "
                        r"(?:house|kitchen|basement|room)\b|\brotten egg (?:smell|odou?r)\b|\b(?:propane|gas) tank\b.{0,15}"
                        r"\b(?:leak\w*|hissing)\b"),
      "Leave now, everyone and the pets, and leave the door open behind you. Don't switch any light or appliance on or "
@@ -95,7 +103,12 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
      "or propane company's emergency line too. Don't go back in until they say it's safe."),
     ("co", re.compile(r"\b(?:carbon monoxide|monoxide|co2?)\s+(?:alarm|detector|monitor|sensor|meter)s?\b|"
                       r"\bcarbon monoxide\b|\b(?:generator|grill|engine|car|truck|heater) (?:is |was )?(?:running|on) in "
-                      r"the (?:garage|house|basement|shop|tent|camper)\b|\b\d+ ?ppm\b"),
+                      r"the (?:garage|house|basement|shop|tent|camper)\b|\b\d+ ?ppm\b|"
+                      r"\b(?:left|ran|running|using|lit|burning)\b.{0,20}\b(?:car|truck|engine|generator|charcoal grill|"
+                      r"grill|gas heater|kerosene heater|propane heater)\b.{0,30}\b(?:inside|in the (?:garage|house|"
+                      r"basement|tent|camper|shop))\b|\b(?:car|truck|engine|generator|grill)\b.{0,15}\b(?:left |was |is )?"
+                      r"running\b.{0,20}\b(?:inside|in the (?:garage|house|basement|shop))\b|\b(?:charcoal |gas )?grill "
+                      r"(?:inside|in the house)\b"),
      "Get everyone, the pets too, out into fresh air now, and leave the door open. Call from outside. Anyone with a "
      "headache, dizziness, sleepiness, nausea or confusion needs care now: tell the operator. Don't go back in until "
      "the fire department says it's clear."),
@@ -122,10 +135,14 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
                          r"\btouched (?:a|the) (?:live|power) (?:wire|line)\b|\bpower lines?\b.{0,25}\b(?:down|touch\w*|"
                          r"hit|broke|broken|fell|fallen|snapped|on the ground|sparking|arcing|in (?:my|the|our) (?:yard|"
                          r"driveway|road|field))\b|\bdowned (?:power )?lines?\b|\blive wires?\b.{0,20}\b(?:down|on the "
-                         r"ground|sparking)\b"),
+                         r"ground|sparking)\b|\b(?:wire|line|electric line|power cable|cable)s? (?:is |are |was |has )?"
+                         r"(?:down|fell|fallen|sparking|arcing)\b|\bpower lines?\b.{0,20}\bon (?:him|her|them|me|my|the|"
+                         r"our)\b"),
      "Don't touch them until the power is off: switch it off at the breaker or unplug it, or push the source away with "
-     "something dry that isn't metal (a wooden broom handle). Stay well back from a downed power line. Once it's off, "
-     "if they aren't breathing normally, start CPR; cover any burns loosely."),
+     "something dry that isn't metal (a wooden broom handle). Stay well back from a downed power line, at least 35 "
+     "feet. If a line is on a vehicle you're in, stay inside unless it catches fire; then jump clear with your feet "
+     "together, never touching the vehicle and the ground at once, and shuffle away. Once it's off, if they aren't "
+     "breathing normally, start CPR; cover any burns loosely."),
     ("cpr", re.compile(r"\b(?:not|isn'?t|aren'?t|ain'?t|stopped|no longer|quit) breathing\b|"
                        r"\b(?:isn'?t|aren'?t) (?:he|she|they|the baby|baby|it) breathing\b|\bno (?:pulse|heartbeat|heart "
                        r"beat)\b|\bcan'?t (?:find|feel) (?:a|his|her|their) (?:pulse|heartbeat)\b|"
@@ -241,14 +258,17 @@ _HAPPENING = re.compile(r"\bright now\b|\bhelp\b|!|\b(?:he|she|they)(?:'s| is| a
                         r"\bmy (?:\w+ ){0,2}(?:is|are|has|just)\b|\bjust (?:now|happened)\b|"
                         # today's, beside a past one (the Fable review: "had a heart attack last year and just
                         # collapsed", "choked last week and today he choked again")
-                        r"\bjust (?:collapsed|passed out|fainted|fell|stopped|choked)\b|\b(?:now|today|tonight|again)\b",
+                        r"\bjust (?:collapsed|passed out|fainted|fell|stopped|choked)\b|\b(?:now|today|tonight|again)\b|"
+                        r"\b(?:not|isn'?t|stopped) breathing\b|\bis (?:he|she|they|the baby) (?:not )?breathing\b",
                         re.I)
 # Something from the past: "had a heart attack in 2019", "years ago".
 _PAST = re.compile(r"\bin (?:19|20)\d\d\b|\b(?:years?|months?|weeks?) ago\b|\blast (?:year|month|week)\b|"
                    r"\bwhen (?:i|he|she) was (?:a )?(?:kid|young|little|child)\b", re.I)
 # A figure of speech: "I'm drowning in work", "choking on all this paperwork", "almost had a heart attack".
-_FIGURE = re.compile(r"\b(?:i'm|i am|we're|you're|he's|she's|they're|you are)\s+on fire\s+(?:today|tonight|lately|"
-                     r"this (?:week|month|season|year)|at work|at the gym|right now with)\b|\bdrowning in\b(?!\s+(?:[\w']+\s+){0,3}(?:pool|lake|pond|river|creek|water|ocean|sea|tub|"
+_FIGURE = re.compile(r"\b(?:i'm|i am|we're|you're|they're|you are)\s+on fire\s+(?:today|lately|"
+                     r"this (?:week|month|season|year))\b|\bfire[- ](?:roasted|grilled|cooked|baked|pit|place|works?|"
+                     r"wood|starter|drill)\b|\b(?:camp|bon)fires?\b|\bburning (?:question|sensation|desire|calories|"
+                     r"daylight|the midnight oil)\b|\bdrowning in\b(?!\s+(?:[\w']+\s+){0,3}(?:pool|lake|pond|river|creek|water|ocean|sea|tub|"
                      r"bath\w*|canal|tank|trough|reservoir|quarry|surf|waves?))|\bchok(?:ing|ed) on (?:all )?(?:this|that|the|my|these) (?:paperwork|work|news|"
                      r"traffic|emails?|bills?|deadlines?)\b|\b(?:almost|nearly) (?:had a (?:heart attack|stroke|cow|fit)|had|died|choked|drowned)\b|"
                      r"\bgave me a heart attack\b|\bmy heart (?:almost |nearly )?stopped when\b|\bunresponsive "
@@ -374,11 +394,16 @@ HOME = ("fire", "gas", "co")  # the home's own: get out first, then call; never 
 def reply(kind, where=None) -> str:
     """Pure logic. The fixed words for a kind (or a list of kinds, the first two said): call the emergency number
     first (the person's country's), then what to do now, then that she's staying with him. A fire, a gas leak or
-    carbon monoxide (`HOME`) says to get out first and call from outside."""
+    carbon monoxide (`HOME`) says to get out first and call from outside.
+    A person's emergency is always one of the two said beside a home's, so a fire and a gas leak never push CPR out."""
     from core.region import DEFAULT, REGIONS
 
     region = where or REGIONS[DEFAULT]
-    wanted = [kind] if isinstance(kind, str) else list(kind)[:2]
+    every = [kind] if isinstance(kind, str) else list(kind)
+    homes = [k for k in every if k in HOME]
+    people = [k for k in every if k not in HOME]
+    # a person's emergency is always said: a fire and a gas leak never push CPR out (Fable's check, 2026-11-25)
+    wanted = [homes[0], people[0]] if homes and people else every[:2]
     steps = [do for k in wanted for kk, _w, do in KINDS if kk == k]
     if wanted[0] in HOME:  # a fire, gas or carbon monoxide: out first, then the call from outside
         return (f"Get out now and call {region.emergency} from outside, {MARK} " + " ".join(steps)

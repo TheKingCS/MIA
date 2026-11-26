@@ -11,6 +11,16 @@ false alarm is the accepted cost (one careful message with the number), and this
 from core import first_aid_floor as floor
 
 REAL = (
+    # Fable's check of the home kinds' widening (2026-11-25)
+    "the apartment is burning", "my bedroom is burning", "the attic is burning", "our home is burning",
+    "the woods behind my house are burning", "the smoke alarm is blaring and there are flames",
+    "smoke alarm going and I see fire", "the smoke alarm woke me up and there's smoke", "he's on fire tonight help",
+    "flames are coming out of the oven", "there are flames in the kitchen", "a fire started in the garage",
+    "the outlet is smoking", "it smells like smoke in here", "theres smoke everywhere", "my husband's sleeve is burning",
+    "we dug into a gas line", "the gas pipe is broken", "gas main ruptured", "the car was left running in the garage",
+    "i ran the generator inside", "using a charcoal grill inside the house", "a wire is down and sparking",
+    "the electric line fell", "a power line is on my truck and I'm inside", "the power line is on him",
+    "why is he not breathing?",
     # the Fable review of the home kinds (2026-11-25)
     "the toaster is on fire", "the couch is on fire", "the pan caught fire", "the outlet is on fire",
     "the roof is on fire", "the space heater caught fire", "the christmas tree is on fire",

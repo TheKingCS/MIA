@@ -5,7 +5,8 @@ tests.test_sweep_16
 The tenth live sweep's fixes (2026-11-25): a unit conversion and a holiday's date are worked out in code (the model
 had said "The conversion is complete." and "I don't have that information"); "I don't know what that means" before
 a real answer goes; "do you remember what I told you yesterday?" is his past conversations, never one person. The
-coming week's holidays, which the morning briefing names. The Fable review's: each route takes only its own.
+coming week's holidays, which the morning briefing names. The Fable review's: each route takes only its own; and
+Fable's check of that narrowing: what it had refused is answered again.
 """
 
 from datetime import date
@@ -84,3 +85,26 @@ def test_the_fable_reviews_routes_take_only_their_own(monkeypatch):
         assert assistant_turn._fish_when_reply(None, words) is None, words
     assert assistant_turn._mains_reply(None, "read me the current breaker list") is None
     assert assistant_turn._monthly_reminder_reply(None, "remind me that the meeting is monthly") is None
+
+
+def test_fable_checks_the_narrowings_losses_are_back():
+    """What 855b6b57's narrowing had refused, answered again; and a division by zero said plainly."""
+    from core import holidays, home_trouble
+    from core.assistant_tools import AssistantTools
+
+    today = date(2026, 11, 25)
+    for words in ("what day of the week is christmas?", "when is thanksgiving day", "when exactly is thanksgiving",
+                  "when is thanksgiving again?", "when is memorial day weekend"):
+        assert holidays.reply(None, words, today=today), words
+    assert holidays.reply(None, "when was labor day", today=today).startswith("Labor Day was Monday, September 7, 2026")
+    for words in ("water is coming through the ceiling", "the washing machine hose burst", "the well line broke",
+                  "the kitchen line is frozen", "my water heater burst", "the toilet is overflowing",
+                  "water is leaking through the ceiling",
+                  "a pipe burst and the water is pouring out, what does a plumber cost"):
+        assert home_trouble.reply(words), words
+    for words in ("how do I check for power at the outlet", "how do I measure voltage at the breaker",
+                  "how do I check voltage at the panel", "check power at the socket with a multimeter"):
+        assert assistant_turn._mains_reply(None, words) == assistant_turn.MAINS_REPLY, words
+    assert assistant_turn._mains_reply(None, "check the voltage on my solar panel") is None
+    said = AssistantTools._action_convert_units(None, {"value": 0, "from_unit": "mpg", "to_unit": "L/100km"})
+    assert "divides by zero" in said or "=" in said

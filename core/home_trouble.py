@@ -28,12 +28,18 @@ TROUBLE = (
     ("burst", re.compile(r"\b(?:water )?pipes?\b(?!\s+tobacco).{0,20}\b(?:burst|bursted|broke|broken|split|cracked|"
                          r"leaking badly)\b|\b(?:water|supply|main) (?:line|main)s?\b.{0,20}\b(?:burst|broke|broken|split|"
                          r"cracked)\b|\bburst (?:water )?(?:pipe|main)s?\b|\bwater(?:'s| is)? (?:pouring|spraying|gushing|"
-                         r"shooting|everywhere)\b"),
+                         r"shooting|everywhere)\b|\bwater(?:'s| is)? (?:coming|leaking|dripping|pouring) (?:through|from|"
+                         r"out of) (?:the )?(?:ceiling|wall|light|floor)\b|\b(?:washing machine|washer|dishwasher|water "
+                         r"heater|ice maker|fridge|toilet|well|supply) (?:hose|line)s?\b.{0,15}\b(?:burst|broke|split|"
+                         r"cracked)\b|\bwater heater\b.{0,15}\b(?:burst|broke|split|leaking everywhere|is leaking|"
+                         r"flooding)\b|\btoilet (?:is |'s )?(?:overflowing|flooding|won'?t stop running over)\b|"
+                         r"\b(?:sink|tub|bathtub) (?:is |'s )?overflowing\b"),
      "Shut off the water at the main valve first: usually where the water line comes into the house, by the meter or "
      "the water heater (turn it clockwise, or the lever across the pipe); a well's is at the pressure tank, and switch "
      "off the well pump's breaker too. " + _POWER + " Then open a faucet at the lowest point to drain the lines, "
      "move what you can out of the water, take photos for insurance, and call a plumber."),
-    ("frozen", re.compile(r"\b(?:pipes?|water lines?|faucets?)\b.{0,15}\b(?:are |is )?froze(?:n)?\b(?!\s+(?:yogurt|food|"
+    ("frozen", re.compile(r"\b(?:pipes?|(?:water|kitchen|well|bathroom|supply) lines?|faucets?)\b.{0,15}\b(?:are |is )?"
+                          r"froze(?:n)?\b(?!\s+(?:yogurt|food|"
                           r"pizza|treat|dinner))|\bno water\b.{0,30}\b(?:froze|frozen|freezing)\b|\bfrozen (?:pipes?|"
                           r"water lines?)\b"),
      "Open the faucet the frozen pipe feeds, so water can move as it thaws. Warm the pipe slowly, from the faucet end "
@@ -57,7 +63,8 @@ _ABOUT = re.compile(r"^\s*(?:how (?:do|can|should) (?:i|you|we) (?:keep|stop|pre
                     r"\bcost\b|\blast (?:year|week|month|winter)\b|\b(?:my |a )?neighbou?r\b|\bbought\b|\bused to\b",
                     re.I)
 # happening now, whatever the question's opening: "how do I keep it from flooding? it's flooding right now"
-_NOW = re.compile(r"\bright now\b|\bit'?s (?:flooding|pouring|spraying)\b|\bhelp\b|!", re.I)
+_NOW = re.compile(r"\bright now\b|\bit'?s (?:flooding|pouring|spraying)\b|\bhelp\b|!|\b(?:is|are|'s) (?:pouring|"
+                  r"spraying|gushing|flooding|overflowing)\b", re.I)
 
 
 def reply(words: str) -> Optional[str]:

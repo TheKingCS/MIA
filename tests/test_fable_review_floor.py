@@ -9,7 +9,8 @@ the floor's steps; the kitchen's water, a goat shelter, a margin of safety and a
 word "power" never starts the outage drill. Fable's check of those fixes: each kind is said once in a
 conversation and then the model helps, and a how-to's answer never stops a real emergency after it. The home's own
 emergencies (a fire, a gas leak, carbon monoxide) say to get out first and call from outside; a person on fire gets
-stop, drop and roll first, and a downed power line is a shock, never water advice.
+stop, drop and roll first, and a downed power line is a shock, never water advice; a person's emergency is always
+said beside a home's (CPR never pushed out by a fire and a gas leak).
 """
 
 from types import SimpleNamespace
@@ -85,3 +86,11 @@ def test_a_person_on_fire_gets_stop_drop_and_roll_first():
     """My clothes on fire: the burn's steps first, then getting out."""
     assert floor.kinds("my clothes are on fire")[0] == "burn"
     assert floor.kinds("a power line is broken in my yard")[0] == "shock"
+
+
+def test_a_persons_emergency_is_always_said_beside_a_homes():
+    """A fire and a gas leak never push CPR or a heart attack's steps out of the reply."""
+    said = floor.respond("my dad isn't breathing. I smell smoke and gas", [])
+    assert "start CPR: kneel beside them" in said and said.startswith("Get out now")
+    said = floor.respond("she's having a heart attack, the kitchen is on fire and I smell gas", [])
+    assert "chew an aspirin" in said

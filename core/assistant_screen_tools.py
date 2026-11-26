@@ -49,7 +49,8 @@ def _yesterday(context, words: str):
     """What he talked about with her yesterday (or the day his words name): each kept conversation that day,
     summarised (core/conversation_export.summary_of: the model's four headings, or what he asked when there's no
     model), the two newest; None when his words name no day.
-    A weekday counts only with "on" or "last" before it, never "Friday's appointment"."""
+    A weekday counts only with "on" or "last" before it, never "Friday's appointment".
+    Or a weekday right after talking words ("what did we talk about Monday?")."""
     import re
     from datetime import date, timedelta
 
@@ -61,7 +62,9 @@ def _yesterday(context, words: str):
         day = (date.today() - timedelta(days=1)).isoformat()
     else:
         # a day only when it's when they talked: "what did we talk about on Monday", never "Friday's appointment"
-        named = re.search(r"\b(?:on|last) (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b(?!'s)", said)
+        named = re.search(r"\b(?:on|last) (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b(?!'s)", said) or \
+            re.search(r"\b(?:talk(?:ed)?|spoke|chat(?:ted)?|told you|tell you|said)\b(?: about)? (monday|tuesday|"
+                      r"wednesday|thursday|friday|saturday|sunday)\b(?!'s)", said)
         day = read_date("last " + named.group(1)) if named else None
     if not day:
         return None

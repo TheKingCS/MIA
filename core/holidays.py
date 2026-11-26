@@ -120,15 +120,16 @@ def coming_line(context, today: Optional[date] = None, days: int = 7) -> str:
     return ("; ".join(said) + ".") if said else ""
 
 
-_ASKED = re.compile(r"^\s*(?:when(?:'s| is| does| was)|what (?:day|date)(?: is| does| was)?|what day of the week is|"
-                    r"which day is)\b"
+_ASKED = re.compile(r"^\s*(?:when(?:'s|s)?(?: exactly)?(?: is| does| was)|what (?:day|date)(?: is| does| was)?|"
+                    r"what day of the week is|which day is)\b"
                     r"(?P<rest>.+?)\s*\??\s*$", re.I)
 
 
 def reply(context, words: str, today: Optional[date] = None) -> Optional[str]:
     """"When is Thanksgiving?", "What day is Easter next year?", "What date is Memorial Day in 2027?": the date, its
     weekday and how far off; None for anything else, or a holiday his country doesn't keep.
-    Only the holiday itself, with a year or a country ("in Canada") at most; a past one is "was"."""
+    Only the holiday itself, with a year or a country ("in Canada") at most; a past one is "was".
+    "Thanksgiving day", "when exactly", "of the week" and "weekend" still name it; "when was" is the last one."""
     found = _ASKED.match(str(words or ""))
     if not found:
         return None
@@ -146,12 +147,14 @@ def reply(context, words: str, today: Optional[date] = None) -> Optional[str]:
     # only the holiday itself, with a year or a country at most: "when is the christmas concert?", "when is my labor
     # day party?" and "when should I start the easter ham?" are his own things (the Fable review)
     bare = re.sub(r"\b(?:this|next|last) year\b|\bin \d{4}\b|\b\d{4}\b|\bin (?:canada|the (?:us|usa|states|united "
-                  r"states))\b|\b(?:is|this|on|fall|falls|land|lands|come|comes|be|the)\b|[?.,!]", " ", rest, flags=re.I)
+                  r"states))\b|\bof the week\b|\b(?:is|this|on|fall|falls|land|lands|come|comes|be|the|exactly|again|"
+                  r"weekend|was)\b|[?.,!]", " ", rest, flags=re.I)  # never "year": it's in "new year's"
     name = named(bare, country)
     if name is None:
         return None
     pattern = HOLIDAYS[name][0]
-    if re.sub(rf"\b(?:{pattern})\b", " ", " ".join(bare.lower().replace("\u2019", "'").split())).strip():
+    left = re.sub(rf"\b(?:{pattern})\b", " ", " ".join(bare.lower().replace("\u2019", "'").split()))
+    if re.sub(r"\bday\b", " ", left).strip():  # "thanksgiving day" is Thanksgiving
         return None
     today = today or date.today()
     year_said = re.search(r"\b(20\d\d)\b", found.group("rest"))
@@ -161,6 +164,8 @@ def reply(context, words: str, today: Optional[date] = None) -> Optional[str]:
         year = today.year + 1
     elif re.search(r"\blast year\b", found.group("rest"), re.I):
         year = today.year - 1
+    elif re.match(r"\s*(?:when was|what (?:day|date) was)\b", str(words or ""), re.I):
+        year = today.year if day_of(name, today.year) <= today else today.year - 1  # "when was labor day?"
     else:
         year = today.year if day_of(name, today.year) >= today or re.search(r"\bthis year\b", found.group("rest"),
                                                                           re.I) else today.year + 1
