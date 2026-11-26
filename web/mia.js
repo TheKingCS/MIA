@@ -796,7 +796,8 @@
     files: (folder) => read("/api/files" + (folder ? "?path=" + encodeURIComponent(folder) : ""), "files"),
     money: (strategy) => read("/api/money" + (strategy ? "?strategy=" + encodeURIComponent(strategy) : ""), "money"),
     kinds: () => call("GET", "/api/actions/kinds"),
-    pending: () => call("GET", "/api/actions").then((r) => { ((r && r.proposals) || []).forEach(shown); return r; }),
+    pending: () => demo ? Promise.resolve({ proposals: [] })
+      : call("GET", "/api/actions").then((r) => { ((r && r.proposals) || []).forEach(shown); return r; }),
     // The Universal Action Layer (core/ual.py, DEC-0165): what MIA can do with a selection, and doing the pick.
     ualOffer: (capture) => demo ? Promise.resolve({ capture: { kind: "text", characters: (capture.text || "").length, from: "this page", missing: [] }, actions: [["find_known", "Find What I Know About This", false], ["explain", "Explain This", false], ["summarise", "Summarise This", false], ["draft_email", "Draft An Email From This", false], ["build_skill", "Build A Skill For MIA", false], ["learn_path", "Learn This Myself", true], ["save_inbox", "Save To My Inbox", true], ["make_mission", "Make This A Mission", true], ["make_project", "Start A Project From This", true]].map(([id, label, needs_approval]) => ({ id, label, needs_approval })), later: ["Research This", "Verify These Claims", "Convert This", "Have The Council Review This"] })
       : call("POST", "/api/ual/offer", { capture }),

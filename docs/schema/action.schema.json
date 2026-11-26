@@ -93,6 +93,10 @@
       "type": "string",
       "description": "The card as shown: a hash of its kind, params and summary (WP-02). Approving with ?binding= holds only for this card, and only while it is unchanged."
     },
+    "held": {
+      "type": "boolean",
+      "description": "Started by something she read (an email, a page: DEC-0293), so it waits for his yes; Home says so beside the card."
+    },
     "read_back": {
       "type": "string",
       "description": "After it ran: ok when its effect read back (DEC-0218, core/read_back.py), else what didn't; empty before."

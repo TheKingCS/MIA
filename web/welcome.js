@@ -165,22 +165,26 @@
     try { cards = (((await MIA.pending()) || {}).proposals || []).filter((p) => p.proposed_by === "mia"); }
     catch (e) { cards = []; }
     $("waiting").hidden = !cards.length;
-    $("waiting-list").replaceChildren(...cards.map((p) => el("li", {},
-      el("span", { class: "what" }, p.summary),
-      el("button", { type: "button", class: "btn btn-green btn-small", onclick: async () => {
-        try { const done = await MIA.approve(p.proposal_id); MIAShell.say((done && done.result) || "Done."); }
-        catch (e) { MIAShell.say(e.message); }
+    $("waiting-list").replaceChildren(...cards.map((p) => {
+      const decide = (yes) => async (ev) => {
+        ev.currentTarget.parentNode.querySelectorAll("button").forEach((b) => { b.disabled = true; });  // one press
+        try {
+          if (yes) { const done = await MIA.approve(p.proposal_id); MIAShell.say((done && done.result) || "Done."); }
+          else await MIA.reject(p.proposal_id);
+        } catch (e) { MIAShell.say(e.message); }
         waiting();
-      } }, "Approve"),
-      el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: async () => {
-        try { await MIA.reject(p.proposal_id); } catch (e) { MIAShell.say(e.message); }
-        waiting();
-      } }, "Not Now"))));
+      };
+      return el("li", {},
+        el("span", { class: "what" }, p.summary,
+          p.held ? el("small", {}, "Started by something I read: check it before you say yes.") : null),
+        el("button", { type: "button", class: "btn btn-green btn-small", onclick: decide(true) }, "Approve"),
+        el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: decide(false) }, "Not Now"));
+    }));
   }
 
   // DEC-0153: MIA opens here, on the Dashboard, in every look (the Nexus is Living Worlds' screen now).
   async function render() {
-    waiting();
+    waiting();  // re-read on every live change too (render runs on each), so a background card shows at once
     const [home, shell] = await Promise.all([MIA.dashboard(), MIA.shell()]);
     $("greeting").textContent = home.greeting;
     hearIt(home.briefing);

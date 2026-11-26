@@ -126,8 +126,8 @@ class Proposal:
     executed, rejected, failed, expired, undone), when, the result line, what it earned (for a surface to celebrate),
     whether it ran at once on his standing yes (`auto`, DEC-0215), the trace id of what proposed it (DEC-0280), whether
     its effect read back after it ran (DEC-0218), what kind of failure it was if it failed (DEC-0283), its binding
-    (WP-02: the card exactly as shown; an approval is for that card and nothing else), and the undo record (kept
-    server-side, never sent).
+    (WP-02: the card exactly as shown; an approval is for that card and nothing else), whether something she read
+    started it (`held`, DEC-0293: Home says so beside the card), and the undo record (kept server-side, never sent).
     """
     proposal_id: str
     kind: str
@@ -147,6 +147,7 @@ class Proposal:
     read_back: str = ""  # "ok" when its effect read back after it ran, else what didn't (DEC-0218, LS-05)
     binding: str = ""  # the card as shown: a hash of kind, params and sentence (WP-02, REQ-SEC-016)
     error: str = ""  # when it failed: refused, invalid, unavailable or failed (DEC-0283)
+    held: bool = False  # started by something she read (an email, a page: DEC-0293), so it waits for his yes
     _change: object = field(default=None, repr=False)  # the undo record, never sent
 
     def as_dict(self) -> dict:
@@ -541,6 +542,7 @@ import core.web_tracks  # noqa: E402,F401  (Tracks: a GPX file kept, a track del
 import core.sensors  # noqa: E402,F401  (sensor.remove: a sensor that sends its own readings)
 import core.lab_actions  # noqa: E402,F401  (the development lab, DEC-0058)
 import core.first_boot  # noqa: E402,F401  (meeting MIA, docs/GLASSES_FIRST_BOOT_PLAN.md)
+import core.trip_packing  # noqa: E402,F401  (gear.copy_last: a trip's packing list from the last like one)
 
 
 # ------------------------------------------------------------------ the five steps
@@ -607,6 +609,16 @@ def _put_back(context, change) -> bool:
     return done
 
 
+def _bump_live() -> None:
+    """Tells open screens to re-read (core/live.py), for a card of MIA's that appeared or went; never raises."""
+    try:
+        from core import live
+
+        live.bump()
+    except Exception:  # noqa: BLE001
+        log.exception("Couldn't tell the screens a card changed")
+
+
 def _may_run_now(kind: str) -> bool:
     """Whether MIA may run a kind she holds a standing yes for right now: the same check as anything she starts
     herself (core/grants.require), so a stop-everything holds it. Held, it stays a card."""
@@ -668,7 +680,9 @@ class ActionCenter:
         unless the grants check holds it (a stop-everything), when it stays a card like any other. It carries the
         trace id of what proposed it, or a new one for a press on a screen (core/trace.py), and its binding: the
         card exactly as it's shown (WP-02). `hold` (DEC-0293): it waits on its card for a
-        person even when its kind was approved from now on (a change started by something MIA read).
+        person even when its kind was approved from now on (a change started by something MIA read), and is marked
+        `held` so Home says so. A card of MIA's left waiting bumps core/live, so Home's Waiting For Your Yes shows it
+        at once.
         """
         from core.child_accounts import is_child
 
@@ -692,6 +706,7 @@ class ActionCenter:
                             created_at=datetime.now().isoformat(timespec="seconds"),
                             trace=trace.current() or trace.new_id())  # a press on a screen starts its own
         proposal.binding = binding_of(kind, params, summary)  # after describe: the card exactly as it's shown
+        proposal.held = bool(hold)
         with self._lock:
             self._expire()
             self._proposals[proposal.proposal_id] = proposal
@@ -703,6 +718,8 @@ class ActionCenter:
                 from core import kind_grants
 
                 kind_grants.used(context, kind)
+        if proposal.proposed_by == "mia" and proposal.status == PROPOSED:
+            _bump_live()  # Home's Waiting For Your Yes re-reads: a card made in the background is seen at once
         return proposal
 
     def get(self, proposal_id: str, profile_id: Optional[str]) -> Proposal:
@@ -849,8 +866,8 @@ class ActionCenter:
 
     def reject(self, context, proposal_id: str) -> Proposal:
         """Declines a proposal still waiting (nothing runs); when MIA proposed it, the decline is noted for her
-        actions.* loops; and a kind that held something open while it waited (`ActionType.rejected`, a browser step)
-        lets it go, so the run it belonged to ends at once.
+        actions.* loops, and screens re-read (core/live); and a kind that held something open while it waited
+        (`ActionType.rejected`, a browser step) lets it go, so the run it belonged to ends at once.
         """
         proposal = self.get(proposal_id, _who(context))
         if proposal.status == PROPOSED:
@@ -858,6 +875,7 @@ class ActionCenter:
             proposal.decided_at = datetime.now().isoformat(timespec="seconds")
             if proposal.proposed_by == "mia":
                 _note(context, "declined", proposal)
+                _bump_live()
             kind = ACTION_TYPES.get(proposal.kind)
             if kind is not None and kind.rejected is not None:
                 try:  # what it held open is let go (a routine's run ends, stopped at that step)
