@@ -129,7 +129,10 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   series), "what should I work out tomorrow?" from his training. Zac asked for a dashboard of the recent work: a build
   dashboard and an engine map were made as private claude.ai pages (not in the repo).
 - Rentals: "the tenant paid $1800 today" records rent on his rental in code (never his own rent, never twice).
-  Fable-reviewed. 8830 passing.
+  Fable-reviewed.
+- A property's summary over 12 months with its months of rent and the year's pace as an estimate (no more "0.64% cap
+  rate, doing well" from one month), and "what time is sunset?" / "how much daylight is left?" for his town in code.
+  Fable-reviewed. 8834 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
