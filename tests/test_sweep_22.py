@@ -12,16 +12,18 @@ from core import assistant_turn
 
 
 def test_each_question_goes_to_its_own_tool():
+    """The hens, the water, the feed, canning and what she may do on her own: each its tool; others none."""
     ran = []
     context = SimpleNamespace(assistant_actions=SimpleNamespace(
-        _actions={"why_hens_not_laying": 1, "should_i_water": 1, "get_eggs": 1, "canning_time": 1},
+        _actions={"why_hens_not_laying": 1, "should_i_water": 1, "get_eggs": 1, "canning_time": 1, "list_grants": 1},
         execute=lambda c, n, a: ran.append((n, a)) or "ok"))
     for words, tool in (("Why aren't my hens laying?", "why_hens_not_laying"),
                         ("my chickens stopped laying", "why_hens_not_laying"),
                         ("Should I water the garden today?", "should_i_water"),
                         ("How much feed do I have left?", "get_eggs"),
                         ("How do I can tomatoes?", "canning_time"),
-                        ("how long do I process quarts of green beans", "canning_time")):
+                        ("how long do I process quarts of green beans", "canning_time"),
+                        ("What can you do on your own?", "list_grants")):
         assert assistant_turn._own_tool_reply(context, words) == "ok", words
         assert ran[-1][0] == tool, words
     for words in ("how do I can I help you", "why is my dog not eating", "should I paint the shed"):

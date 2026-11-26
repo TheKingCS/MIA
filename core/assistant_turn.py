@@ -1249,6 +1249,9 @@ _OWN_TOOLS = (
     # the flock's feed only: "how much feed is left?" alone could be any animal's (the everyday corpus)
     ("get_eggs", re.compile(r"\bhow (?:much|many)\b.{0,15}\bfeed\b.{0,10}\b(?:do (?:i|we) have|have (?:i|we) got)\b|"
                             r"\bhow long will (?:the |my |our )?(?:chicken |layer |hens'? )?feed last\b", re.I), True),
+    # what she may do herself is her grants' (list_grants); the model had made up a browser and the Classroom
+    ("list_grants", re.compile(r"^\s*what (?:can|may|do|will) you do (?:on your own|by yourself|without (?:asking|me))\s*\??\s*$",
+                               re.I), False),
     ("canning_time", re.compile(r"^\s*how (?:do|should|would) (?:i|you|we) (?:pressure |water[- ]bath )?can\b(?! i\b| you\b)|"
                                 r"^\s*how long (?:do|should) (?:i|you) (?:pressure |water[- ]bath )?(?:can|process)\b", re.I),
      True),
@@ -1259,7 +1262,8 @@ def _own_tool_reply(context, prompt: str):
     """The homestead's own read-only answers by the words that are their question (the live sweep, 2026-11-25: "why
     aren't my hens laying?" was asked about stress, "how much feed do I have left?" asked what feed, "should I water
     the garden?" said there was no garden, and "how do I can tomatoes?" got back "How to can tomatoes."):
-    why_hens_not_laying, should_i_water, get_eggs (its feed runway) and canning_time. None otherwise."""
+    why_hens_not_laying, should_i_water, get_eggs (its feed runway) and canning_time; and what she may do on her own,
+    her grants (list_grants). None otherwise."""
     said = prompt.replace("’", "'")
     actions = getattr(context, "assistant_actions", None)
     if actions is None:
